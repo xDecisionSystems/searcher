@@ -25,13 +25,20 @@ If an interactive shell needs activation, use:
 
 - `source .venv/bin/activate`
 
-## 3. Change Hygiene
+## 3. Version Update Command Rule
+
+- If the user says `update version name to <new version name>`, automatically update `VERSION.md`.
+- Use exactly:
+  - `VERSION_NAME=<new version name>`
+- Keep the key name exactly `VERSION_NAME`.
+
+## 4. Change Hygiene
 
 - When code changes affect behavior, update docs in the same change.
 - Keep API responses stable unless a breaking change is explicitly requested.
 - Validate all input and return clear HTTP errors.
 
-## 4. Security Basics
+## 5. Security Basics
 
 - Never expose API keys or secrets.
 - Treat downloaded content as untrusted.

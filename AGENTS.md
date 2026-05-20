@@ -64,7 +64,14 @@ When using multiple agents in parallel, assign disjoint file ownership to avoid 
 - If activation is needed for an interactive session, use:
   - `source .venv/bin/activate`
 
-## 6. Safety and Security
+## 6. Version Update Command Rule
+
+- If the user command is `update version name to <new version name>`, automatically update `VERSION.md`.
+- Write the value using this exact format:
+  - `VERSION_NAME=<new version name>`
+- Do not change key name casing or add extra keys.
+
+## 7. Safety and Security
 
 - Accept only `http`/`https` URLs.
 - Treat downloaded content as untrusted.
@@ -73,7 +80,7 @@ When using multiple agents in parallel, assign disjoint file ownership to avoid 
 - Do not execute downloaded files.
 - Prefer allowlists for provider names and parameters.
 
-## 7. Change Workflow for Agents
+## 8. Change Workflow for Agents
 
 1. Read `README.md`, `ARCHITECTURE.md`, and `app.py`.
 2. Identify impacted endpoints, config, and docs.
@@ -84,7 +91,7 @@ When using multiple agents in parallel, assign disjoint file ownership to avoid 
 5. Update docs and examples.
 6. Summarize changes, assumptions, and residual risks.
 
-## 8. API Change Policy
+## 9. API Change Policy
 
 Treat these as breaking changes:
 
@@ -99,7 +106,7 @@ If a breaking change is required:
 - Update `README.md` and `ARCHITECTURE.md`.
 - Call out change impact clearly in PR/task summary.
 
-## 9. Definition of Done
+## 10. Definition of Done
 
 A change is complete when:
 

@@ -10,6 +10,14 @@ FastAPI service for:
 - Direct Google Scholar search (`/search_google_scholar`)
 - PDF download (`/download_pdf`)
 
+## 0. One-Line Proxmox LXC Installer (wget)
+
+```bash
+wget -O install.sh https://raw.githubusercontent.com/xDecisionSystems/searcher_MCP/main/install.sh && chmod +x install.sh && SEARCHER_MCP_BASE_URL="https://raw.githubusercontent.com/xDecisionSystems/searcher_MCP/main" ./install.sh
+```
+
+This installer downloads, installs, and deploys the FastAPI service on Debian-based Proxmox LXC, and installs `curl` as part of system dependencies.
+
 ## 1. Install
 
 ```bash
@@ -45,6 +53,14 @@ cp /opt/searcher_mcp/deploy/searcher-mcp.service /etc/systemd/system/searcher-mc
 systemctl daemon-reload
 systemctl enable --now searcher-mcp
 systemctl status searcher-mcp
+```
+
+## 2c. Update an Existing Deployment
+
+`update.sh` downloads the latest runtime files (including `app.py`, `requirements.txt`, `install.sh`, and `update.sh`) and restarts the service automatically.
+
+```bash
+SEARCHER_MCP_BASE_URL="https://raw.githubusercontent.com/xDecisionSystems/searcher_MCP/main" /opt/searcher_mcp/update.sh
 ```
 
 ## 3. Endpoints

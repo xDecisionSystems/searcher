@@ -16,16 +16,37 @@ APP_USER_AGENT = os.getenv(
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT_SECONDS", "20"))
 PDF_MAX_MB = int(os.getenv("PDF_MAX_MB", "50"))
 DOWNLOAD_DIR = Path(os.getenv("DOWNLOAD_DIR", tempfile.gettempdir()))
+VERSION_FILE = Path(__file__).with_name("VERSION.md")
 
 SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")
 BRAVE_SEARCH_API_KEY = os.getenv("BRAVE_SEARCH_API_KEY")
 BING_SEARCH_API_KEY = os.getenv("BING_SEARCH_API_KEY")
 SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
 
+
+def _load_version_name() -> str:
+    default_version_name = os.getenv("VERSION_NAME", "searcher-mcp-dev")
+    try:
+        content = VERSION_FILE.read_text(encoding="utf-8")
+    except OSError:
+        return default_version_name
+
+    for raw_line in content.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("VERSION_NAME="):
+            value = line.split("=", 1)[1].strip()
+            return value.strip("'\"") or default_version_name
+    return default_version_name
+
+
+VERSION_NAME = _load_version_name()
+
 session = requests.Session()
 session.headers.update({"User-Agent": APP_USER_AGENT})
 
-app = FastAPI(title="Searcher MCP API", version="1.0.0")
+app = FastAPI(title="Searcher MCP API", version=VERSION_NAME)
 
 
 def _validate_http_url(url: str) -> None:
@@ -238,7 +259,7 @@ def _build_pdf_filename(url: str) -> str:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "version_name": VERSION_NAME}
 
 
 @app.get("/search_web")
