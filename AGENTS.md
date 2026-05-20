@@ -31,6 +31,17 @@ Deployment policy:
 - Local deployment using `.venv` + `uvicorn` is allowed for testing and validation only.
 - Do not add additional deployment targets unless explicitly requested.
 
+Deployment and testing permissions:
+
+- Agents may deploy locally for testing only (`.venv` + `uvicorn`).
+- Agents must not run production deployment scripts (`./install.sh`, `./update.sh`) as part of normal agent operations.
+- Agents are allowed to run testing scripts in `testing/`, including:
+  - `./testing/test_health.sh`
+  - `./testing/test_smoke.sh`
+  - `./testing/test_api_keys.sh`
+  - `./testing/test_local_deploy.sh`
+- After local test deployment, agents should run verification checks and report results.
+
 ## 3. Agent Roles
 
 Use these roles when coordinating multiple programming agents:
