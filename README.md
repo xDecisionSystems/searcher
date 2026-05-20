@@ -52,7 +52,18 @@ Local testing docs URL:
 SEARCHER_MCP_BASE_URL="https://raw.githubusercontent.com/xDecisionSystems/searcher_MCP/main" /opt/searcher_mcp/update.sh
 ```
 
-## 3. Endpoints
+## 3. Testing Scripts
+
+The `testing/` folder includes endpoint smoke tests:
+
+- `./testing/test_health.sh`
+- `./testing/test_smoke.sh`
+- `./testing/test_api_keys.sh`
+- `./testing/test_local_deploy.sh`
+
+See [testing/README.md](/home/aev/UCF Dropbox/Adan Vela/git-ucf/searcher_MCP/testing/README.md) for options and usage.
+
+## 4. Endpoints
 
 ### `GET /health`
 
@@ -125,7 +136,7 @@ Params:
 
 Downloads PDF to `DOWNLOAD_DIR` (or `/tmp` by default), enforces max size (`PDF_MAX_MB`), and returns file path + size.
 
-## 4. Example Requests
+## 5. Example Requests
 
 ```bash
 curl "http://127.0.0.1:8000/search_web?query=fastapi+mcp&provider=duckduckgo"
