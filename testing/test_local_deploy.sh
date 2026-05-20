@@ -8,10 +8,21 @@ BASE_URL="${BASE_URL:-http://${APP_HOST}:${APP_PORT}}"
 SKIP_NETWORK_TESTS="${SKIP_NETWORK_TESTS:-0}"
 RUN_API_KEY_TESTS="${RUN_API_KEY_TESTS:-1}"
 LOG_FILE="${PROJECT_ROOT}/testing/local_server.log"
+LOCAL_ENV_FILE="${LOCAL_ENV_FILE:-${PROJECT_ROOT}/.env.dev}"
 
 if [[ ! -x "${PROJECT_ROOT}/.venv/bin/python" ]]; then
   echo "FAIL: .venv is missing. Create it first and install dependencies."
   exit 1
+fi
+
+if [[ -f "${LOCAL_ENV_FILE}" ]]; then
+  echo "Loading local environment: ${LOCAL_ENV_FILE}"
+  set -a
+  # shellcheck disable=SC1090
+  source "${LOCAL_ENV_FILE}"
+  set +a
+else
+  echo "WARN: ${LOCAL_ENV_FILE} not found. Continuing without env file."
 fi
 
 cleanup() {

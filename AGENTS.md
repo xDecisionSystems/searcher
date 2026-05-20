@@ -17,18 +17,20 @@ Prioritize correctness, safe defaults, and predictable API behavior.
 
 Primary code and runtime files:
 
-- `app.py`: API routes and business logic.
+- `app.py`: compatibility entrypoint (`uvicorn app:app`).
+- `searcher_mcp/`: modular API and business logic (config, services, HTTP helpers).
 - `requirements.txt`: Python dependencies.
 - `.env.example`: runtime configuration keys.
 - `deploy/searcher-mcp.service`: systemd service for Proxmox LXC.
 - `README.md`: user-facing setup and usage.
 
-If you add or change behavior in `app.py`, update `README.md` and `.env.example` in the same change.
+If you add or change behavior in `searcher_mcp/`, update `README.md` and `.env.example` in the same change.
 
 Deployment policy:
 
 - Production deployment is Debian-based Proxmox LXC with `systemd`.
 - Local deployment using `.venv` + `uvicorn` is allowed for testing and validation only.
+- Use `.env.dev` for local development and local testing runs.
 - Do not add additional deployment targets unless explicitly requested.
 
 Deployment and testing permissions:
@@ -103,7 +105,7 @@ When using multiple agents in parallel, assign disjoint file ownership to avoid 
 2. Identify impacted endpoints, config, and docs.
 3. Implement smallest coherent change.
 4. Run quick checks:
-   - `.venv/bin/python -m py_compile app.py`
+   - `.venv/bin/python -m py_compile app.py searcher_mcp/*.py searcher_mcp/services/*.py`
    - Optional runtime checks if deps are installed.
 5. Update docs and examples.
 6. Summarize changes, assumptions, and residual risks.

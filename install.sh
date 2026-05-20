@@ -22,12 +22,13 @@ apt-get install -y --no-install-recommends \
   python3-pip
 
 echo "[2/8] Preparing application directories..."
-mkdir -p "${APP_DIR}/deploy"
+mkdir -p "${APP_DIR}/deploy" "${APP_DIR}/searcher_mcp/services"
 
 download_file() {
   local src="$1"
   local dst="$2"
   echo "Downloading ${src} -> ${dst}"
+  mkdir -p "$(dirname "${dst}")"
   wget -qO "${dst}" "${BASE_URL}/${src}"
 }
 
@@ -51,13 +52,27 @@ read_version_name() {
 }
 
 echo "[3/8] Downloading application files..."
-download_file "app.py" "${APP_DIR}/app.py"
-download_file "requirements.txt" "${APP_DIR}/requirements.txt"
-download_file ".env.example" "${APP_DIR}/.env.example"
-download_file "VERSION.md" "${APP_DIR}/VERSION.md"
-download_file "deploy/${SERVICE_FILE}" "${APP_DIR}/deploy/${SERVICE_FILE}"
-download_file "install.sh" "${APP_DIR}/install.sh"
-download_file "update.sh" "${APP_DIR}/update.sh"
+DOWNLOAD_FILES=(
+  "app.py"
+  "requirements.txt"
+  ".env.example"
+  "VERSION.md"
+  "deploy/${SERVICE_FILE}"
+  "install.sh"
+  "update.sh"
+  "searcher_mcp/__init__.py"
+  "searcher_mcp/api.py"
+  "searcher_mcp/config.py"
+  "searcher_mcp/http_client.py"
+  "searcher_mcp/utils.py"
+  "searcher_mcp/services/__init__.py"
+  "searcher_mcp/services/search.py"
+  "searcher_mcp/services/page.py"
+  "searcher_mcp/services/pdf.py"
+)
+for rel_path in "${DOWNLOAD_FILES[@]}"; do
+  download_file "${rel_path}" "${APP_DIR}/${rel_path}"
+done
 chmod +x "${APP_DIR}/install.sh" "${APP_DIR}/update.sh"
 VERSION_NAME="$(read_version_name "${APP_DIR}/VERSION.md")"
 echo "Installing Searcher MCP version: ${VERSION_NAME}"

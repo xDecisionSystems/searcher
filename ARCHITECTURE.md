@@ -13,7 +13,13 @@ Core responsibilities:
 - Scholarly paper search.
 - PDF download with safety limits.
 
-The current implementation is monolithic in `app.py` for simplicity.
+The implementation is modular:
+
+- `app.py` is a thin compatibility entrypoint.
+- `searcher_mcp/api.py` defines FastAPI routes.
+- `searcher_mcp/services/` contains business logic by domain.
+- `searcher_mcp/config.py` centralizes environment-driven settings.
+- `searcher_mcp/http_client.py` owns shared HTTP session/request helpers.
 
 ## 2. Runtime Components
 

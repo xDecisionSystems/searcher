@@ -44,3 +44,10 @@ Start local app and test automatically:
 ```bash
 ./testing/test_local_deploy.sh
 ```
+
+The local deploy script loads `.env.dev` by default.
+Override env file path with:
+
+```bash
+LOCAL_ENV_FILE="/path/to/custom.env" ./testing/test_local_deploy.sh
+```

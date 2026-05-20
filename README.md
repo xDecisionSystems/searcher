@@ -35,8 +35,8 @@ Swagger docs:
 
 ```bash
 .venv/bin/python -m pip install -r requirements.txt
-cp .env.example .env
-set -a && source .env && set +a
+cp .env.example .env.dev
+set -a && source .env.dev && set +a
 .venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8000
 ```
 

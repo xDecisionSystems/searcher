@@ -11,13 +11,14 @@ if [[ "${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
-mkdir -p "${APP_DIR}/deploy"
+mkdir -p "${APP_DIR}/deploy" "${APP_DIR}/searcher_mcp/services"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
 download_file() {
   local src="$1"
   local dst="$2"
+  mkdir -p "$(dirname "${dst}")"
   wget -qO "${dst}" "${BASE_URL}/${src}"
 }
 
@@ -41,13 +42,27 @@ read_version_name() {
 }
 
 echo "[1/6] Downloading latest service files..."
-download_file "app.py" "${TMP_DIR}/app.py"
-download_file "requirements.txt" "${TMP_DIR}/requirements.txt"
-download_file ".env.example" "${TMP_DIR}/.env.example"
-download_file "VERSION.md" "${TMP_DIR}/VERSION.md"
-download_file "deploy/${SERVICE_FILE}" "${TMP_DIR}/${SERVICE_FILE}"
-download_file "install.sh" "${TMP_DIR}/install.sh"
-download_file "update.sh" "${TMP_DIR}/update.sh"
+DOWNLOAD_FILES=(
+  "app.py"
+  "requirements.txt"
+  ".env.example"
+  "VERSION.md"
+  "deploy/${SERVICE_FILE}"
+  "install.sh"
+  "update.sh"
+  "searcher_mcp/__init__.py"
+  "searcher_mcp/api.py"
+  "searcher_mcp/config.py"
+  "searcher_mcp/http_client.py"
+  "searcher_mcp/utils.py"
+  "searcher_mcp/services/__init__.py"
+  "searcher_mcp/services/search.py"
+  "searcher_mcp/services/page.py"
+  "searcher_mcp/services/pdf.py"
+)
+for rel_path in "${DOWNLOAD_FILES[@]}"; do
+  download_file "${rel_path}" "${TMP_DIR}/${rel_path}"
+done
 
 CURRENT_VERSION_NAME="$(read_version_name "${APP_DIR}/VERSION.md")"
 NEW_VERSION_NAME="$(read_version_name "${TMP_DIR}/VERSION.md")"
@@ -67,13 +82,16 @@ case "${CONFIRM_UPDATE}" in
 esac
 
 echo "[2/6] Updating local files..."
-install -m 0644 "${TMP_DIR}/app.py" "${APP_DIR}/app.py"
-install -m 0644 "${TMP_DIR}/requirements.txt" "${APP_DIR}/requirements.txt"
-install -m 0644 "${TMP_DIR}/.env.example" "${APP_DIR}/.env.example"
-install -m 0644 "${TMP_DIR}/VERSION.md" "${APP_DIR}/VERSION.md"
-install -m 0644 "${TMP_DIR}/${SERVICE_FILE}" "${APP_DIR}/deploy/${SERVICE_FILE}"
-install -m 0755 "${TMP_DIR}/install.sh" "${APP_DIR}/install.sh"
-install -m 0755 "${TMP_DIR}/update.sh" "${APP_DIR}/update.sh"
+for rel_path in "${DOWNLOAD_FILES[@]}"; do
+  src_path="${TMP_DIR}/${rel_path}"
+  dst_path="${APP_DIR}/${rel_path}"
+  mkdir -p "$(dirname "${dst_path}")"
+  file_mode="0644"
+  case "${rel_path}" in
+    install.sh|update.sh) file_mode="0755" ;;
+  esac
+  install -m "${file_mode}" "${src_path}" "${dst_path}"
+done
 
 echo "[3/6] Ensuring virtual environment exists..."
 if [[ ! -x "${APP_DIR}/.venv/bin/python" ]]; then

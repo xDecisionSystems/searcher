@@ -31,7 +31,7 @@ Add API keys in `.env` as needed.
 
 Minimum required before merge:
 
-- `python3 -m py_compile app.py`
+- `.venv/bin/python -m py_compile app.py searcher_mcp/*.py searcher_mcp/services/*.py`
 - Confirm `/health` responds.
 - Confirm changed endpoints return expected JSON shape.
 - Confirm failures return reasonable HTTP codes/messages.

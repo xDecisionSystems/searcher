@@ -6,6 +6,7 @@ Deployment policy:
 
 - Production deployment is Debian-based Proxmox LXC with `systemd`.
 - Local deployment using `.venv` + `uvicorn` is allowed for testing and validation only.
+- Use `.env.dev` for local development and local testing runs.
 - Do not add additional deployment targets unless explicitly requested.
 
 Deployment and testing permissions:
@@ -36,7 +37,7 @@ Deployment and testing permissions:
 - Run API:
   - `.venv/bin/python -m uvicorn app:app --host 0.0.0.0 --port 8000` (local debugging only, not deployment)
 - Run syntax checks:
-  - `.venv/bin/python -m py_compile app.py`
+  - `.venv/bin/python -m py_compile app.py searcher_mcp/*.py searcher_mcp/services/*.py`
 
 If an interactive shell needs activation, use:
 
