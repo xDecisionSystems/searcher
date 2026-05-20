@@ -75,9 +75,9 @@ Params:
 
 - `query` (required)
 - `limit` (default `5`, max `20`)
-- `provider` (`auto|serpapi_google|brave|bing|duckduckgo`)
+- `provider` (`auto|serpapi_google|serper_google|brave|bing|duckduckgo`)
 
-`auto` chooses `serpapi_google`, then `brave`, then `bing`, then `duckduckgo`.
+`auto` chooses `serpapi_google`, then `serper_google`, then `brave`, then `bing`, then `duckduckgo`.
 
 ### `GET /search_google`
 
@@ -86,7 +86,8 @@ Params:
 - `query` (required)
 - `limit` (default `5`, max `20`)
 
-Always uses SerpAPI Google search (`SERPAPI_API_KEY` required).
+Uses SerpAPI Google when `SERPAPI_API_KEY` is set.
+If `SERPAPI_API_KEY` is not set, it falls back to Serper Google (`SERPER_API_KEY` required).
 
 ### `GET /fetch_page`
 

@@ -19,6 +19,7 @@ DOWNLOAD_DIR = Path(os.getenv("DOWNLOAD_DIR", tempfile.gettempdir()))
 VERSION_FILE = Path(__file__).with_name("VERSION.md")
 
 SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")
+SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 BRAVE_SEARCH_API_KEY = os.getenv("BRAVE_SEARCH_API_KEY")
 BING_SEARCH_API_KEY = os.getenv("BING_SEARCH_API_KEY")
 SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
@@ -55,9 +56,9 @@ def _validate_http_url(url: str) -> None:
         raise HTTPException(status_code=400, detail="Invalid URL. Use http(s) URL.")
 
 
-def _request_json(url: str, **kwargs: Any) -> dict[str, Any]:
+def _request_json(url: str, method: str = "GET", **kwargs: Any) -> dict[str, Any]:
     try:
-        resp = session.get(url, timeout=REQUEST_TIMEOUT, **kwargs)
+        resp = session.request(method=method, url=url, timeout=REQUEST_TIMEOUT, **kwargs)
         resp.raise_for_status()
         return resp.json()
     except requests.RequestException as exc:
@@ -75,6 +76,27 @@ def _search_web_serpapi(query: str, limit: int) -> list[dict[str, str]]:
     )
     results: list[dict[str, str]] = []
     for item in payload.get("organic_results", [])[:limit]:
+        results.append(
+            {
+                "title": item.get("title", ""),
+                "url": item.get("link", ""),
+                "snippet": item.get("snippet", ""),
+            }
+        )
+    return results
+
+
+def _search_web_serper(query: str, limit: int) -> list[dict[str, str]]:
+    if not SERPER_API_KEY:
+        raise HTTPException(status_code=400, detail="SERPER_API_KEY is not configured.")
+    payload = _request_json(
+        "https://google.serper.dev/search",
+        method="POST",
+        headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+        json={"q": query, "num": limit},
+    )
+    results: list[dict[str, str]] = []
+    for item in payload.get("organic", [])[:limit]:
         results.append(
             {
                 "title": item.get("title", ""),
@@ -272,6 +294,8 @@ def search_web(
     if provider == "auto":
         if SERPAPI_API_KEY:
             provider = "serpapi_google"
+        elif SERPER_API_KEY:
+            provider = "serper_google"
         elif BRAVE_SEARCH_API_KEY:
             provider = "brave"
         elif BING_SEARCH_API_KEY:
@@ -281,6 +305,8 @@ def search_web(
 
     if provider == "serpapi_google":
         results = _search_web_serpapi(query, limit)
+    elif provider == "serper_google":
+        results = _search_web_serper(query, limit)
     elif provider == "brave":
         results = _search_web_brave(query, limit)
     elif provider == "bing":
@@ -298,8 +324,18 @@ def search_google(
     query: str,
     limit: int = Query(default=5, ge=1, le=20),
 ) -> dict[str, Any]:
-    results = _search_web_serpapi(query=query, limit=limit)
-    return {"provider": "serpapi_google", "query": query, "results": results}
+    if SERPAPI_API_KEY:
+        provider = "serpapi_google"
+        results = _search_web_serpapi(query=query, limit=limit)
+    elif SERPER_API_KEY:
+        provider = "serper_google"
+        results = _search_web_serper(query=query, limit=limit)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Set SERPAPI_API_KEY or SERPER_API_KEY to use /search_google.",
+        )
+    return {"provider": provider, "query": query, "results": results}
 
 
 @app.get("/fetch_page")
