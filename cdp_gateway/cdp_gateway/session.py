@@ -1,12 +1,11 @@
 import time
 
+import bcrypt
 import jwt
-from passlib.context import CryptContext
 
 from .config import DURATIONS, JWT_SECRET, PASSWORD_FILE
 
 _ALGORITHM = "HS256"
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 # ─── Password management ──────────────────────────────────────────────────────
@@ -17,9 +16,9 @@ def password_is_set() -> bool:
 
 def set_password(plain: str) -> None:
     """Hash plain with bcrypt and write to PASSWORD_FILE (mode 0600)."""
-    hashed = _pwd_context.hash(plain)
+    hashed = bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt())
     PASSWORD_FILE.parent.mkdir(parents=True, exist_ok=True)
-    PASSWORD_FILE.write_text(hashed, encoding="utf-8")
+    PASSWORD_FILE.write_bytes(hashed)
     PASSWORD_FILE.chmod(0o600)
 
 
@@ -27,8 +26,8 @@ def verify_password(plain: str) -> bool:
     """Return True if plain matches the stored bcrypt hash."""
     if not password_is_set():
         return False
-    stored = PASSWORD_FILE.read_text(encoding="utf-8").strip()
-    return _pwd_context.verify(plain, stored)
+    stored = PASSWORD_FILE.read_bytes()
+    return bcrypt.checkpw(plain.encode("utf-8"), stored)
 
 
 # ─── JWT management ───────────────────────────────────────────────────────────
