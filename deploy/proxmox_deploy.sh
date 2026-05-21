@@ -17,7 +17,6 @@
 #   --vmid           LXC container ID          (default: $VMID or 200)
 #   --storage        Proxmox storage pool      (default: local-lvm)
 #   --bridge         LXC network bridge        (default: vmbr0)
-#   --repo-url       Git repo URL to clone     (default: $REPO_URL or prompt)
 #   --repo-branch    Git branch to deploy      (default: main)
 #   --ip             Static IP (CIDR) or dhcp  (default: dhcp)
 #   --gateway        Network gateway           (required for static IP)
@@ -32,7 +31,7 @@ PROXMOX_HOST="${PROXMOX_HOST:-}"
 VMID="${VMID:-200}"
 STORAGE="${STORAGE:-local-lvm}"
 BRIDGE="${BRIDGE:-vmbr0}"
-REPO_URL="${REPO_URL:-}"
+REPO_URL="https://github.com/xDecisionSystems/searcher_MCP"
 REPO_BRANCH="${REPO_BRANCH:-main}"
 LXC_IP="${LXC_IP:-dhcp}"
 GATEWAY="${GATEWAY:-}"
@@ -56,7 +55,6 @@ while [[ $# -gt 0 ]]; do
     --vmid)         VMID="$2";         shift 2 ;;
     --storage)      STORAGE="$2";      shift 2 ;;
     --bridge)       BRIDGE="$2";       shift 2 ;;
-    --repo-url)     REPO_URL="$2";     shift 2 ;;
     --repo-branch)  REPO_BRANCH="$2";  shift 2 ;;
     --ip)           LXC_IP="$2";       shift 2 ;;
     --gateway)      GATEWAY="$2";      shift 2 ;;
@@ -91,14 +89,30 @@ if [[ -z "$PROXMOX_HOST" ]]; then
 fi
 [[ -z "$PROXMOX_HOST" ]] && die "PROXMOX_HOST is required."
 
-if [[ -z "$REPO_URL" ]]; then
-  read -rp "Git repo URL to clone: " REPO_URL
-fi
-[[ -z "$REPO_URL" ]] && die "REPO_URL is required."
-
 if [[ "$LXC_IP" != "dhcp" && -z "$GATEWAY" ]]; then
   read -rp "Gateway IP (required for static IP): " GATEWAY
   [[ -z "$GATEWAY" ]] && die "GATEWAY is required when using a static IP."
+fi
+
+# ─── Resolve VMID ─────────────────────────────────────────────────────────────
+# Search all containers on the Proxmox host for one with hostname = LXC_HOSTNAME.
+# If found, use its VMID (regardless of what --vmid was passed or defaulted to).
+# If not found, prompt for the VMID to use for the new container.
+log "Searching for existing '${LXC_HOSTNAME}' container on ${PROXMOX_HOST} ..."
+FOUND_VMID="$(ssh_run "$PROXMOX_HOST" \
+  "pct list | awk 'NR>1 {print \$1}' | while read id; do
+     h=\$(pct config \$id 2>/dev/null | awk -F': ' '/^hostname:/{print \$2}')
+     [ \"\$h\" = '${LXC_HOSTNAME}' ] && echo \$id && break
+   done" || true)"
+
+if [[ -n "$FOUND_VMID" ]]; then
+  log "Found existing '${LXC_HOSTNAME}' at VMID ${FOUND_VMID}."
+  VMID="$FOUND_VMID"
+else
+  log "No existing '${LXC_HOSTNAME}' container found."
+  read -rp "VMID for new container [${VMID}]: " VMID_INPUT
+  VMID="${VMID_INPUT:-${VMID}}"
+  [[ "$VMID" =~ ^[0-9]+$ ]] || die "VMID must be a number."
 fi
 
 # ─── Detect or select LXC template ───────────────────────────────────────────
@@ -148,10 +162,23 @@ read -rp "Proceed? [y/N] " CONFIRM
 [[ "${CONFIRM,,}" == "y" ]] || { log "Aborted."; exit 0; }
 
 # ─── Create LXC ───────────────────────────────────────────────────────────────
-log "Checking if VMID ${VMID} exists ..."
+# Check whether the chosen VMID is already occupied (could be an unrelated container
+# if the user manually specified --vmid and the hostname search found nothing).
 EXISTS="$(ssh_run "$PROXMOX_HOST" "pct list | awk 'NR>1 {print \$1}' | grep -w '${VMID}' || true")"
 if [[ -n "$EXISTS" ]]; then
-  log "VMID ${VMID} exists — stopping and destroying ..."
+  EXISTING_HOSTNAME="$(ssh_run "$PROXMOX_HOST" "pct config ${VMID} | awk -F': ' '/^hostname:/{print \$2}'" || echo "unknown")"
+  echo ""
+  if [[ "$EXISTING_HOSTNAME" != "$LXC_HOSTNAME" ]]; then
+    echo "  WARNING: VMID ${VMID} is occupied by '${EXISTING_HOSTNAME}',"
+    echo "           which is NOT a searcher-stack container."
+    echo "           Destroying it will permanently delete an unrelated LXC."
+  else
+    echo "  VMID ${VMID} ('${EXISTING_HOSTNAME}') will be permanently destroyed and redeployed."
+  fi
+  echo ""
+  read -rp "  Type the hostname to confirm destruction ('${EXISTING_HOSTNAME}'): " CONFIRM_DESTROY
+  [[ "$CONFIRM_DESTROY" == "$EXISTING_HOSTNAME" ]] || die "Hostname did not match. Aborted."
+  log "Confirmed — stopping and destroying VMID ${VMID} ..."
   ssh_run "$PROXMOX_HOST" "pct stop ${VMID} --skiplock 1 2>/dev/null || true"
   ssh_run "$PROXMOX_HOST" "pct destroy ${VMID} --purge 1"
 fi
