@@ -191,7 +191,7 @@ async def cdp_json_new(request: Request) -> Any:
         return JSONResponse({"error": "Access denied. Authenticate at /login."}, status_code=403)
     url = request.query_params.get("url", "about:blank")
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{_cdp_http_base()}/json/new?{url}")
+        resp = await client.put(f"{_cdp_http_base()}/json/new?{url}")
     data = resp.json()
     gateway_host = request.headers.get("host", f"localhost:{GATEWAY_PORT}")
     if isinstance(data, dict):

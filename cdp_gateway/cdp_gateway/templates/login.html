@@ -183,6 +183,16 @@
       <div class="token-box" id="token-value">{{ token }}</div>
       <button class="copy-btn" onclick="copyToken()">Copy token</button>
 
+      <!-- Open URL form -->
+      <hr class="divider" style="margin:1.25rem 0;">
+      <label for="open-url" style="margin-bottom:0.4rem;">Open URL in remote browser</label>
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;">
+        <input type="text" id="open-url" placeholder="https://www.sciencedirect.com"
+               style="flex:1;margin-bottom:0;">
+        <button onclick="openUrl()" class="btn btn-primary" style="width:auto;padding:0.6rem 1rem;">Open</button>
+      </div>
+      <div id="open-result" style="font-size:0.8rem;color:#68d391;display:none;margin-bottom:1rem;"></div>
+
       <div class="steps">
         <p style="margin-bottom:0.6rem;">To connect Chrome DevTools:</p>
         <ol>
@@ -190,22 +200,50 @@
           <li>Click <strong>Configure…</strong> and add:<br>
             <code>{{ gateway_host }}</code>
           </li>
-          <li>Click <strong>Done</strong> — targets appear automatically<br>
-            <em>(token is embedded in the WebSocket URL)</em></li>
-          <li>Click <strong>inspect</strong> and log into your portal</li>
+          <li>Click <strong>Done</strong> — targets appear automatically</li>
+          <li>Click <strong>inspect</strong> on the target to open DevTools</li>
         </ol>
       </div>
     </div>
 
     <script>
+      const _token = document.getElementById("token-value").innerText.trim();
+
       function copyToken() {
-        const t = document.getElementById("token-value").innerText.trim();
-        navigator.clipboard.writeText(t).then(() => {
+        navigator.clipboard.writeText(_token).then(() => {
           const btn = document.querySelector(".copy-btn");
           btn.textContent = "Copied!";
           setTimeout(() => btn.textContent = "Copy token", 2000);
         });
       }
+
+      function openUrl() {
+        const url = document.getElementById("open-url").value.trim();
+        if (!url) return;
+        const result = document.getElementById("open-result");
+        result.style.display = "none";
+        fetch("/json/new?url=" + encodeURIComponent(url) + "&token=" + encodeURIComponent(_token))
+          .then(r => r.json())
+          .then(data => {
+            if (data.error) {
+              result.style.color = "#fc8181";
+              result.textContent = "Error: " + data.error;
+            } else {
+              result.style.color = "#68d391";
+              result.textContent = "Opened: " + (data.title || data.url || "new tab");
+            }
+            result.style.display = "block";
+          })
+          .catch(() => {
+            result.style.color = "#fc8181";
+            result.textContent = "Request failed.";
+            result.style.display = "block";
+          });
+      }
+
+      document.getElementById("open-url").addEventListener("keydown", e => {
+        if (e.key === "Enter") openUrl();
+      });
     </script>
     {% endif %}
 
