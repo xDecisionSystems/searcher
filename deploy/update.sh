@@ -16,8 +16,8 @@ REPO_URL="https://github.com/xDecisionSystems/searcher_MCP"
 BRANCH="${BRANCH:-main}"
 DRY_RUN=0
 
-SEARCHER_DIR="${REPO_DIR}/searcher"
-WORKER_DIR="${REPO_DIR}/browser_worker"
+SEARCHER_DIR="/opt/repo/searcher"
+WORKER_DIR="/opt/repo/browser_worker"
 CDP_PORT=9222
 SEARCHER_PORT=8000
 WORKER_PORT=8010
