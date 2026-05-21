@@ -69,13 +69,37 @@ done
 log()  { echo "[deploy] $*"; }
 die()  { echo "[deploy] ERROR: $*" >&2; exit 1; }
 
+SSH_SOCKET=""
+
+# Open a single multiplexed SSH connection; all subsequent ssh_run calls reuse it.
+ssh_open() {
+  local host="$1"
+  SSH_SOCKET="$(mktemp -u /tmp/ssh-mux-XXXXXX)"
+  if [[ "$DRY_RUN" == "1" ]]; then
+    echo "[dry-run] ssh -M -o ControlMaster=yes ... root@${host}"
+    return 0
+  fi
+  ssh -o StrictHostKeyChecking=accept-new \
+      -o ControlMaster=yes \
+      -o ControlPath="${SSH_SOCKET}" \
+      -o ControlPersist=yes \
+      -fN "root@${host}"
+  trap 'ssh_close' EXIT
+}
+
+ssh_close() {
+  if [[ -n "$SSH_SOCKET" && "$DRY_RUN" != "1" ]]; then
+    ssh -o ControlPath="${SSH_SOCKET}" -O exit "root@${PROXMOX_HOST}" 2>/dev/null || true
+  fi
+}
+
 ssh_run() {
   local host="$1"; shift
   if [[ "$DRY_RUN" == "1" ]]; then
     echo "[dry-run] ssh root@${host} $*"
     return 0
   fi
-  ssh -o StrictHostKeyChecking=accept-new "root@${host}" "$@"
+  ssh -o ControlPath="${SSH_SOCKET}" "root@${host}" "$@"
 }
 
 lxc_exec() {
@@ -88,6 +112,24 @@ if [[ -z "$PROXMOX_HOST" ]]; then
   read -rp "Proxmox host (IP or hostname): " PROXMOX_HOST
 fi
 [[ -z "$PROXMOX_HOST" ]] && die "PROXMOX_HOST is required."
+
+log "Opening SSH connection to ${PROXMOX_HOST} ..."
+ssh_open "$PROXMOX_HOST"
+
+# ─── Resolve default VMID ─────────────────────────────────────────────────────
+# Find the next available VMID above 100 unless one was explicitly passed.
+if [[ "$VMID" == "200" ]]; then
+  log "Finding next available VMID ..."
+  NEXT_VMID="$(ssh_run "$PROXMOX_HOST" \
+    "pvesh get /cluster/nextid 2>/dev/null || \
+     { used=\$(pct list | awk 'NR>1{print \$1}' | sort -n); \
+       id=100; for u in \$used; do [ \$id -lt \$u ] && break; id=\$((u+1)); done; echo \$id; }" \
+    | tr -d '[:space:]"' || echo "")"
+  if [[ "$NEXT_VMID" =~ ^[0-9]+$ ]]; then
+    VMID="$NEXT_VMID"
+    log "Next available VMID: ${VMID}"
+  fi
+fi
 
 if [[ "$LXC_IP" != "dhcp" && -z "$GATEWAY" ]]; then
   read -rp "Gateway IP (required for static IP): " GATEWAY
@@ -118,12 +160,15 @@ fi
 # ─── Detect or select LXC template ───────────────────────────────────────────
 log "Querying available Debian templates on ${PROXMOX_HOST} ..."
 TEMPLATES_RAW="$(ssh_run "$PROXMOX_HOST" \
-  "pveam list local 2>/dev/null | awk 'NR>1 {print \$1}' | grep -i 'debian' | sort -rV" \
+  "pvesm status --content vztmpl 2>/dev/null | awk 'NR>1 {print \$1}' | \
+   while read storage; do
+     pveam list \"\$storage\" 2>/dev/null | awk 'NR>1 {print \$1}'
+   done | grep -i 'debian' | sort -rV" \
   || true)"
 
 if [[ -z "$TEMPLATE" ]]; then
   if [[ -z "$TEMPLATES_RAW" ]]; then
-    die "No Debian templates found. Download one first: pveam download local debian-12-standard_*.tar.zst"
+    die "No Debian templates found on any storage. Download one with: pveam download local debian-12-standard_*.tar.zst"
   fi
   mapfile -t TEMPLATE_LIST <<< "$TEMPLATES_RAW"
   log "Available Debian templates:"
