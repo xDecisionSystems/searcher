@@ -18,11 +18,10 @@ DRY_RUN=0
 
 SEARCHER_DIR="/opt/repo/searcher"
 WORKER_DIR="/opt/repo/browser_worker"
-GATEWAY_DIR="/opt/repo/cdp_gateway"
 CDP_PORT=9222
+NOVNC_PORT=6080
 SEARCHER_PORT=8000
 WORKER_PORT=8010
-GATEWAY_PORT=8020
 
 # ─── Argument parsing ─────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -88,33 +87,46 @@ run "${WORKER_DIR}/.venv/bin/python" -m pip install --quiet --upgrade pip
 run "${WORKER_DIR}/.venv/bin/python" -m pip install --quiet -r "${WORKER_DIR}/requirements.txt"
 run "${WORKER_DIR}/.venv/bin/python" -m playwright install chromium
 
-log "Refreshing browser-worker and chromium-cdp systemd units ..."
-run cp "${WORKER_DIR}/deploy/browser-worker.service"  /etc/systemd/system/browser-worker.service
-run cp "${WORKER_DIR}/deploy/chromium-cdp.service"    /etc/systemd/system/chromium-cdp.service
-
-# ─── Update cdp_gateway deps ──────────────────────────────────────────────────
-log "Updating cdp_gateway dependencies ..."
-run "${GATEWAY_DIR}/.venv/bin/python" -m pip install --quiet --upgrade pip
-run "${GATEWAY_DIR}/.venv/bin/python" -m pip install --quiet -r "${GATEWAY_DIR}/requirements.txt"
-
-log "Refreshing cdp-gateway systemd unit ..."
-run cp "${GATEWAY_DIR}/deploy/cdp-gateway.service" /etc/systemd/system/cdp-gateway.service
+log "Refreshing browser_worker systemd units ..."
+run cp "${WORKER_DIR}/deploy/browser-worker.service"     /etc/systemd/system/browser-worker.service
+run cp "${WORKER_DIR}/deploy/xvfb.service"               /etc/systemd/system/xvfb.service
+run cp "${WORKER_DIR}/deploy/x11vnc.service"             /etc/systemd/system/x11vnc.service
+run cp "${WORKER_DIR}/deploy/chromium-display.service"   /etc/systemd/system/chromium-display.service
+run cp "${WORKER_DIR}/deploy/novnc.service"              /etc/systemd/system/novnc.service
 
 # ─── Reload systemd ───────────────────────────────────────────────────────────
 run systemctl daemon-reload
 
-# ─── Restart services in dependency order ────────────────────────────────────
-log "Restarting chromium-cdp ..."
-run systemctl restart chromium-cdp
+# ─── Restart display stack first ─────────────────────────────────────────────
+log "Restarting xvfb ..."
+run systemctl restart xvfb
+sleep 2
+
+log "Restarting x11vnc ..."
+run systemctl restart x11vnc
+sleep 1
+
+log "Restarting chromium-display ..."
+run systemctl restart chromium-display
 
 log "Waiting for Chromium CDP on port ${CDP_PORT} ..."
 for i in $(seq 1 15); do
   curl -sf "http://127.0.0.1:${CDP_PORT}/json/version" > /dev/null 2>&1 && break
-  [[ "$i" == "15" ]] && die "chromium-cdp did not come up after 30s"
+  [[ "$i" == "15" ]] && die "chromium-display did not come up after 30s"
   sleep 2
 done
-pass "chromium-cdp"
+pass "chromium-display"
 
+log "Restarting novnc ..."
+run systemctl restart novnc
+for i in $(seq 1 10); do
+  curl -sf "http://127.0.0.1:${NOVNC_PORT}/" > /dev/null 2>&1 && break
+  [[ "$i" == "10" ]] && die "novnc did not pass health check"
+  sleep 2
+done
+pass "novnc"
+
+# ─── Restart API services ─────────────────────────────────────────────────────
 log "Restarting browser-worker ..."
 run systemctl restart browser-worker
 for i in $(seq 1 10); do
@@ -133,19 +145,10 @@ for i in $(seq 1 10); do
 done
 pass "searcher-mcp"
 
-log "Restarting cdp-gateway ..."
-run systemctl restart cdp-gateway
-for i in $(seq 1 10); do
-  curl -sf "http://127.0.0.1:${GATEWAY_PORT}/login" > /dev/null 2>&1 && break
-  [[ "$i" == "10" ]] && die "cdp-gateway did not pass health check"
-  sleep 2
-done
-pass "cdp-gateway"
-
 # ─── Summary ──────────────────────────────────────────────────────────────────
 echo ""
 log "=== Update complete ==="
 log "  ${OLD_VERSION} → ${NEW_VERSION}"
 echo ""
-systemctl is-active chromium-cdp browser-worker searcher-mcp cdp-gateway 2>/dev/null | \
-  paste - - - - | awk '{printf "  %-20s %-20s %-20s %-20s\n", "chromium-cdp:"$1, "browser-worker:"$2, "searcher-mcp:"$3, "cdp-gateway:"$4}'
+systemctl is-active xvfb x11vnc chromium-display novnc browser-worker searcher-mcp 2>/dev/null | \
+  paste - - - - - - | awk '{printf "  xvfb:%s  x11vnc:%s  chromium:%s  novnc:%s  browser-worker:%s  searcher-mcp:%s\n",$1,$2,$3,$4,$5,$6}'

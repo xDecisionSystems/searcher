@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # proxmox_deploy.sh
 #
-# Creates a single Proxmox LXC and deploys all four services:
-#   - searcher-mcp    FastAPI scholar search API          port 8000
-#   - browser-worker  FastAPI browser-download API        port 8010
-#   - chromium-cdp    Persistent Chromium CDP instance    port 9222
+# Creates a single Proxmox LXC and deploys all services:
+#   - searcher-mcp      FastAPI scholar search API        port 8000
+#   - browser-worker    FastAPI browser-download API      port 8010
+#   - xvfb              Virtual display (Xvfb :99)
+#   - x11vnc            VNC server on the virtual display port 5900
+#   - chromium-display  Chromium browser with GUI + CDP   port 9222 (localhost)
+#   - novnc             Browser-based VNC client          port 6080
 #
 # Requirements (local machine):
 #   - SSH access to the Proxmox host as root (or a user with pct privileges)
@@ -46,7 +49,7 @@ LXC_HOSTNAME=""  # resolved after prompts
 SEARCHER_PORT=8000
 WORKER_PORT=8010
 CDP_PORT=9222
-GATEWAY_PORT=8020
+NOVNC_PORT=6080
 MEMORY=1536
 SWAP=512
 CORES=2
@@ -296,10 +299,12 @@ echo ""
 echo "  Shared env    : ${SHARED_ENV_FILE:-(repo .env.example for each service)}"
 echo ""
 echo "  Services to install:"
-echo "    searcher-mcp    port ${SEARCHER_PORT}"
-echo "    browser-worker  port ${WORKER_PORT}"
-echo "    chromium-cdp    port ${CDP_PORT} (localhost only)"
-echo "    cdp-gateway     port ${GATEWAY_PORT} (login page + CDP proxy)"
+echo "    searcher-mcp       port ${SEARCHER_PORT}"
+echo "    browser-worker     port ${WORKER_PORT}"
+echo "    xvfb               virtual display :99"
+echo "    chromium-display   port ${CDP_PORT} (localhost CDP) + GUI on :99"
+echo "    x11vnc             VNC on port 5900"
+echo "    novnc              browser VNC client port ${NOVNC_PORT}"
 echo ""
 if [[ "$DRY_RUN" == "1" ]]; then
   echo "  *** DRY RUN — no changes will be made ***"
@@ -437,32 +442,57 @@ lxc_exec "$VMID" "
   .venv/bin/python -m playwright install chromium 2>&1 | tail -5
 "
 
-# ─── Install chromium-cdp ─────────────────────────────────────────────────────
-log "Installing chromium-cdp service ..."
+# ─── Install display stack (Xvfb + Chromium GUI + x11vnc + noVNC) ────────────
+log "Installing display and VNC packages ..."
+lxc_exec "$VMID" "
+  DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+    xvfb x11vnc novnc websockify xauth dbus-x11
+"
+
+log "Installing display/VNC/noVNC systemd services ..."
 lxc_exec "$VMID" "
   mkdir -p /opt/repo/browser_worker/chromium-profile
-  cp /opt/repo/browser_worker/deploy/chromium-cdp.service /etc/systemd/system/chromium-cdp.service
+
+  cp /opt/repo/browser_worker/deploy/xvfb.service            /etc/systemd/system/xvfb.service
+  cp /opt/repo/browser_worker/deploy/x11vnc.service          /etc/systemd/system/x11vnc.service
+  cp /opt/repo/browser_worker/deploy/chromium-display.service /etc/systemd/system/chromium-display.service
+  cp /opt/repo/browser_worker/deploy/novnc.service           /etc/systemd/system/novnc.service
+
   systemctl daemon-reload
-  systemctl enable chromium-cdp
-  systemctl start chromium-cdp
+  systemctl enable xvfb x11vnc chromium-display novnc
+  systemctl start xvfb
+  sleep 2
+  systemctl start x11vnc
+  sleep 1
+  systemctl start chromium-display
+  sleep 3
+  systemctl start novnc
 "
+
 log "Waiting for Chromium CDP on port ${CDP_PORT} ..."
 lxc_exec "$VMID" "
-  for i in \$(seq 1 12); do
+  for i in \$(seq 1 15); do
     curl -sf http://127.0.0.1:${CDP_PORT}/json/version > /dev/null && exit 0
     sleep 2
   done
-  echo 'chromium-cdp did not start in time'; exit 1
+  echo 'chromium-display did not start in time'; exit 1
 "
-log "chromium-cdp PASSED."
+log "chromium-display PASSED."
 
-# ─── Wire CDP URL into browser_worker env and start it ───────────────────────
+log "Waiting for noVNC on port ${NOVNC_PORT} ..."
+lxc_exec "$VMID" "
+  for i in \$(seq 1 10); do
+    curl -sf http://127.0.0.1:${NOVNC_PORT}/ > /dev/null && exit 0
+    sleep 2
+  done
+  echo 'noVNC did not start in time'; exit 1
+"
+log "noVNC PASSED."
+
+# ─── Start browser-worker ─────────────────────────────────────────────────────
 log "Configuring and starting browser-worker ..."
 lxc_exec "$VMID" "
   ln -sf /opt/repo/.env /opt/repo/browser_worker/.env
-  sed -i 's|^BROWSER_WORKER_CDP_URL=.*|BROWSER_WORKER_CDP_URL=http://127.0.0.1:${GATEWAY_PORT}|' /opt/repo/.env
-  grep -q 'BROWSER_WORKER_CDP_URL' /opt/repo/.env || \
-    echo 'BROWSER_WORKER_CDP_URL=http://127.0.0.1:${GATEWAY_PORT}' >> /opt/repo/.env
   cp /opt/repo/browser_worker/deploy/browser-worker.service /etc/systemd/system/browser-worker.service
   systemctl daemon-reload
   systemctl enable browser-worker
@@ -472,29 +502,6 @@ log "Waiting for browser-worker ..."
 lxc_exec "$VMID" "sleep 4"
 lxc_exec "$VMID" "curl -sf http://127.0.0.1:${WORKER_PORT}/health || { echo 'browser-worker health check failed'; exit 1; }"
 log "browser-worker PASSED."
-
-# ─── Install cdp_gateway ──────────────────────────────────────────────────────
-log "Installing cdp_gateway ..."
-lxc_exec "$VMID" "
-  cd /opt/repo/cdp_gateway
-  python3 -m venv .venv
-  .venv/bin/python -m pip install --quiet --upgrade pip
-  .venv/bin/python -m pip install --quiet -r requirements.txt
-  ln -sf /opt/repo/.env /opt/repo/cdp_gateway/.env
-  cp /opt/repo/cdp_gateway/deploy/cdp-gateway.service /etc/systemd/system/cdp-gateway.service
-  systemctl daemon-reload
-  systemctl enable cdp-gateway
-  systemctl start cdp-gateway
-"
-log "Waiting for cdp-gateway ..."
-lxc_exec "$VMID" "
-  for i in \$(seq 1 15); do
-    curl -sf http://127.0.0.1:${GATEWAY_PORT}/login > /dev/null && exit 0
-    sleep 2
-  done
-  echo 'cdp-gateway health check failed'; exit 1
-"
-log "cdp-gateway PASSED."
 
 # ─── Summary ──────────────────────────────────────────────────────────────────
 log ""
@@ -507,24 +514,20 @@ LXC_ACTUAL_IP="$(ssh_run "$PROXMOX_HOST" \
 echo "  searcher-mcp    http://${LXC_ACTUAL_IP}:${SEARCHER_PORT}/health"
 echo "  searcher docs   http://${LXC_ACTUAL_IP}:${SEARCHER_PORT}/docs"
 echo "  browser-worker  http://${LXC_ACTUAL_IP}:${WORKER_PORT}/health"
-echo "  cdp-gateway     http://${LXC_ACTUAL_IP}:${GATEWAY_PORT}/login"
-echo "  chromium-cdp    port ${CDP_PORT} (localhost inside LXC only)"
+echo "  noVNC           http://${LXC_ACTUAL_IP}:${NOVNC_PORT}/vnc.html"
 echo ""
 echo "  Next steps:"
 if [[ -z "$SHARED_ENV_FILE" ]]; then
-  echo "    1. Add API keys to /opt/repo/searcher/.env and /opt/repo/browser_worker/.env"
-  echo "       on VMID ${VMID}, then run: pct exec ${VMID} -- bash /opt/repo/deploy/restart.sh"
+  echo "    1. Add API keys to /opt/repo/.env on VMID ${VMID},"
+  echo "       then: pct exec ${VMID} -- bash /opt/repo/deploy/restart.sh"
 else
-  echo "    1. Shared env uploaded from ${SHARED_ENV_FILE} — all services are ready."
+  echo "    1. Shared env uploaded from ${SHARED_ENV_FILE} — API keys are set."
 fi
 echo ""
 echo "    2. To log into publisher portals (ScienceDirect, IEEE, etc.):"
-echo "       a. Open http://${LXC_ACTUAL_IP}:${GATEWAY_PORT}/login"
-echo "          Enter your CDP_LOGIN_KEY and select a session duration."
-echo "       b. In Chrome/Edge go to: chrome://inspect"
-echo "          Click 'Configure', add: ${LXC_ACTUAL_IP}:${GATEWAY_PORT}"
-echo "          Click 'inspect' on the remote target and log in to the portal."
-echo "       c. Session saves to /opt/repo/browser_worker/chromium-profile — persists across restarts."
+echo "       Open http://${LXC_ACTUAL_IP}:${NOVNC_PORT}/vnc.html"
+echo "       Enter your VNC password, then log in to the portal in the browser."
+echo "       Session saves to /opt/repo/browser_worker/chromium-profile — persists across restarts."
 
 # ─── Optional Tailscale install ───────────────────────────────────────────────
 echo ""

@@ -1,12 +1,13 @@
 [Unit]
-Description=Chromium CDP Remote Debugging Service
-After=network.target
+Description=Chromium Browser with Display and CDP
+After=xvfb.service
+Requires=xvfb.service
 
 [Service]
 Type=simple
 User=root
+Environment=DISPLAY=:99
 ExecStart=/usr/bin/chromium \
-    --headless=new \
     --no-sandbox \
     --disable-gpu \
     --remote-debugging-port=9222 \
@@ -14,7 +15,8 @@ ExecStart=/usr/bin/chromium \
     --user-data-dir=/opt/repo/browser_worker/chromium-profile \
     --disable-dev-shm-usage \
     --no-first-run \
-    --no-default-browser-check
+    --no-default-browser-check \
+    --window-size=1280,800
 Restart=always
 RestartSec=5
 

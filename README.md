@@ -46,8 +46,10 @@ All three services run in a single Proxmox LXC.
 |---------|------|-------------|
 | `searcher-mcp` | 8000 | Scholar search FastAPI |
 | `browser-worker` | 8010 | Browser-download FastAPI |
-| `cdp-gateway` | 8020 | Authenticated CDP login page + WebSocket proxy |
-| `chromium-cdp` | 9222 (localhost only) | Persistent Chromium instance |
+| `novnc` | 6080 | Browser-based remote desktop (password protected) |
+| `chromium-display` | 9222 (localhost) | Chromium with GUI on virtual display |
+| `x11vnc` | 5900 (localhost) | VNC server on virtual display |
+| `xvfb` | — | Virtual display :99 |
 
 Deployed code lives at `/opt/repo/` inside the LXC (a git clone of this repo).
 A single shared `/opt/repo/.env` covers all services — symlinked from each service directory.
@@ -72,9 +74,7 @@ pct exec <vmid> -- bash /opt/repo/deploy/restart.sh
 
 ### Log into publisher portals (ScienceDirect, IEEE, etc.)
 
-1. Open `http://<lxc-ip>:8020/login` — enter your `CDP_LOGIN_KEY` and select a session duration
-2. Open Chrome/Edge and go to `chrome://inspect`
-3. Click **Configure**, add `<lxc-ip>:8020`
-4. Click **inspect** on the remote target and log in to the portal
-5. Session is saved to `/opt/repo/browser_worker/chromium-profile` — persists across restarts
-6. To revoke access, return to the login page and select **Stop**
+1. Open `http://<lxc-ip>:6080/vnc.html` in your browser
+2. Enter your `VNC_PASSWORD`
+3. A full Chromium browser appears — log in to the portal normally
+4. Session is saved to `/opt/repo/browser_worker/chromium-profile` — persists across restarts

@@ -152,9 +152,6 @@ activemq-data/
 .env.*
 !.env.example
 .envrc
-
-# CDP gateway password hash — created at runtime, never committed
-cdp_gateway/password.hash
 .venv
 env/
 venv/

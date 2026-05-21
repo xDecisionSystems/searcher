@@ -4,11 +4,11 @@ Repository instructions for Claude-based programming agents.
 
 ## Repository Structure
 
-This is a monorepo with four services deployed together in a single Proxmox LXC:
+This is a monorepo with two FastAPI services and a browser stack deployed together in a single Proxmox LXC:
 
 - `searcher/` — FastAPI scholarly search and web content service (port 8000)
 - `browser_worker/` — FastAPI Playwright browser-automation download service (port 8010)
-- `chromium-cdp` — Persistent Chromium instance managed by `browser_worker/deploy/chromium-cdp.service` (port 9222)
+- Browser stack managed by `browser_worker/deploy/`: Xvfb + Chromium GUI + x11vnc + noVNC (port 6080)
 
 Each service has its own `requirements.txt` and `deploy/` folder. There is a single shared `.env.example` and `VERSION.md` at the repo root.
 
@@ -47,8 +47,6 @@ Each service has its own `requirements.txt` and `deploy/` folder. There is a sin
 - Run browser_worker locally: `cd browser_worker && ../.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8010`
 - Syntax check searcher: `.venv/bin/python -m py_compile searcher/app.py searcher/searcher_mcp/*.py searcher/searcher_mcp/services/*.py`
 - Syntax check browser_worker: `.venv/bin/python -m py_compile browser_worker/app.py browser_worker/browser_worker/*.py browser_worker/browser_worker/services/*.py`
-- Syntax check cdp_gateway: `.venv/bin/python -m py_compile cdp_gateway/app.py cdp_gateway/cdp_gateway/*.py`
-- Run cdp_gateway locally: `cd cdp_gateway && ../.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8020`
 - For standalone scripts, prefer flat top-level execution flow and do not add `main()`.
 
 ## 3. Version Update Rule

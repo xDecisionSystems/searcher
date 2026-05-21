@@ -37,5 +37,4 @@ SESSION_DIR: Path | None = Path(_session_dir_raw) if _session_dir_raw else None
 
 # URL of a remote Chromium CDP endpoint (e.g. http://127.0.0.1:9222).
 # When set, browser_worker connects to that instance instead of launching its own.
-# Points to cdp_gateway by default; cdp_gateway proxies to chromium-cdp internally.
-CDP_URL: str | None = os.getenv("BROWSER_WORKER_CDP_URL", "http://127.0.0.1:8020")
+CDP_URL: str | None = os.getenv("BROWSER_WORKER_CDP_URL", "http://127.0.0.1:9222")
