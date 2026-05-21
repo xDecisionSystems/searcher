@@ -1,4 +1,5 @@
 import re
+import time
 import uuid
 from pathlib import Path
 from typing import Any
@@ -133,6 +134,139 @@ def _get_browser_context(playwright: Any) -> Any:
 
     browser = playwright.chromium.launch(headless=HEADLESS)
     return browser.new_context(user_agent=APP_USER_AGENT)
+
+
+def _is_login_page(html: str, url: str) -> bool:
+    """Heuristic: returns True if the page looks like a login wall."""
+    lower = html.lower()
+    login_signals = [
+        "sign in", "log in", "login", "please sign", "access denied",
+        "institutional access", "subscribe", "purchase access",
+        "you need to", "register to", "create account",
+    ]
+    # Also check if we've been redirected to an auth domain
+    auth_domains = ["login.", "accounts.", "auth.", "shibboleth.", "idp."]
+    from urllib.parse import urlparse as _up
+    domain = _up(url).netloc.lower()
+    if any(d in domain for d in auth_domains):
+        return True
+    matched = sum(1 for s in login_signals if s in lower)
+    return matched >= 2
+
+
+def download_paper_authenticated(
+    url: str,
+    filename: str | None = None,
+    poll_interval: int = 30,
+    max_wait_minutes: int = 10,
+) -> dict[str, Any]:
+    """Open URL in the noVNC Chromium, detect if login is required, and poll
+    until the user has logged in and the paper becomes accessible.
+
+    Args:
+        url: Paper page URL.
+        filename: Optional output filename.
+        poll_interval: Seconds between retry attempts when login is required.
+        max_wait_minutes: Maximum total minutes to wait for login.
+    """
+    _validate_http_url(url)
+    DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    base_name = filename.strip() if filename else _safe_filename(url)
+    if not base_name.lower().endswith(".pdf"):
+        base_name = f"{base_name}.pdf"
+    base_name = re.sub(r"[^A-Za-z0-9._-]", "_", base_name)[:220]
+    output_path = _unique_output_path(DOWNLOAD_DIR, base_name)
+
+    max_attempts = max(1, (max_wait_minutes * 60) // poll_interval)
+
+    for attempt in range(max_attempts):
+        try:
+            with sync_playwright() as playwright:
+                ctx = _get_browser_context(playwright)
+                page = ctx.new_page()
+
+                response = page.goto(url, wait_until="domcontentloaded", timeout=int(REQUEST_TIMEOUT * 1000))
+                content_type = ""
+                if response is not None:
+                    content_type = (response.header_value("content-type") or "").lower()
+
+                # Direct PDF response
+                if "pdf" in content_type:
+                    final_url = page.url
+                    page.close()
+                    size = _stream_to_disk(final_url, output_path)
+                    return {
+                        "path": str(output_path),
+                        "filename": output_path.name,
+                        "size_bytes": size,
+                        "source_url": final_url,
+                        "method": "authenticated_direct",
+                        "attempts": attempt + 1,
+                    }
+
+                html = page.content()
+                current_url = page.url
+                page.close()
+
+            # Check if login wall
+            if _is_login_page(html, current_url):
+                if attempt == 0:
+                    # First attempt — let the page stay open in noVNC for the user
+                    # Re-open so user can see it in the browser
+                    with sync_playwright() as playwright:
+                        ctx = _get_browser_context(playwright)
+                        p = ctx.new_page()
+                        p.goto(url, wait_until="domcontentloaded", timeout=int(REQUEST_TIMEOUT * 1000))
+                        # Don't close — leave it open in noVNC
+
+                if attempt < max_attempts - 1:
+                    time.sleep(poll_interval)
+                    continue
+                else:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=(
+                            f"Login required. Page was opened in the remote browser. "
+                            f"Please log in via noVNC and try again. "
+                            f"Waited {max_wait_minutes} minutes."
+                        ),
+                    )
+
+            # No login wall — try to find PDF link
+            pdf_link = _extract_pdf_link(current_url, html)
+            if not pdf_link:
+                if attempt < max_attempts - 1:
+                    time.sleep(poll_interval)
+                    continue
+                raise HTTPException(
+                    status_code=404,
+                    detail="No PDF link found after waiting. Try logging in via noVNC.",
+                )
+
+            size = _stream_to_disk(pdf_link, output_path)
+            return {
+                "path": str(output_path),
+                "filename": output_path.name,
+                "size_bytes": size,
+                "source_url": pdf_link,
+                "method": "authenticated_pdf_link",
+                "attempts": attempt + 1,
+            }
+
+        except HTTPException:
+            if output_path.exists() and output_path.stat().st_size == 0:
+                output_path.unlink(missing_ok=True)
+            raise
+        except PlaywrightError as exc:
+            if attempt < max_attempts - 1:
+                time.sleep(poll_interval)
+                continue
+            if output_path.exists():
+                output_path.unlink(missing_ok=True)
+            raise HTTPException(status_code=502, detail=f"Browser automation failed: {exc}") from exc
+
+    raise HTTPException(status_code=408, detail="Timed out waiting for authenticated access.")
 
 
 def download_paper_via_browser(url: str, filename: str | None = None) -> dict[str, Any]:

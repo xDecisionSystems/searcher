@@ -54,6 +54,33 @@ All three services run in a single Proxmox LXC.
 Deployed code lives at `/opt/repo/` inside the LXC (a git clone of this repo).
 A single shared `/opt/repo/.env` covers all services — symlinked from each service directory.
 
+### Using as an MCP server with Claude Code
+
+The searcher service exposes all its tools as an MCP server at `/mcp`.
+
+Add to your Claude Code MCP settings (`~/.claude/settings.json` or via `/config`):
+
+```json
+{
+  "mcpServers": {
+    "searcher": {
+      "type": "http",
+      "url": "https://searcher.xds-lab.com/mcp"
+    }
+  }
+}
+```
+
+A ready-to-use config file is at [mcp_config.json](mcp_config.json) — update the IP then run:
+
+```bash
+claude mcp add --config mcp_config.json
+```
+
+Available MCP tools mirror the API endpoints: `search_scholar`, `search_google_scholar`, `search_ieeexplore`, `search_web_of_science`, `search_scopus`, `fetch_page`, `review_page`, `download_pdf`.
+
+---
+
 ### Quick deploy
 
 ```bash

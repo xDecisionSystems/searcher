@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "searcher": {
+      "type": "http",
+      "url": "https://searcher.xds-lab.com/mcp"
+    }
+  }
+}
