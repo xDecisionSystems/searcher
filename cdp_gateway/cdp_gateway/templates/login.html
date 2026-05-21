@@ -180,7 +180,7 @@
     <hr class="divider">
     <div class="result">
       <h2>&#x2713; Token issued</h2>
-      <div class="token-box" id="token-value">{{ token }}</div>
+      <div class="token-box" id="token-value" style="white-space:nowrap;overflow-x:auto;">{{ token }}</div>
       <button class="copy-btn" onclick="copyToken()">Copy token</button>
 
       <!-- Open URL form -->
@@ -207,7 +207,7 @@
     </div>
 
     <script>
-      const _token = document.getElementById("token-value").innerText.trim();
+      const _token = document.getElementById("token-value").innerText.replace(/\s+/g, "").trim();
 
       function copyToken() {
         navigator.clipboard.writeText(_token).then(() => {
