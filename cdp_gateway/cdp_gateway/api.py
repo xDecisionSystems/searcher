@@ -249,38 +249,36 @@ async def cdp_json_close(request: Request, target_id: str) -> Any:
 
 @app.api_route("/json/version", methods=["GET"])
 async def cdp_json_version(request: Request) -> Any:
-    token = _extract_token(request)
-    if not validate_token(token):
-        return JSONResponse({"error": "Access denied. Authenticate at /login."}, status_code=403)
     async with httpx.AsyncClient() as client:
         resp = await client.get(f"{_cdp_http_base()}/json/version")
-    data = resp.json()
-    gateway_host = request.headers.get("host", f"localhost:{GATEWAY_PORT}")
-    if isinstance(data, dict):
-        data = _rewrite_json_entry(data, token, gateway_host)
-    return JSONResponse(data, status_code=resp.status_code)
+    return JSONResponse(resp.json(), status_code=resp.status_code)
 
 
 @app.api_route("/json", methods=["GET"])
 @app.api_route("/json/list", methods=["GET"])
 async def cdp_json_list(request: Request) -> Any:
+    # Token required to get WebSocket URLs with embedded auth.
+    # Without a token, return the target list but omit webSocketDebuggerUrl
+    # so DevTools can see targets but cannot connect without authenticating.
     token = _extract_token(request)
-    if not validate_token(token):
-        return JSONResponse({"error": "Access denied. Authenticate at /login."}, status_code=403)
     async with httpx.AsyncClient() as client:
         resp = await client.get(f"{_cdp_http_base()}/json")
     gateway_host = request.headers.get("host", f"localhost:{GATEWAY_PORT}")
     data = resp.json()
     if isinstance(data, list):
-        data = [_rewrite_json_entry(e, token, gateway_host) for e in data]
+        if validate_token(token):
+            data = [_rewrite_json_entry(e, token, gateway_host) for e in data]
+        else:
+            # Strip WebSocket URLs — targets visible but not connectable
+            for entry in data:
+                if isinstance(entry, dict):
+                    entry.pop("webSocketDebuggerUrl", None)
+                    entry.pop("devtoolsFrontendUrl", None)
     return JSONResponse(data, status_code=resp.status_code)
 
 
 @app.api_route("/json/{path:path}", methods=["GET"])
 async def cdp_json_other(request: Request, path: str) -> Any:
-    token = _extract_token(request)
-    if not validate_token(token):
-        return JSONResponse({"error": "Access denied. Authenticate at /login."}, status_code=403)
     async with httpx.AsyncClient() as client:
         resp = await client.get(f"{_cdp_http_base()}/json/{path}")
     return JSONResponse(resp.json(), status_code=resp.status_code)
