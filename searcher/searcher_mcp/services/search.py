@@ -91,6 +91,54 @@ def _search_scholar_semantic(query: str, limit: int) -> dict[str, Any]:
     return {"total_records": payload.get("total"), "results": results}
 
 
+def _search_scholar_scholarly(query: str, limit: int) -> dict[str, Any]:
+    try:
+        from scholarly import scholarly as _scholarly  # noqa: PLC0415
+    except ImportError:
+        raise HTTPException(status_code=500, detail="scholarly package is not installed.")
+
+    results: list[dict[str, Any]] = []
+    try:
+        search_iter = _scholarly.search_pubs(query)
+        for _ in range(limit):
+            try:
+                item = next(search_iter)
+            except StopIteration:
+                break
+
+            bib = item.get("bib", {})
+            author_field = bib.get("author", "")
+            if isinstance(author_field, str):
+                authors = [a.strip() for a in author_field.split(" and ") if a.strip()]
+            elif isinstance(author_field, list):
+                authors = [str(a).strip() for a in author_field if str(a).strip()]
+            else:
+                authors = []
+
+            year_raw = bib.get("pub_year", "")
+            try:
+                pub_year = int(str(year_raw).strip())
+            except (TypeError, ValueError):
+                pub_year = None
+
+            results.append(
+                {
+                    "title": bib.get("title", ""),
+                    "url": item.get("pub_url", "") or item.get("eprint_url", ""),
+                    "snippet": bib.get("abstract", ""),
+                    "publication_year": pub_year,
+                    "authors": authors,
+                    "source": bib.get("venue", ""),
+                    "citation_count": item.get("num_citations"),
+                    "pdf_link": item.get("eprint_url", ""),
+                }
+            )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"scholarly search failed: {exc}") from exc
+
+    return {"total_records": None, "results": results}
+
+
 def _search_scholar_serpapi(query: str, limit: int) -> dict[str, Any]:
     if not SERPAPI_API_KEY:
         raise HTTPException(status_code=400, detail="SERPAPI_API_KEY is not configured.")
@@ -304,6 +352,8 @@ def search_scholar(
 
     if provider == "semantic_scholar":
         data = _search_scholar_semantic(query=query, limit=limit)
+    elif provider == "google_scholar_scholarly":
+        data = _search_scholar_scholarly(query=query, limit=limit)
     elif provider == "google_scholar_serpapi":
         data = _search_scholar_serpapi(query=query, limit=limit)
     elif provider == "ieeexplore":
@@ -316,8 +366,8 @@ def search_scholar(
         raise HTTPException(
             status_code=400,
             detail=(
-                "Invalid provider. Use auto, semantic_scholar, google_scholar_serpapi, "
-                "ieeexplore, web_of_science, or scopus."
+                "Invalid provider. Use auto, semantic_scholar, google_scholar_scholarly, "
+                "google_scholar_serpapi, ieeexplore, web_of_science, or scopus."
             ),
         )
 
@@ -325,8 +375,8 @@ def search_scholar(
 
 
 def search_google_scholar(query: str, limit: int) -> dict[str, Any]:
-    data = _search_scholar_serpapi(query=query, limit=limit)
-    return {"provider": "google_scholar_serpapi", "query": query, **data}
+    data = _search_scholar_scholarly(query=query, limit=limit)
+    return {"provider": "google_scholar_scholarly", "query": query, **data}
 
 
 def search_ieeexplore(query: str, limit: int, start_record: int) -> dict[str, Any]:
