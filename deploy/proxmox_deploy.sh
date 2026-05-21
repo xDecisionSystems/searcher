@@ -4,7 +4,7 @@
 # Creates a single Proxmox LXC and deploys all three services:
 #   - searcher-mcp    FastAPI scholar search API          port 8000
 #   - browser-worker  FastAPI browser-download API        port 8010
-#   - chromium-cdp    Persistent Chromium CDP instance    port 9222 (localhost only)
+#   - chromium-cdp    Persistent Chromium CDP instance    port 9222
 #
 # Requirements (local machine):
 #   - SSH access to the Proxmox host as root (or a user with pct privileges)
@@ -150,10 +150,15 @@ else
 fi
 log "Hostname: ${LXC_HOSTNAME}"
 
-# ─── Resolve default VMID ─────────────────────────────────────────────────────
-# Find the next available VMID above 100 unless one was explicitly passed.
-if [[ "$VMID" == "200" ]]; then
-  log "Finding next available VMID ..."
+# ─── Resolve VMID from already-fetched stack list ─────────────────────────────
+# Look up the chosen hostname in EXISTING_STACKS (no second SSH call needed).
+FOUND_VMID="$(echo "$EXISTING_STACKS" | awk -v h="$LXC_HOSTNAME" '$2==h{print $1}')"
+
+if [[ -n "$FOUND_VMID" ]]; then
+  log "Found existing '${LXC_HOSTNAME}' at VMID ${FOUND_VMID} — will destroy and redeploy."
+  VMID="$FOUND_VMID"
+else
+  log "No existing '${LXC_HOSTNAME}' — finding next available VMID ..."
   NEXT_VMID="$(ssh_run "$PROXMOX_HOST" \
     "pvesh get /cluster/nextid 2>/dev/null || \
      { used=\$(pct list | awk 'NR>1{print \$1}' | sort -n); \
@@ -161,8 +166,10 @@ if [[ "$VMID" == "200" ]]; then
     | tr -d '[:space:]"' || echo "")"
   if [[ "$NEXT_VMID" =~ ^[0-9]+$ ]]; then
     VMID="$NEXT_VMID"
-    log "Next available VMID: ${VMID}"
   fi
+  read -rp "VMID for new container [${VMID}]: " VMID_INPUT
+  VMID="${VMID_INPUT:-${VMID}}"
+  [[ "$VMID" =~ ^[0-9]+$ ]] || die "VMID must be a number."
 fi
 
 # ─── Select storage ───────────────────────────────────────────────────────────
@@ -192,27 +199,6 @@ fi
 if [[ "$LXC_IP" != "dhcp" && -z "$GATEWAY" ]]; then
   read -rp "Gateway IP (required for static IP): " GATEWAY
   [[ -z "$GATEWAY" ]] && die "GATEWAY is required when using a static IP."
-fi
-
-# ─── Resolve VMID ─────────────────────────────────────────────────────────────
-# Search all containers on the Proxmox host for one with hostname = LXC_HOSTNAME.
-# If found, use its VMID (regardless of what --vmid was passed or defaulted to).
-# If not found, prompt for the VMID to use for the new container.
-log "Searching for existing '${LXC_HOSTNAME}' container on ${PROXMOX_HOST} ..."
-FOUND_VMID="$(ssh_run "$PROXMOX_HOST" \
-  "pct list | awk 'NR>1 {print \$1}' | while read id; do
-     h=\$(pct config \$id 2>/dev/null | awk -F': ' '/^hostname:/{print \$2}')
-     [ \"\$h\" = '${LXC_HOSTNAME}' ] && echo \$id && break
-   done" || true)"
-
-if [[ -n "$FOUND_VMID" ]]; then
-  log "Found existing '${LXC_HOSTNAME}' at VMID ${FOUND_VMID}."
-  VMID="$FOUND_VMID"
-else
-  log "No existing '${LXC_HOSTNAME}' container found."
-  read -rp "VMID for new container [${VMID}]: " VMID_INPUT
-  VMID="${VMID_INPUT:-${VMID}}"
-  [[ "$VMID" =~ ^[0-9]+$ ]] || die "VMID must be a number."
 fi
 
 # ─── Detect or select LXC template ───────────────────────────────────────────
@@ -311,13 +297,14 @@ echo ""
 echo "  Services to install:"
 echo "    searcher-mcp    port ${SEARCHER_PORT}"
 echo "    browser-worker  port ${WORKER_PORT}"
-echo "    chromium-cdp    port ${CDP_PORT} (localhost only)"
+echo "    chromium-cdp    port ${CDP_PORT}"
 echo ""
 if [[ "$DRY_RUN" == "1" ]]; then
   echo "  *** DRY RUN — no changes will be made ***"
   echo ""
 fi
-read -rp "Proceed? [y/N] " CONFIRM
+read -rp "Proceed? [Y/n] " CONFIRM
+CONFIRM="${CONFIRM:-y}"
 [[ "${CONFIRM,,}" == "y" ]] || { log "Aborted."; exit 0; }
 
 # ─── Create LXC ───────────────────────────────────────────────────────────────
@@ -484,7 +471,7 @@ LXC_ACTUAL_IP="$(ssh_run "$PROXMOX_HOST" \
 echo "  searcher-mcp    http://${LXC_ACTUAL_IP}:${SEARCHER_PORT}/health"
 echo "  searcher docs   http://${LXC_ACTUAL_IP}:${SEARCHER_PORT}/docs"
 echo "  browser-worker  http://${LXC_ACTUAL_IP}:${WORKER_PORT}/health"
-echo "  chromium-cdp    port ${CDP_PORT} (localhost inside LXC only)"
+echo "  chromium-cdp    http://${LXC_ACTUAL_IP}:${CDP_PORT}/json/version"
 echo ""
 echo "  Next steps:"
 if [[ -z "$SHARED_ENV_FILE" ]]; then
@@ -495,9 +482,7 @@ else
 fi
 echo ""
 echo "    2. To log into publisher portals (ScienceDirect, IEEE, etc.):"
-echo "       a. SSH port-forward the CDP port:"
-echo "            ssh -L 9222:127.0.0.1:${CDP_PORT} root@${LXC_ACTUAL_IP}"
-echo "       b. In Chrome/Edge go to: chrome://inspect"
-echo "          Click 'Configure', add: localhost:9222"
+echo "       a. In Chrome/Edge go to: chrome://inspect"
+echo "          Click 'Configure', add: ${LXC_ACTUAL_IP}:${CDP_PORT}"
 echo "          Click 'inspect' on the remote target and log in."
 echo "       c. Session saves to /opt/browser_worker/chromium-profile — persists across restarts."
