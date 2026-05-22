@@ -270,7 +270,11 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
 
             if _is_login_page(html, current_url):
                 # If the page state is broken (ERR_ABORTED), open a fresh tab so
-                # the user actually sees something in noVNC.
+                # the user actually sees something in noVNC. The tab must stay open
+                # after this function returns, so we do NOT close the context here.
+                # With CDP the context is the shared remote browser — exiting the
+                # sync_playwright() block disconnects our client but leaves the
+                # remote tab open.
                 if not html or html.strip() == "<html><body><p>login</p><p>sign in</p></body></html>":
                     try:
                         page.close()
@@ -282,7 +286,11 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
                         page.bring_to_front()
                     except PlaywrightError:
                         pass
-                return _login_required_response(url, current_url)
+                # Return inside the with-block so the playwright client is still
+                # connected when bring_to_front / goto complete, then disconnect.
+                login_response = _login_required_response(url, current_url)
+                # Don't close the context — the tab must remain open for the user.
+                return login_response
 
             page.close()
             _close_context_if_needed(ctx)
