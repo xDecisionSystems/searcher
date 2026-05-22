@@ -142,9 +142,13 @@ def _click_pdf_button(page: Any, out_path: Path) -> tuple[int, str] | None:
 
     ctx = page.context
     captured_pdf_url: list[str] = []
+    pages_before = set(id(p) for p in ctx.pages)
 
     def _sniff_pdf(route: Any, request: Any) -> None:
         url = request.url
+        if url.startswith("chrome") or url.startswith("about:"):
+            route.continue_()
+            return
         if "pdf" in url.lower() or url.lower().endswith(".pdf"):
             if url not in captured_pdf_url:
                 captured_pdf_url.append(url)
@@ -168,7 +172,12 @@ def _click_pdf_button(page: Any, out_path: Path) -> tuple[int, str] | None:
             download_obj = dl_info.value
     except PlaywrightError:
         try:
-            popup_page = popup_info.value
+            candidate = popup_info.value
+            # Only accept the popup if it genuinely appeared after our click.
+            if id(candidate) not in pages_before:
+                popup_page = candidate
+            else:
+                log_event("pdf_popup_stale", popup_url=candidate.url)
         except Exception:
             popup_page = None
 
@@ -182,6 +191,13 @@ def _click_pdf_button(page: Any, out_path: Path) -> tuple[int, str] | None:
         ctx.unroute("**/*", _sniff_pdf)
     except PlaywrightError:
         pass
+
+    # Filter chrome-extension URLs from sniffed candidates — these are the PDF
+    # viewer's own assets, not the actual document PDF.
+    captured_pdf_url[:] = [
+        u for u in captured_pdf_url
+        if not u.startswith("chrome") and not u.startswith("about:")
+    ]
 
     # Strategy 1: direct browser download event.
     if download_obj is not None:
@@ -321,7 +337,11 @@ def _navigate_for_analysis(page: Any, url: str) -> tuple[Any | None, str, str]:
     try:
         response = page.goto(url, wait_until="domcontentloaded", timeout=int(REQUEST_TIMEOUT * 1000))
     except PlaywrightError as exc:
-        if "ERR_ABORTED" not in str(exc):
+        err = str(exc)
+        if "Download is starting" in err:
+            # Direct PDF URL triggered an auto-download. Signal caller via sentinel.
+            return None, url, "__AUTO_DOWNLOAD__"
+        if "ERR_ABORTED" not in err:
             raise
         response = None
         aborted = True
@@ -495,6 +515,23 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
             http_status = response.status if response is not None else None
             log_event("page_loaded", requested_url=url, final_url=current_url,
                       http_status=http_status, content_type=content_type)
+
+            # Direct PDF URL triggered an auto-download in the browser — use the
+            # browser session to stream it rather than letting goto fail.
+            if html == "__AUTO_DOWNLOAD__":
+                log_event("auto_download_detected", url=url)
+                fetch_result = _fetch_pdf_with_browser(page, url, output_path)
+                if fetch_result is not None:
+                    size, src = fetch_result
+                    result = {
+                        "path": str(output_path),
+                        "filename": output_path.name,
+                        "size_bytes": size,
+                        "source_url": src,
+                        "method": "browser_auto_download",
+                    }
+                    log_event("download_success", **result)
+                    return result
 
             _dismiss_cookie_banners(page)
 
