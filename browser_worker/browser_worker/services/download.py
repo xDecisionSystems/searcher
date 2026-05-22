@@ -136,6 +136,15 @@ def _get_browser_context(playwright: Any) -> Any:
     return browser.new_context(user_agent=APP_USER_AGENT)
 
 
+def _close_context_if_needed(ctx: Any) -> None:
+    """Close context only for local launches; keep shared CDP context alive."""
+    from ..config import CDP_URL
+
+    if CDP_URL:
+        return
+    ctx.close()
+
+
 def _is_login_page(html: str, url: str) -> bool:
     """Heuristic: returns True if the page looks like a login wall."""
     lower = html.lower()
@@ -152,6 +161,23 @@ def _is_login_page(html: str, url: str) -> bool:
         return True
     matched = sum(1 for s in login_signals if s in lower)
     return matched >= 2
+
+
+def _login_required_response(requested_url: str, current_url: str) -> dict[str, Any]:
+    return {
+        "status": "login_required",
+        "requires_login": True,
+        "message": (
+            "Publisher login is required before this paper can be downloaded. "
+            "The page has been opened in the remote browser."
+        ),
+        "requested_url": requested_url,
+        "current_url": current_url,
+        "next_step": "Log in via noVNC, then retry the same download request.",
+        "user_prompt": "Please log in via noVNC. After you are logged in, reply Yes and retry this tool call.",
+        "retry_recommended": True,
+        "method": "interactive_login_required",
+    }
 
 
 def download_paper_authenticated(
@@ -294,7 +320,7 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
                 # Page response is directly a PDF — get the final URL and stream it
                 final_url = page.url
                 page.close()
-                ctx.close()
+                _close_context_if_needed(ctx)
                 size = _stream_to_disk(final_url, output_path)
                 return {
                     "path": str(output_path),
@@ -305,10 +331,15 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
                 }
 
             html = page.content()
-            page.close()
-            ctx.close()
+            current_url = page.url
+            if _is_login_page(html, current_url):
+                # Keep the page open in the shared remote browser for interactive login.
+                return _login_required_response(url, current_url)
 
-        pdf_link = _extract_pdf_link(url, html)
+            page.close()
+            _close_context_if_needed(ctx)
+
+        pdf_link = _extract_pdf_link(current_url, html)
         if not pdf_link:
             raise HTTPException(
                 status_code=404,

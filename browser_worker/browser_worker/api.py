@@ -11,8 +11,8 @@ app = FastAPI(
     title="Searcher Browser Worker",
     description=(
         "Browser-automation service for downloading academic papers from authenticated "
-        "publisher portals. Opens pages in a real Chromium browser — use "
-        "download_paper_authenticated for paywalled papers that require institutional login."
+        "publisher portals. Opens pages in a real Chromium browser and can prompt "
+        "interactive login through noVNC when needed."
     ),
     version=VERSION_NAME,
 )
@@ -37,6 +37,12 @@ def health() -> dict[str, str]:
 
 @app.post("/download_paper")
 def download_paper(request: DownloadRequest) -> dict[str, Any]:
+    """Attempt download immediately.
+
+    When a login wall is detected, returns a structured login_required response
+    so MCP agents can prompt the user to log in via noVNC and retry after
+    confirmation.
+    """
     return download_paper_via_browser(url=request.url, filename=request.filename)
 
 
@@ -62,8 +68,9 @@ mcp = FastApiMCP(
     name="Browser Worker MCP",
     description=(
         "Download academic papers from publisher portals using a real Chromium browser. "
-        "Use download_paper_authenticated for paywalled papers — it opens the page in the "
-        "remote browser so you can log in via noVNC, then downloads automatically."
+        "download_paper attempts immediate download; if login is required, it returns "
+        "login_required instructions so the agent can ask the user to log in via noVNC "
+        "and retry after the user confirms Yes."
     ),
     exclude_operations=["health"],
 )

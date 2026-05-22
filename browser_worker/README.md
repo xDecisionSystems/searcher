@@ -12,6 +12,7 @@ FastAPI service that drives a persistent Chromium browser to download papers fro
 
 - `GET /health`
 - `POST /download_paper`
+- `POST /download_paper_authenticated`
 
 `POST /download_paper` body:
 
@@ -21,6 +22,13 @@ FastAPI service that drives a persistent Chromium browser to download papers fro
   "filename": "optional-output-name.pdf"
 }
 ```
+
+Behavior:
+- Attempts download immediately.
+- If a login wall is detected, returns a structured `status=login_required` response with prompt text for agents to ask the user to log in via noVNC and retry after the user confirms Yes.
+- Keeps the login page open in the remote Chromium session when possible.
+
+`POST /download_paper_authenticated` is the long-polling variant that retries for `max_wait_minutes` while you complete login in noVNC.
 
 ## Deployment
 
