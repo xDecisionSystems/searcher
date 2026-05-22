@@ -300,8 +300,14 @@ def _show_url_in_novnc(ctx: Any, url: str) -> Any:
 
 
 def _is_login_page(html: str, url: str) -> bool:
-    """Heuristic: returns True if the page looks like a login wall."""
+    """Heuristic: returns True if the page looks like a login wall or bot challenge."""
+    # Cloudflare challenge: 403 with challenge token in URL
+    if "__cf_chl_rt_tk" in url or "cf-chl-bypass" in url:
+        return True
     lower = html.lower()
+    # Cloudflare challenge page signals
+    if "checking if the site connection is secure" in lower or "enable javascript and cookies" in lower:
+        return True
     login_signals = [
         "sign in", "log in", "login", "please sign", "access denied",
         "institutional access", "subscribe", "purchase access",
@@ -320,21 +326,31 @@ def _is_login_page(html: str, url: str) -> bool:
 def _login_required_response(requested_url: str, current_url: str) -> dict[str, Any]:
     from ..config import NOVNC_URL
 
-    return {
-        "status": "login_required",
-        "requires_login": True,
-        "message": (
-            "Login is required to download this paper. "
-            "The login page has been opened in the remote browser."
-        ),
-        "requested_url": requested_url,
-        "current_url": current_url,
-        "novnc_url": NOVNC_URL,
-        "user_prompt": (
+    cloudflare = "__cf_chl_rt_tk" in current_url
+    if cloudflare:
+        message = "A Cloudflare CAPTCHA challenge was detected. Complete it in the browser to establish a trusted session."
+        prompt = (
+            f"A Cloudflare CAPTCHA has appeared in the browser at {NOVNC_URL} — "
+            "please complete it there, then press **OK** to retry the download, "
+            "or press **Stop** to cancel."
+        )
+    else:
+        message = "Login is required to download this paper. The login page has been opened in the remote browser."
+        prompt = (
             f"A login page has been opened in the browser at {NOVNC_URL} — "
             "please log in there, then press **OK** to retry the download, "
             "or press **Stop** to cancel."
-        ),
+        )
+
+    return {
+        "status": "login_required",
+        "requires_login": True,
+        "cloudflare_challenge": cloudflare,
+        "message": message,
+        "requested_url": requested_url,
+        "current_url": current_url,
+        "novnc_url": NOVNC_URL,
+        "user_prompt": prompt,
         "retry_recommended": True,
         "method": "interactive_login_required",
     }
