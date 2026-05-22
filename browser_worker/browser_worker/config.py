@@ -38,3 +38,6 @@ SESSION_DIR: Path | None = Path(_session_dir_raw) if _session_dir_raw else None
 # URL of a remote Chromium CDP endpoint (e.g. http://127.0.0.1:9222).
 # When set, browser_worker connects to that instance instead of launching its own.
 CDP_URL: str | None = os.getenv("BROWSER_WORKER_CDP_URL", "http://127.0.0.1:9222")
+
+# Public noVNC URL shown to users when interactive login is required.
+NOVNC_URL: str = os.getenv("BROWSER_WORKER_NOVNC_URL", "http://localhost:6080/vnc.html")

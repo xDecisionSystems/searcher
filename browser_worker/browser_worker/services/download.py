@@ -169,12 +169,26 @@ def _navigate_for_analysis(page: Any, url: str) -> tuple[Any | None, str, str]:
     except PlaywrightError:
         html = ""
 
-    # ERR_ABORTED on EZproxy/auth redirects: treat the landing URL as a login wall
-    # even if page state is unusable, so callers can surface it to the user.
+    # ERR_ABORTED on EZproxy/auth redirects: the page is in a broken state.
+    # Signal login_required via synthetic HTML so callers detect it correctly.
     if aborted and not html:
-        html = f'<html><body><p>login</p><p>sign in</p></body></html>'
+        html = "<html><body><p>login</p><p>sign in</p></body></html>"
 
     return response, current_url, html
+
+
+def _open_url_in_novnc(ctx: Any, url: str) -> Any:
+    """Open url in a new tab and bring it to the front in noVNC. Returns the page."""
+    page = ctx.new_page()
+    try:
+        page.goto(url, wait_until="domcontentloaded", timeout=15000)
+    except PlaywrightError:
+        pass
+    try:
+        page.bring_to_front()
+    except PlaywrightError:
+        pass
+    return page
 
 
 def _is_login_page(html: str, url: str) -> bool:
@@ -196,18 +210,21 @@ def _is_login_page(html: str, url: str) -> bool:
 
 
 def _login_required_response(requested_url: str, current_url: str) -> dict[str, Any]:
+    from ..config import NOVNC_URL
+
     return {
         "status": "login_required",
         "requires_login": True,
         "message": (
             "Login is required to download this paper. "
-            "The page has been opened in the remote browser (noVNC)."
+            "The login page has been opened in the remote browser."
         ),
         "requested_url": requested_url,
         "current_url": current_url,
+        "novnc_url": NOVNC_URL,
         "user_prompt": (
-            "A login page has been opened in the browser. "
-            "Please log in via noVNC, then press **OK** to retry the download — "
+            f"A login page has been opened in the browser at {NOVNC_URL} — "
+            "please log in there, then press **OK** to retry the download, "
             "or press **Stop** to cancel."
         ),
         "retry_recommended": True,
@@ -252,7 +269,19 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
                 }
 
             if _is_login_page(html, current_url):
-                # Keep the page open in the shared remote browser for interactive login.
+                # If the page state is broken (ERR_ABORTED), open a fresh tab so
+                # the user actually sees something in noVNC.
+                if not html or html.strip() == "<html><body><p>login</p><p>sign in</p></body></html>":
+                    try:
+                        page.close()
+                    except PlaywrightError:
+                        pass
+                    _open_url_in_novnc(ctx, url)
+                else:
+                    try:
+                        page.bring_to_front()
+                    except PlaywrightError:
+                        pass
                 return _login_required_response(url, current_url)
 
             page.close()
