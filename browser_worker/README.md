@@ -26,6 +26,7 @@ FastAPI service that drives a persistent Chromium browser to download papers fro
 Behavior:
 - Attempts download immediately.
 - If a login wall is detected, returns a structured `status=login_required` response with prompt text for agents to ask the user to log in via noVNC and retry after the user confirms Yes.
+- Auth handoff navigation errors such as `ERR_ABORTED` are treated as recoverable when they land on login pages.
 - Keeps the login page open in the remote Chromium session when possible.
 
 `POST /download_paper_authenticated` is the long-polling variant that retries for `max_wait_minutes` while you complete login in noVNC.
