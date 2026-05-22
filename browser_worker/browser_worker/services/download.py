@@ -177,15 +177,21 @@ def _navigate_for_analysis(page: Any, url: str) -> tuple[Any | None, str, str]:
     return response, current_url, html
 
 
-def _open_url_in_novnc(ctx: Any, url: str) -> Any:
-    """Open url in a new tab and bring it to the front in noVNC. Returns the page."""
-    page = ctx.new_page()
+def _show_url_in_novnc(ctx: Any, url: str) -> Any:
+    """Navigate the active noVNC tab to url so the user sees it immediately.
+
+    Reuses the first existing page (already visible in noVNC) rather than
+    opening a background tab that bring_to_front may fail to surface.
+    Falls back to a new page if no existing pages are found.
+    """
+    pages = ctx.pages
+    page = pages[0] if pages else ctx.new_page()
     try:
-        page.goto(url, wait_until="domcontentloaded", timeout=15000)
+        page.bring_to_front()
     except PlaywrightError:
         pass
     try:
-        page.bring_to_front()
+        page.goto(url, wait_until="domcontentloaded", timeout=30000)
     except PlaywrightError:
         pass
     return page
@@ -247,7 +253,10 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
         with sync_playwright() as playwright:
             ctx = _get_browser_context(playwright)
 
-            page = ctx.new_page()
+            # Use the first existing page (already visible in noVNC) so every
+            # navigation is visible to the user without needing bring_to_front.
+            pages = ctx.pages
+            page = pages[0] if pages else ctx.new_page()
 
             response, current_url, html = _navigate_for_analysis(page, url)
             content_type = ""
@@ -255,9 +264,7 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
                 content_type = (response.header_value("content-type") or "").lower()
 
             if "pdf" in content_type:
-                # Page response is directly a PDF — get the final URL and stream it
                 final_url = page.url
-                page.close()
                 _close_context_if_needed(ctx)
                 size = _stream_to_disk(final_url, output_path)
                 return {
@@ -269,30 +276,14 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
                 }
 
             if _is_login_page(html, current_url):
-                # If the page state is broken (ERR_ABORTED), open a fresh tab so
-                # the user actually sees something in noVNC. The tab must stay open
-                # after this function returns, so we do NOT close the context here.
-                # With CDP the context is the shared remote browser — exiting the
-                # sync_playwright() block disconnects our client but leaves the
-                # remote tab open.
+                # If ERR_ABORTED left the page in a broken state, navigate it again
+                # via _show_url_in_novnc so the user sees the login page.
                 if not html or html.strip() == "<html><body><p>login</p><p>sign in</p></body></html>":
-                    try:
-                        page.close()
-                    except PlaywrightError:
-                        pass
-                    _open_url_in_novnc(ctx, url)
-                else:
-                    try:
-                        page.bring_to_front()
-                    except PlaywrightError:
-                        pass
-                # Return inside the with-block so the playwright client is still
-                # connected when bring_to_front / goto complete, then disconnect.
-                login_response = _login_required_response(url, current_url)
-                # Don't close the context — the tab must remain open for the user.
-                return login_response
+                    _show_url_in_novnc(ctx, url)
+                # Return inside the with-block while playwright is still connected.
+                # Do not close the context — leave the login page open for the user.
+                return _login_required_response(url, current_url)
 
-            page.close()
             _close_context_if_needed(ctx)
 
         pdf_link = _extract_pdf_link(current_url, html)
