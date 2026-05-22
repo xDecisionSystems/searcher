@@ -143,66 +143,102 @@ def _click_pdf_button(page: Any, out_path: Path) -> int | None:
 
     log_event("pdf_button_found", selector=matched_selector, page_url=page.url)
 
-    # First try: intercept a browser download event (direct download links).
-    try:
-        with page.expect_download(timeout=15000) as dl_info:
-            btn.click()
-        download = dl_info.value
-        download.save_as(str(out_path))
-        size = out_path.stat().st_size
-        log_event("pdf_download_event", selector=matched_selector, size_bytes=size, out_path=str(out_path))
-        return size
-    except PlaywrightError as exc:
-        log_event("pdf_download_event_failed", selector=matched_selector, error=str(exc))
+    # Try all three interception strategies simultaneously — whichever fires first wins.
+    # ScienceDirect opens PDF in a new tab (popup), so we must watch for that too.
+    ctx = page.context
 
-    # Second try: the click navigated to a new URL (e.g. ScienceDirect PDF viewer
-    # or a redirect that lands on a .pdf URL). Stream that URL directly.
+    popup_page = None
+    download_obj = None
+    nav_url = None
+
     try:
-        page.wait_for_load_state("domcontentloaded", timeout=15000)
+        with ctx.expect_page(timeout=15000) as popup_info:
+            with page.expect_download(timeout=15000) as dl_info:
+                btn.click()
+            # If we get here, a download fired before a popup.
+            download_obj = dl_info.value
+    except PlaywrightError:
+        # expect_download timed out — check if a popup appeared instead.
+        try:
+            popup_page = popup_info.value
+        except Exception:
+            popup_page = None
+
+    if download_obj is not None:
+        try:
+            download_obj.save_as(str(out_path))
+            size = out_path.stat().st_size
+            log_event("pdf_download_event", selector=matched_selector, size_bytes=size)
+            return size
+        except PlaywrightError as exc:
+            log_event("pdf_download_event_failed", selector=matched_selector, error=str(exc))
+
+    # Popup tab opened (e.g. ScienceDirect "View PDF" → new tab with PDF viewer).
+    if popup_page is not None:
+        try:
+            popup_page.wait_for_load_state("domcontentloaded", timeout=20000)
+        except PlaywrightError:
+            pass
+        popup_url = popup_page.url
+        log_event("pdf_popup_detected", popup_url=popup_url)
+        size = _fetch_pdf_with_browser(popup_page, popup_url, out_path)
+        try:
+            popup_page.close()
+        except PlaywrightError:
+            pass
+        if size is not None:
+            return size
+
+    # Last resort: check if the current page navigated to a PDF URL after the click.
+    try:
+        page.wait_for_load_state("domcontentloaded", timeout=10000)
     except PlaywrightError:
         pass
-
-    current = page.url
+    nav_url = page.url
     content_type = ""
     try:
-        resp = page.request.get(current, timeout=int(REQUEST_TIMEOUT * 1000))
+        resp = page.request.get(nav_url, timeout=int(REQUEST_TIMEOUT * 1000))
         content_type = (resp.headers.get("content-type") or "").lower()
-        log_event("pdf_nav_check", navigated_url=current, content_type=content_type)
+        log_event("pdf_nav_check", navigated_url=nav_url, content_type=content_type)
     except PlaywrightError as exc:
-        log_event("pdf_nav_check_failed", navigated_url=current, error=str(exc))
+        log_event("pdf_nav_check_failed", navigated_url=nav_url, error=str(exc))
 
-    if "pdf" in content_type or current.lower().endswith(".pdf"):
-        # Use the browser's own session (cookies, auth) to download the PDF
-        # so institutional/authenticated PDFs aren't blocked with 403.
-        try:
-            api_resp = page.request.get(current, timeout=int(REQUEST_TIMEOUT * 1000))
-            if api_resp.ok:
-                data = api_resp.body()
-                max_bytes = MAX_DOWNLOAD_MB * 1024 * 1024
-                if len(data) > max_bytes:
-                    raise HTTPException(
-                        status_code=413,
-                        detail=f"Download exceeded configured max size ({MAX_DOWNLOAD_MB} MB).",
-                    )
-                out_path.write_bytes(data)
-                log_event("pdf_browser_stream_ok", url=current, size_bytes=len(data))
-                return len(data)
-            else:
-                log_event("pdf_browser_stream_failed", url=current, http_status=api_resp.status)
-        except HTTPException:
-            raise
-        except Exception as exc:
-            log_event("pdf_browser_stream_error", url=current, error=str(exc))
-        # Fallback: plain streaming (works for open-access PDFs)
-        try:
-            size = _stream_to_disk(current, out_path)
-            log_event("pdf_plain_stream_ok", url=current, size_bytes=size)
+    if "pdf" in content_type or nav_url.lower().endswith(".pdf"):
+        size = _fetch_pdf_with_browser(page, nav_url, out_path)
+        if size is not None:
             return size
-        except Exception as exc:
-            log_event("pdf_plain_stream_error", url=current, error=str(exc))
-            return None
 
-    log_event("pdf_nav_not_pdf", navigated_url=current, content_type=content_type)
+    log_event("pdf_nav_not_pdf", navigated_url=nav_url, content_type=content_type)
+    return None
+
+
+def _fetch_pdf_with_browser(page: Any, url: str, out_path: Path) -> int | None:
+    """Download a PDF using the browser session (carries cookies/auth), fall back to requests."""
+    try:
+        api_resp = page.request.get(url, timeout=int(REQUEST_TIMEOUT * 1000))
+        if api_resp.ok:
+            data = api_resp.body()
+            max_bytes = MAX_DOWNLOAD_MB * 1024 * 1024
+            if len(data) > max_bytes:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"Download exceeded configured max size ({MAX_DOWNLOAD_MB} MB).",
+                )
+            out_path.write_bytes(data)
+            log_event("pdf_browser_stream_ok", url=url, size_bytes=len(data))
+            return len(data)
+        else:
+            log_event("pdf_browser_stream_failed", url=url, http_status=api_resp.status)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log_event("pdf_browser_stream_error", url=url, error=str(exc))
+    try:
+        size = _stream_to_disk(url, out_path)
+        log_event("pdf_plain_stream_ok", url=url, size_bytes=size)
+        return size
+    except Exception as exc:
+        log_event("pdf_plain_stream_error", url=url, error=str(exc))
     return None
 
 
