@@ -11,6 +11,7 @@ from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import sync_playwright
 
 from ..config import APP_USER_AGENT, DOWNLOAD_DIR, HEADLESS, MAX_DOWNLOAD_MB, REQUEST_TIMEOUT
+from ..logger import log_event
 
 
 def _validate_http_url(url: str) -> None:
@@ -107,14 +108,17 @@ def _click_pdf_button(page: Any, out_path: Path) -> int | None:
 
     Works for JS-driven buttons (e.g. ScienceDirect "Download PDF") that do not
     have a plain href. Returns file size on success, None if no button found.
+
+    Also handles the ScienceDirect pattern where clicking navigates to a PDF
+    viewer page rather than triggering a browser download event.
     """
     # Selectors tried in priority order
     selectors = [
-        "a[href*='pdf']:visible",
         "a:has-text('Download PDF')",
         "a:has-text('View PDF')",
-        "a:has-text('PDF')",
         "button:has-text('Download PDF')",
+        "a[href*='pdf']:visible",
+        "a:has-text('PDF')",
         "button:has-text('PDF')",
         "[data-testid*='pdf']",
         "[aria-label*='PDF']",
@@ -122,26 +126,84 @@ def _click_pdf_button(page: Any, out_path: Path) -> int | None:
     ]
 
     btn = None
+    matched_selector = None
     for sel in selectors:
         try:
             loc = page.locator(sel).first
             if loc.count() and loc.is_visible(timeout=2000):
                 btn = loc
+                matched_selector = sel
                 break
         except PlaywrightError:
             continue
 
     if btn is None:
+        log_event("pdf_button_not_found", page_url=page.url, selectors_tried=selectors)
         return None
 
+    log_event("pdf_button_found", selector=matched_selector, page_url=page.url)
+
+    # First try: intercept a browser download event (direct download links).
     try:
-        with page.expect_download(timeout=30000) as dl_info:
+        with page.expect_download(timeout=15000) as dl_info:
             btn.click()
         download = dl_info.value
         download.save_as(str(out_path))
-        return out_path.stat().st_size
+        size = out_path.stat().st_size
+        log_event("pdf_download_event", selector=matched_selector, size_bytes=size, out_path=str(out_path))
+        return size
+    except PlaywrightError as exc:
+        log_event("pdf_download_event_failed", selector=matched_selector, error=str(exc))
+
+    # Second try: the click navigated to a new URL (e.g. ScienceDirect PDF viewer
+    # or a redirect that lands on a .pdf URL). Stream that URL directly.
+    try:
+        page.wait_for_load_state("domcontentloaded", timeout=15000)
     except PlaywrightError:
-        return None
+        pass
+
+    current = page.url
+    content_type = ""
+    try:
+        resp = page.request.get(current, timeout=int(REQUEST_TIMEOUT * 1000))
+        content_type = (resp.headers.get("content-type") or "").lower()
+        log_event("pdf_nav_check", navigated_url=current, content_type=content_type)
+    except PlaywrightError as exc:
+        log_event("pdf_nav_check_failed", navigated_url=current, error=str(exc))
+
+    if "pdf" in content_type or current.lower().endswith(".pdf"):
+        # Use the browser's own session (cookies, auth) to download the PDF
+        # so institutional/authenticated PDFs aren't blocked with 403.
+        try:
+            api_resp = page.request.get(current, timeout=int(REQUEST_TIMEOUT * 1000))
+            if api_resp.ok:
+                data = api_resp.body()
+                max_bytes = MAX_DOWNLOAD_MB * 1024 * 1024
+                if len(data) > max_bytes:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"Download exceeded configured max size ({MAX_DOWNLOAD_MB} MB).",
+                    )
+                out_path.write_bytes(data)
+                log_event("pdf_browser_stream_ok", url=current, size_bytes=len(data))
+                return len(data)
+            else:
+                log_event("pdf_browser_stream_failed", url=current, http_status=api_resp.status)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            log_event("pdf_browser_stream_error", url=current, error=str(exc))
+        # Fallback: plain streaming (works for open-access PDFs)
+        try:
+            size = _stream_to_disk(current, out_path)
+            log_event("pdf_plain_stream_ok", url=current, size_bytes=size)
+            return size
+        except Exception as exc:
+            log_event("pdf_plain_stream_error", url=current, error=str(exc))
+            return None
+
+    log_event("pdf_nav_not_pdf", navigated_url=current, content_type=content_type)
+    return None
 
 
 def _get_browser_context(playwright: Any) -> Any:
@@ -289,6 +351,8 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
     base_name = re.sub(r"[^A-Za-z0-9._-]", "_", base_name)[:220]
     output_path = _unique_output_path(DOWNLOAD_DIR, base_name)
 
+    log_event("download_start", url=url, output_path=str(output_path))
+
     try:
         with sync_playwright() as playwright:
             ctx = _get_browser_context(playwright)
@@ -302,55 +366,76 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
             content_type = ""
             if response is not None:
                 content_type = (response.header_value("content-type") or "").lower()
+            http_status = response.status if response is not None else None
+            log_event("page_loaded", requested_url=url, final_url=current_url,
+                      http_status=http_status, content_type=content_type)
 
             if "pdf" in content_type:
                 final_url = page.url
                 _close_context_if_needed(ctx)
                 size = _stream_to_disk(final_url, output_path)
-                return {
+                result = {
                     "path": str(output_path),
                     "filename": output_path.name,
                     "size_bytes": size,
                     "source_url": final_url,
                     "method": "browser_direct_stream",
                 }
+                log_event("download_success", **result)
+                return result
 
             # Try clicking the PDF button before the login check — pages that are
             # fully authenticated (e.g. ScienceDirect) may still contain "sign in"
             # in their nav/footer, causing false-positive login detection.
             size = _click_pdf_button(page, output_path)
             if size is not None:
-                return {
+                result = {
                     "path": str(output_path),
                     "filename": output_path.name,
                     "size_bytes": size,
                     "source_url": current_url,
                     "method": "browser_click_download",
                 }
+                log_event("download_success", **result)
+                return result
 
-            if _is_login_page(html, current_url):
-                # If ERR_ABORTED left the page in a broken state, navigate it again
-                # via _show_url_in_novnc so the user sees the login page.
+            login_signals_matched = [
+                s for s in [
+                    "sign in", "log in", "login", "please sign", "access denied",
+                    "institutional access", "subscribe", "purchase access",
+                    "you need to", "register to", "create account",
+                ]
+                if s in html.lower()
+            ]
+            is_login = _is_login_page(html, current_url)
+            log_event("login_check", url=current_url, is_login_page=is_login,
+                      signals_matched=login_signals_matched)
+
+            if is_login:
                 if not html or html.strip() == "<html><body><p>login</p><p>sign in</p></body></html>":
                     _show_url_in_novnc(ctx, url)
-                # Return inside the with-block while playwright is still connected.
-                # Do not close the context — leave the login page open for the user.
+                log_event("download_login_required", url=url, final_url=current_url)
                 return _login_required_response(url, current_url)
 
             # Fall back to scraping a plain href PDF link.
             pdf_link = _extract_pdf_link(current_url, html)
+            log_event("pdf_link_scrape", found=pdf_link is not None, link=pdf_link)
             if pdf_link:
                 _close_context_if_needed(ctx)
                 size = _stream_to_disk(pdf_link, output_path)
-                return {
+                result = {
                     "path": str(output_path),
                     "filename": output_path.name,
                     "size_bytes": size,
                     "source_url": pdf_link,
                     "method": "browser_page_pdf_link",
                 }
+                log_event("download_success", **result)
+                return result
 
             _close_context_if_needed(ctx)
+            log_event("download_failed", url=url, final_url=current_url,
+                      reason="no_pdf_button_or_link")
             raise HTTPException(
                 status_code=404,
                 detail="No PDF button or link found. The page may require interactive login.",
@@ -363,4 +448,5 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
     except PlaywrightError as exc:
         if output_path.exists():
             output_path.unlink()
+        log_event("download_error", url=url, error=str(exc))
         raise HTTPException(status_code=502, detail=f"Browser automation failed: {exc}") from exc
