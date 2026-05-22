@@ -109,8 +109,8 @@ def _click_pdf_button(page: Any, out_path: Path) -> tuple[int, str] | None:
     Works for JS-driven buttons (e.g. ScienceDirect "Download PDF") that do not
     have a plain href. Returns (size_bytes, source_url) on success, None if not found.
     """
-    # Selectors tried in priority order — text-based first to avoid matching
-    # reference/citation links that happen to contain "pdf" in their href.
+    # Text-based selectors only — href-based selectors are too broad and match
+    # citation/reference links that happen to contain "pdf" in their href.
     selectors = [
         "a:has-text('Download PDF')",
         "a:has-text('View PDF')",
@@ -122,7 +122,6 @@ def _click_pdf_button(page: Any, out_path: Path) -> tuple[int, str] | None:
         "[aria-label*='PDF']",
         "[aria-label*='pdf']",
         "a:has-text('PDF')",
-        "a[href*='pdf']:visible",  # last resort — too broad, matches citation links
     ]
 
     # Some sites (e.g. MDPI) hide "Download PDF" inside a dropdown. Try opening
@@ -137,9 +136,9 @@ def _click_pdf_button(page: Any, out_path: Path) -> tuple[int, str] | None:
     for dsel in dropdown_selectors:
         try:
             dloc = page.locator(dsel).first
-            if dloc.count() and dloc.is_visible(timeout=1500):
+            if dloc.count() and dloc.is_visible(timeout=2000):
                 dloc.click(timeout=3000)
-                page.wait_for_timeout(500)
+                page.wait_for_timeout(1000)
                 log_event("dropdown_opened", selector=dsel)
                 break
         except PlaywrightError:
@@ -433,7 +432,7 @@ def _dismiss_cookie_banners(page: Any) -> None:
             if loc.count() and loc.is_visible(timeout=1000):
                 loc.click(timeout=3000)
                 log_event("cookie_banner_dismissed", selector=sel)
-                page.wait_for_timeout(500)
+                page.wait_for_timeout(1500)
                 return
         except PlaywrightError:
             continue
@@ -535,8 +534,16 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
 
             # Use the first existing page (already visible in noVNC) so every
             # navigation is visible to the user without needing bring_to_front.
+            # Close any extra background tabs first — stale PDF tabs from previous
+            # downloads can be mistakenly captured as popups or sniffed URLs.
             pages = ctx.pages
             page = pages[0] if pages else ctx.new_page()
+            for extra in pages[1:]:
+                try:
+                    log_event("closing_background_tab", url=extra.url)
+                    extra.close()
+                except PlaywrightError:
+                    pass
 
             response, current_url, html = _navigate_for_analysis(page, url)
             content_type = ""
