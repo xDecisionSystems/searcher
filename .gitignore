@@ -219,3 +219,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# MCP config (local machine-specific)
+.mcp.json
+mcp_config.json
