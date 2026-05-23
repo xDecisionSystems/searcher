@@ -606,20 +606,36 @@ def _replay_strategy(page: Any, strategy: dict[str, Any], output_path: Path) -> 
                 try:
                     page.wait_for_selector(selector, state="attached", timeout=10000)
                     loc = page.locator(selector).first
-                    # Extract href — if the element has a direct link, navigate the
-                    # browser to it rather than clicking (bypasses visibility issues).
                     href = loc.get_attribute("href") or ""
+                    abs_href = ""
                     if href:
                         from urllib.parse import urljoin
                         abs_href = urljoin(page.url, href)
-                        log_event("strategy_href_navigate", selector=selector, url=abs_href)
-                        try:
-                            page.goto(abs_href, wait_until="domcontentloaded",
-                                      timeout=int(REQUEST_TIMEOUT * 1000))
-                        except PlaywrightError:
-                            pass
-                    else:
-                        loc.click(force=True, timeout=5000)
+
+                    # Try to intercept a browser download event first.
+                    # MDPI navigates to /pdf?version=... which triggers a file download.
+                    try:
+                        with page.expect_download(timeout=int(REQUEST_TIMEOUT * 1000)) as dl_info:
+                            if abs_href:
+                                page.goto(abs_href, wait_until="domcontentloaded",
+                                          timeout=int(REQUEST_TIMEOUT * 1000))
+                            else:
+                                loc.click(force=True, timeout=5000)
+                        download = dl_info.value
+                        download.save_as(str(output_path))
+                        size = output_path.stat().st_size
+                        log_event("strategy_download_event", selector=selector,
+                                  url=download.url, size_bytes=size)
+                        return {
+                            "path": str(output_path),
+                            "filename": output_path.name,
+                            "size_bytes": size,
+                            "source_url": download.url,
+                            "method": "strategy_browser_download",
+                        }
+                    except PlaywrightError:
+                        # No download event — page navigated normally, on_response will catch it
+                        pass
                     page.wait_for_timeout(2000)
                     log_event("strategy_click_ok", selector=selector)
                 except PlaywrightError as exc:
