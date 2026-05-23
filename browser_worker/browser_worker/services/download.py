@@ -602,10 +602,29 @@ def _replay_strategy(page: Any, strategy: dict[str, Any], output_path: Path) -> 
                 if not selector:
                     continue
                 try:
-                    # Wait up to 10s for the element to appear (handles JS-rendered dropdowns)
-                    page.wait_for_selector(selector, timeout=10000)
+                    # Wait for element to be attached (not necessarily visible — some
+                    # sites render buttons hidden until JS activates them).
+                    page.wait_for_selector(selector, state="attached", timeout=10000)
                     loc = page.locator(selector).first
-                    loc.click(timeout=5000)
+                    # If the anchor has a direct PDF href, fetch via browser session
+                    # (carries cookies/auth) rather than relying on a click event.
+                    href = loc.get_attribute("href") or ""
+                    if href and ("pdf" in href.lower() or href.lower().endswith(".pdf")):
+                        from urllib.parse import urljoin
+                        abs_href = urljoin(page.url, href)
+                        fetch_result = _fetch_pdf_with_browser(page, abs_href, output_path)
+                        if fetch_result is not None:
+                            size, src = fetch_result
+                            log_event("strategy_href_fetch_ok", selector=selector, url=abs_href)
+                            return {
+                                "path": str(output_path),
+                                "filename": output_path.name,
+                                "size_bytes": size,
+                                "source_url": src,
+                                "method": "strategy_href_fetch",
+                            }
+                    # Fall back to force-click for JS-driven buttons
+                    loc.click(force=True, timeout=5000)
                     page.wait_for_timeout(2000)
                     log_event("strategy_click_ok", selector=selector)
                 except PlaywrightError as exc:
