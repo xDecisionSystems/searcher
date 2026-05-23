@@ -80,9 +80,18 @@ def search_scopus(
 @app.get("/search_google_scholar")
 def search_google_scholar(
     query: str,
-    limit: int = Query(default=5, ge=1, le=20),
+    limit: int = Query(default=200, ge=1, le=200),
+    start_index: int = Query(default=0, ge=0, description="Result offset for pagination."),
+    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
+    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
 ) -> dict[str, Any]:
-    return search_google_scholar_service(query=query, limit=limit)
+    return search_google_scholar_service(
+        query=query,
+        limit=limit,
+        start_index=start_index,
+        year_low=year_low,
+        year_high=year_high,
+    )
 
 
 @app.get("/search_ieeexplore")

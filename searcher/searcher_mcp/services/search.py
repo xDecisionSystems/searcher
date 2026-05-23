@@ -91,7 +91,13 @@ def _search_scholar_semantic(query: str, limit: int) -> dict[str, Any]:
     return {"total_records": payload.get("total"), "results": results}
 
 
-def _search_scholar_scholarly(query: str, limit: int) -> dict[str, Any]:
+def _search_scholar_scholarly(
+    query: str,
+    limit: int,
+    start_index: int = 0,
+    year_low: int | None = None,
+    year_high: int | None = None,
+) -> dict[str, Any]:
     try:
         from scholarly import scholarly as _scholarly  # noqa: PLC0415
     except ImportError:
@@ -99,7 +105,12 @@ def _search_scholar_scholarly(query: str, limit: int) -> dict[str, Any]:
 
     results: list[dict[str, Any]] = []
     try:
-        search_iter = _scholarly.search_pubs(query)
+        search_iter = _scholarly.search_pubs(
+            query,
+            start_index=start_index,
+            year_low=year_low,
+            year_high=year_high,
+        )
         for _ in range(limit):
             try:
                 item = next(search_iter)
@@ -374,8 +385,20 @@ def search_scholar(
     return {"provider": provider, "query": query, **data}
 
 
-def search_google_scholar(query: str, limit: int) -> dict[str, Any]:
-    data = _search_scholar_scholarly(query=query, limit=limit)
+def search_google_scholar(
+    query: str,
+    limit: int,
+    start_index: int = 0,
+    year_low: int | None = None,
+    year_high: int | None = None,
+) -> dict[str, Any]:
+    data = _search_scholar_scholarly(
+        query=query,
+        limit=limit,
+        start_index=start_index,
+        year_low=year_low,
+        year_high=year_high,
+    )
     return {"provider": "google_scholar_scholarly", "query": query, **data}
 
 
