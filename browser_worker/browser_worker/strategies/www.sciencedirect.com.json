@@ -1,0 +1,31 @@
+{
+  "domain": "www.sciencedirect.com",
+  "source_url": "https://www.sciencedirect.com/science/article/abs/pii/S1359835X25005408",
+  "recorded_at": "2026-05-23T22:15:00.000000+00:00",
+  "timeout_seconds": 120,
+  "login_detection": {
+    "enabled": true,
+    "signals": ["sign in", "log in", "institutional access", "purchase access", "access denied", "subscribe"],
+    "auth_domains": ["id.elsevier.com", "login.", "auth.", "shibboleth.", "idp."],
+    "threshold": 1
+  },
+  "steps": [
+    {
+      "type": "click",
+      "selector": "a.accessButton:has-text('Download PDF')",
+      "element_text": "Download PDF",
+      "note": "Primary ScienceDirect download button (authenticated)"
+    },
+    {
+      "type": "click",
+      "selector": "a:has-text('Download PDF')",
+      "element_text": "Download PDF",
+      "note": "Fallback broader selector"
+    },
+    {
+      "type": "wait_for_pdf_response",
+      "url_pattern": "https://www.sciencedirect.com/science/article/pii/.*\\.pdf",
+      "example_url": "https://www.sciencedirect.com/science/article/pii/S1359835X25005408/pdfft"
+    }
+  ]
+}
