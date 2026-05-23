@@ -502,7 +502,17 @@ def _is_login_page(html: str, url: str, login_detection: dict[str, Any] | None =
     return matched >= threshold
 
 
-def _login_required_response(requested_url: str, current_url: str) -> dict[str, Any]:
+def _no_strategy_hint(domain: str, url: str) -> str:
+    return (
+        f"No recorded strategy exists for '{domain}'. "
+        f"Tell the user: \"No download strategy exists for {domain}. "
+        f"To create one, call POST /record_session?url={url}, "
+        f"manually download a PDF in the noVNC browser, then call POST /stop_recording. "
+        f"Future downloads from {domain} will use the recorded steps automatically.\""
+    )
+
+
+def _login_required_response(requested_url: str, current_url: str, strategy: dict[str, Any] | None = None) -> dict[str, Any]:
     from ..config import NOVNC_URL
 
     cloudflare = "__cf_chl_rt_tk" in current_url
@@ -521,7 +531,7 @@ def _login_required_response(requested_url: str, current_url: str) -> dict[str, 
             "or press **Stop** to cancel."
         )
 
-    return {
+    resp: dict[str, Any] = {
         "status": "login_required",
         "requires_login": True,
         "cloudflare_challenge": cloudflare,
@@ -533,6 +543,11 @@ def _login_required_response(requested_url: str, current_url: str) -> dict[str, 
         "retry_recommended": True,
         "method": "interactive_login_required",
     }
+    if strategy is None:
+        from urllib.parse import urlparse as _up
+        domain = _up(requested_url).netloc.lower()
+        resp["strategy_hint"] = _no_strategy_hint(domain, requested_url)
+    return resp
 
 
 
@@ -769,7 +784,7 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
                 if not html or html.strip() == "<html><body><p>login</p><p>sign in</p></body></html>":
                     _show_url_in_novnc(ctx, url)
                 log_event("download_login_required", url=url, final_url=current_url)
-                return _login_required_response(url, current_url)
+                return _login_required_response(url, current_url, strategy=strategy)
 
             # Fall back to scraping a plain href PDF link.
             pdf_link = _extract_pdf_link(current_url, html)
@@ -790,10 +805,16 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
             _close_context_if_needed(ctx)
             log_event("download_failed", url=url, final_url=current_url,
                       reason="no_pdf_button_or_link")
-            raise HTTPException(
-                status_code=404,
-                detail="No PDF button or link found. The page may require interactive login.",
-            )
+            nav_domain = urlparse(current_url).netloc.lower().split(":")[0]
+            resp: dict[str, Any] = {
+                "status": "failed",
+                "message": "No PDF button or link found. The page may require interactive login.",
+                "requested_url": url,
+                "current_url": current_url,
+            }
+            if strategy is None:
+                resp["strategy_hint"] = _no_strategy_hint(nav_domain, url)
+            raise HTTPException(status_code=404, detail=resp)
 
     except HTTPException:
         if output_path.exists():
