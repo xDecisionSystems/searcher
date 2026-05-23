@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import FastAPI, Query
 from fastapi_mcp import FastApiMCP
@@ -84,6 +84,7 @@ def search_google_scholar(
     start_index: int = Query(default=0, ge=0, description="Result offset for pagination."),
     year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
     year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
+    exclude_domains: Annotated[list[str] | None, Query(description="Domains to exclude. Defaults to researchgate.net, books.google.com, search.proquest.com. Pass empty list to disable filtering.")] = None,
 ) -> dict[str, Any]:
     return search_google_scholar_service(
         query=query,
@@ -91,6 +92,7 @@ def search_google_scholar(
         start_index=start_index,
         year_low=year_low,
         year_high=year_high,
+        exclude_domains=exclude_domains,
     )
 
 

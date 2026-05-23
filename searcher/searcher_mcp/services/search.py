@@ -91,17 +91,32 @@ def _search_scholar_semantic(query: str, limit: int) -> dict[str, Any]:
     return {"total_records": payload.get("total"), "results": results}
 
 
+_DEFAULT_EXCLUDE_DOMAINS: list[str] = [
+    "www.researchgate.net",
+    "books.google.com",
+    "search.proquest.com",
+]
+
+
+def _url_domain(url: str) -> str:
+    from urllib.parse import urlparse  # noqa: PLC0415
+    return urlparse(url).netloc.lower()
+
+
 def _search_scholar_scholarly(
     query: str,
     limit: int,
     start_index: int = 0,
     year_low: int | None = None,
     year_high: int | None = None,
+    exclude_domains: list[str] | None = None,
 ) -> dict[str, Any]:
     try:
         from scholarly import scholarly as _scholarly  # noqa: PLC0415
     except ImportError:
         raise HTTPException(status_code=500, detail="scholarly package is not installed.")
+
+    blocked = set(exclude_domains if exclude_domains is not None else _DEFAULT_EXCLUDE_DOMAINS)
 
     results: list[dict[str, Any]] = []
     try:
@@ -111,11 +126,19 @@ def _search_scholar_scholarly(
             year_low=year_low,
             year_high=year_high,
         )
-        for _ in range(limit):
+        # Pull up to limit*3 candidates so filtering doesn't leave us short.
+        candidates_checked = 0
+        max_candidates = limit * 3
+        while len(results) < limit and candidates_checked < max_candidates:
             try:
                 item = next(search_iter)
             except StopIteration:
                 break
+            candidates_checked += 1
+
+            pub_url = item.get("pub_url", "") or item.get("eprint_url", "") or ""
+            if blocked and _url_domain(pub_url) in blocked:
+                continue
 
             bib = item.get("bib", {})
             author_field = bib.get("author", "")
@@ -135,7 +158,7 @@ def _search_scholar_scholarly(
             results.append(
                 {
                     "title": bib.get("title", ""),
-                    "url": item.get("pub_url", "") or item.get("eprint_url", ""),
+                    "url": pub_url,
                     "snippet": bib.get("abstract", ""),
                     "publication_year": pub_year,
                     "authors": authors,
@@ -391,6 +414,7 @@ def search_google_scholar(
     start_index: int = 0,
     year_low: int | None = None,
     year_high: int | None = None,
+    exclude_domains: list[str] | None = None,
 ) -> dict[str, Any]:
     data = _search_scholar_scholarly(
         query=query,
@@ -398,6 +422,7 @@ def search_google_scholar(
         start_index=start_index,
         year_low=year_low,
         year_high=year_high,
+        exclude_domains=exclude_domains,
     )
     return {"provider": "google_scholar_scholarly", "query": query, **data}
 
