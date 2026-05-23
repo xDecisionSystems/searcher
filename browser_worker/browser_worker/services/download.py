@@ -12,6 +12,7 @@ from playwright.sync_api import sync_playwright
 
 from ..config import APP_USER_AGENT, DOWNLOAD_DIR, HEADLESS, MAX_DOWNLOAD_MB, REQUEST_TIMEOUT
 from ..logger import log_event
+from .recorder import load_strategy
 
 
 def _validate_http_url(url: str) -> None:
@@ -516,6 +517,112 @@ def _login_required_response(requested_url: str, current_url: str) -> dict[str, 
 
 
 
+def _replay_strategy(page: Any, strategy: dict[str, Any], output_path: Path) -> dict[str, Any] | None:
+    """Replay a recorded strategy on page. Returns a success result dict or None on failure.
+
+    Steps understood:
+      navigate          — page.goto the example_url (used only to verify we're on the right page)
+      click             — find element by selector and click it
+      wait_for_pdf_response — wait for a network response matching the url_pattern, then download it
+    """
+    steps: list[dict[str, Any]] = strategy.get("steps", [])
+    domain = strategy.get("domain", "")
+    log_event("strategy_replay_start", domain=domain, steps=len(steps))
+
+    # Register a response listener to catch the PDF before we start clicking
+    captured_pdf: list[tuple[str, bytes]] = []
+
+    def on_response(response: Any) -> None:
+        try:
+            ct = (response.headers.get("content-type") or "").lower()
+            resp_url = response.url
+            if "pdf" in ct or resp_url.lower().endswith(".pdf"):
+                data = response.body()
+                if data:
+                    captured_pdf.append((resp_url, data))
+                    log_event("strategy_pdf_captured", url=resp_url, size=len(data))
+        except Exception:
+            pass
+
+    page.on("response", on_response)
+
+    try:
+        for step in steps:
+            step_type = step.get("type")
+
+            if step_type == "navigate":
+                # Already navigated to the starting URL; skip intermediate navigations —
+                # the browser followed them automatically.
+                continue
+
+            elif step_type == "click":
+                selector = step.get("selector", "")
+                if not selector:
+                    continue
+                try:
+                    loc = page.locator(selector).first
+                    if loc.count() and loc.is_visible(timeout=3000):
+                        loc.click(timeout=5000)
+                        page.wait_for_timeout(1500)
+                        log_event("strategy_click_ok", selector=selector)
+                    else:
+                        log_event("strategy_click_skip", selector=selector, reason="not_visible")
+                except PlaywrightError as exc:
+                    log_event("strategy_click_error", selector=selector, error=str(exc))
+
+            elif step_type == "wait_for_pdf_response":
+                # Give the browser up to REQUEST_TIMEOUT seconds to deliver the PDF
+                deadline = REQUEST_TIMEOUT
+                waited = 0.0
+                while waited < deadline and not captured_pdf:
+                    page.wait_for_timeout(500)
+                    waited += 0.5
+
+                if captured_pdf:
+                    break  # PDF captured, done
+
+        # ── Check if PDF was captured via response listener ────────────────
+        if captured_pdf:
+            pdf_url, data = captured_pdf[0]
+            max_bytes = MAX_DOWNLOAD_MB * 1024 * 1024
+            if len(data) > max_bytes:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"Download exceeded configured max size ({MAX_DOWNLOAD_MB} MB).",
+                )
+            output_path.write_bytes(data)
+            log_event("strategy_replay_success", url=pdf_url, size=len(data))
+            return {
+                "path": str(output_path),
+                "filename": output_path.name,
+                "size_bytes": len(data),
+                "source_url": pdf_url,
+                "method": "strategy_replay",
+            }
+
+        # ── Fallback: try the click-PDF-button approach on the current page ─
+        click_result = _click_pdf_button(page, output_path)
+        if click_result is not None:
+            size, src = click_result
+            log_event("strategy_replay_click_fallback", url=src, size=size)
+            return {
+                "path": str(output_path),
+                "filename": output_path.name,
+                "size_bytes": size,
+                "source_url": src,
+                "method": "strategy_replay_click_fallback",
+            }
+
+        log_event("strategy_replay_failed", domain=domain)
+        return None
+
+    finally:
+        try:
+            page.remove_listener("response", on_response)
+        except Exception:
+            pass
+
+
 def download_paper_via_browser(url: str, filename: str | None = None) -> dict[str, Any]:
     _validate_http_url(url)
     DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -571,6 +678,24 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
                     return result
 
             _dismiss_cookie_banners(page)
+
+            # ── Strategy replay: try recorded steps before generic flow ────
+            nav_domain = urlparse(current_url).netloc.lower().split(":")[0]
+            strategy = load_strategy(nav_domain)
+            if strategy is None:
+                # Also try the original request domain in case of a redirect
+                req_domain = urlparse(url).netloc.lower().split(":")[0]
+                if req_domain != nav_domain:
+                    strategy = load_strategy(req_domain)
+
+            if strategy is not None:
+                log_event("strategy_found", domain=nav_domain, steps=len(strategy.get("steps", [])))
+                result = _replay_strategy(page, strategy, output_path)
+                if result is not None:
+                    _close_context_if_needed(ctx)
+                    log_event("download_success", **result)
+                    return result
+                log_event("strategy_replay_no_result", domain=nav_domain, falling_through=True)
 
             if "pdf" in content_type:
                 final_url = page.url

@@ -7,6 +7,14 @@ from pydantic import BaseModel, Field
 from .config import VERSION_NAME
 from .logger import tail_log
 from .services.download import download_paper_via_browser
+from .services.recorder import (
+    delete_strategy,
+    get_recording_status,
+    list_strategies,
+    load_strategy,
+    start_recording,
+    stop_recording,
+)
 
 app = FastAPI(
     title="Searcher Browser Worker",
@@ -41,6 +49,59 @@ def get_logs(
     """
     events = tail_log(n)
     return {"count": len(events), "events": events}
+
+
+@app.post("/record_session")
+def record_session(
+    url: str = Query(..., description="URL to navigate to at the start of recording."),
+    timeout_seconds: int = Query(default=60, ge=10, le=300, description="Auto-stop after this many seconds."),
+) -> dict[str, Any]:
+    """Start recording your browser interactions for one download session.
+
+    Navigate to the paper URL, perform the download manually in noVNC, then call
+    POST /stop_recording (or wait for the timeout). A strategy file is saved for
+    the domain and will be used automatically on future download_paper calls.
+    """
+    return start_recording(url=url, timeout_seconds=timeout_seconds)
+
+
+@app.post("/stop_recording")
+def stop_recording_endpoint() -> dict[str, Any]:
+    """Stop the active recording session early and save the strategy immediately."""
+    return stop_recording()
+
+
+@app.get("/recording_status")
+def recording_status() -> dict[str, Any]:
+    """Return the current recording state (idle / recording / saved / error)."""
+    return get_recording_status()
+
+
+@app.get("/strategies")
+def list_strategies_endpoint() -> dict[str, Any]:
+    """List all saved domain strategies available for replay."""
+    strategies = list_strategies()
+    return {"count": len(strategies), "strategies": strategies}
+
+
+@app.get("/strategies/{domain}")
+def get_strategy(domain: str) -> dict[str, Any]:
+    """Return the saved strategy for a domain, or 404 if not found."""
+    from fastapi import HTTPException
+    strategy = load_strategy(domain)
+    if strategy is None:
+        raise HTTPException(status_code=404, detail=f"No strategy found for domain '{domain}'.")
+    return strategy
+
+
+@app.delete("/strategies/{domain}")
+def delete_strategy_endpoint(domain: str) -> dict[str, Any]:
+    """Delete the saved strategy for a domain."""
+    from fastapi import HTTPException
+    deleted = delete_strategy(domain)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"No strategy found for domain '{domain}'.")
+    return {"status": "deleted", "domain": domain}
 
 
 @app.post("/download_paper")
