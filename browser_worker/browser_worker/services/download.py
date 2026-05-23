@@ -608,30 +608,9 @@ def _replay_strategy(page: Any, strategy: dict[str, Any], output_path: Path) -> 
                     loc = page.locator(selector).first
                     # If the anchor has a direct PDF href, fetch via browser session
                     # (carries cookies/auth) rather than relying on a click event.
-                    href = loc.get_attribute("href") or ""
-                    if href and ("pdf" in href.lower() or href.lower().endswith(".pdf")):
-                        from urllib.parse import urljoin
-                        abs_href = urljoin(page.url, href)
-                        # Navigate the real browser to the PDF URL so all cookies and
-                        # session state are sent — page.request.get() doesn't carry
-                        # the same browser-level auth as a full navigation.
-                        log_event("strategy_href_navigate", selector=selector, url=abs_href)
-                        _, nav_url, nav_html = _navigate_for_analysis(page, abs_href)
-                        if nav_html == "__AUTO_DOWNLOAD__":
-                            fetch_result = _fetch_pdf_with_browser(page, abs_href, output_path)
-                        else:
-                            fetch_result = _fetch_pdf_with_browser(page, nav_url, output_path)
-                        if fetch_result is not None:
-                            size, src = fetch_result
-                            log_event("strategy_href_fetch_ok", selector=selector, url=src)
-                            return {
-                                "path": str(output_path),
-                                "filename": output_path.name,
-                                "size_bytes": size,
-                                "source_url": src,
-                                "method": "strategy_href_fetch",
-                            }
-                    # Fall back to force-click for JS-driven buttons
+                    # Force-click the element regardless of visibility.
+                    # For PDF href anchors this navigates to the intermediate page
+                    # which triggers the real PDF load — captured by on_response.
                     loc.click(force=True, timeout=5000)
                     page.wait_for_timeout(2000)
                     log_event("strategy_click_ok", selector=selector)
