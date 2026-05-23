@@ -1,6 +1,7 @@
 from typing import Any
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
 from fastapi_mcp import FastApiMCP
 from pydantic import BaseModel, Field
 
@@ -50,6 +51,31 @@ def get_logs(
     """
     events = tail_log(n)
     return {"count": len(events), "events": events}
+
+
+@app.get("/files/{filename}")
+def get_file(filename: str) -> FileResponse:
+    """Download a file from the browser_worker download directory by filename."""
+    from .config import DOWNLOAD_DIR
+    import re
+    if re.search(r"[/\\]", filename):
+        raise HTTPException(status_code=400, detail="Invalid filename.")
+    path = DOWNLOAD_DIR / filename
+    if not path.exists() or not path.is_file():
+        raise HTTPException(status_code=404, detail=f"File '{filename}' not found.")
+    return FileResponse(path=str(path), filename=filename, media_type="application/pdf")
+
+
+@app.get("/files")
+def list_files() -> dict[str, Any]:
+    """List all files in the browser_worker download directory."""
+    from .config import DOWNLOAD_DIR
+    files = []
+    if DOWNLOAD_DIR.exists():
+        for f in sorted(DOWNLOAD_DIR.iterdir()):
+            if f.is_file():
+                files.append({"filename": f.name, "size_bytes": f.stat().st_size})
+    return {"count": len(files), "files": files}
 
 
 @app.post("/record_session")
