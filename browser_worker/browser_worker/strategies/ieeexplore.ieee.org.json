@@ -1,0 +1,25 @@
+{
+  "domain": "ieeexplore.ieee.org",
+  "source_url": "https://ieeexplore.ieee.org/abstract/document/10104142/",
+  "recorded_at": "2026-05-23T23:30:00.000000+00:00",
+  "timeout_seconds": 120,
+  "login_detection": {
+    "enabled": true,
+    "signals": ["log in", "sign in", "access denied", "institutional access", "purchase access", "subscribe"],
+    "auth_domains": ["idp.", "shibboleth.", "auth.", "login."],
+    "threshold": 1
+  },
+  "steps": [
+    {
+      "type": "click",
+      "selector": "a:has-text('PDF')",
+      "element_text": "PDF",
+      "note": "Opens stamp.jsp PDF viewer page, which fires the getPDF.jsp download"
+    },
+    {
+      "type": "wait_for_pdf_response",
+      "url_pattern": "https://ieeexplore\\.ieee\\.org/stampPDF/getPDF\\.jsp.*",
+      "example_url": "https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=10104142"
+    }
+  ]
+}
