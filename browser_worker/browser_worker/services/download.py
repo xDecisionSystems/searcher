@@ -459,28 +459,47 @@ def _show_url_in_novnc(ctx: Any, url: str) -> Any:
     return page
 
 
-def _is_login_page(html: str, url: str) -> bool:
-    """Heuristic: returns True if the page looks like a login wall or bot challenge."""
-    # Cloudflare challenge: 403 with challenge token in URL
+_DEFAULT_LOGIN_SIGNALS = [
+    "sign in", "log in", "login", "please sign", "access denied",
+    "institutional access", "subscribe", "purchase access",
+    "you need to", "register to", "create account",
+]
+_DEFAULT_AUTH_DOMAINS = ["login.", "accounts.", "auth.", "shibboleth.", "idp."]
+_DEFAULT_LOGIN_THRESHOLD = 2
+
+
+def _is_login_page(html: str, url: str, login_detection: dict[str, Any] | None = None) -> bool:
+    """Heuristic: returns True if the page looks like a login wall or bot challenge.
+
+    login_detection from a strategy file can override signals, auth_domains, and threshold,
+    or disable the check entirely with {"enabled": false}.
+    """
+    # Cloudflare challenge signals are always checked regardless of strategy config.
     if "__cf_chl_rt_tk" in url or "cf-chl-bypass" in url:
         return True
     lower = html.lower()
-    # Cloudflare challenge page signals
     if "checking if the site connection is secure" in lower or "enable javascript and cookies" in lower:
         return True
-    login_signals = [
-        "sign in", "log in", "login", "please sign", "access denied",
-        "institutional access", "subscribe", "purchase access",
-        "you need to", "register to", "create account",
-    ]
-    # Also check if we've been redirected to an auth domain
-    auth_domains = ["login.", "accounts.", "auth.", "shibboleth.", "idp."]
+
+    if login_detection is not None and not login_detection.get("enabled", True):
+        return False
+
+    if login_detection is not None:
+        signals = login_detection.get("signals", _DEFAULT_LOGIN_SIGNALS)
+        auth_domains = login_detection.get("auth_domains", _DEFAULT_AUTH_DOMAINS)
+        threshold = login_detection.get("threshold", _DEFAULT_LOGIN_THRESHOLD)
+    else:
+        signals = _DEFAULT_LOGIN_SIGNALS
+        auth_domains = _DEFAULT_AUTH_DOMAINS
+        threshold = _DEFAULT_LOGIN_THRESHOLD
+
     from urllib.parse import urlparse as _up
     domain = _up(url).netloc.lower()
     if any(d in domain for d in auth_domains):
         return True
-    matched = sum(1 for s in login_signals if s in lower)
-    return matched >= 4
+
+    matched = sum(1 for s in signals if s in lower)
+    return matched >= threshold
 
 
 def _login_required_response(requested_url: str, current_url: str) -> dict[str, Any]:
@@ -734,15 +753,15 @@ def download_paper_via_browser(url: str, filename: str | None = None) -> dict[st
                 log_event("download_success", **result)
                 return result
 
+            login_detection = strategy.get("login_detection") if strategy else None
             login_signals_matched = [
-                s for s in [
-                    "sign in", "log in", "login", "please sign", "access denied",
-                    "institutional access", "subscribe", "purchase access",
-                    "you need to", "register to", "create account",
-                ]
+                s for s in (
+                    login_detection.get("signals", _DEFAULT_LOGIN_SIGNALS)
+                    if login_detection else _DEFAULT_LOGIN_SIGNALS
+                )
                 if s in html.lower()
             ]
-            is_login = _is_login_page(html, current_url)
+            is_login = _is_login_page(html, current_url, login_detection=login_detection)
             log_event("login_check", url=current_url, is_login_page=is_login,
                       signals_matched=login_signals_matched)
 
