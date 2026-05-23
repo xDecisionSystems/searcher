@@ -480,7 +480,7 @@ def _is_login_page(html: str, url: str) -> bool:
     if any(d in domain for d in auth_domains):
         return True
     matched = sum(1 for s in login_signals if s in lower)
-    return matched >= 2
+    return matched >= 3
 
 
 def _login_required_response(requested_url: str, current_url: str) -> dict[str, Any]:
@@ -546,13 +546,21 @@ def _replay_strategy(page: Any, strategy: dict[str, Any], output_path: Path) -> 
 
     page.on("response", on_response)
 
+    # Wait for JS-rendered content before replaying clicks.
+    try:
+        page.wait_for_load_state("load", timeout=15000)
+    except PlaywrightError:
+        pass
+    try:
+        page.wait_for_load_state("networkidle", timeout=10000)
+    except PlaywrightError:
+        pass
+
     try:
         for step in steps:
             step_type = step.get("type")
 
             if step_type == "navigate":
-                # Already navigated to the starting URL; skip intermediate navigations —
-                # the browser followed them automatically.
                 continue
 
             elif step_type == "click":
@@ -561,9 +569,9 @@ def _replay_strategy(page: Any, strategy: dict[str, Any], output_path: Path) -> 
                     continue
                 try:
                     loc = page.locator(selector).first
-                    if loc.count() and loc.is_visible(timeout=3000):
+                    if loc.count() and loc.is_visible(timeout=5000):
                         loc.click(timeout=5000)
-                        page.wait_for_timeout(1500)
+                        page.wait_for_timeout(2000)
                         log_event("strategy_click_ok", selector=selector)
                     else:
                         log_event("strategy_click_skip", selector=selector, reason="not_visible")
