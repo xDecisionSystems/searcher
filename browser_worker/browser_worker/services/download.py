@@ -563,7 +563,8 @@ def _replay_strategy(page: Any, strategy: dict[str, Any], output_path: Path) -> 
     domain = strategy.get("domain", "")
     log_event("strategy_replay_start", domain=domain, steps=len(steps))
 
-    # Register a response listener to catch the PDF before we start clicking
+    # Register a response listener on the context so it survives page navigations.
+    # page-level listeners are dropped when the page navigates away.
     captured_pdf: list[tuple[str, bytes]] = []
 
     def on_response(response: Any) -> None:
@@ -572,13 +573,14 @@ def _replay_strategy(page: Any, strategy: dict[str, Any], output_path: Path) -> 
             resp_url = response.url
             if "pdf" in ct or resp_url.lower().endswith(".pdf"):
                 data = response.body()
-                if data:
+                if data and len(data) > 10000:  # ignore tiny stubs
                     captured_pdf.append((resp_url, data))
                     log_event("strategy_pdf_captured", url=resp_url, size=len(data))
         except Exception:
             pass
 
-    page.on("response", on_response)
+    ctx = page.context
+    ctx.on("response", on_response)
 
     # Wait for JS-rendered content before replaying clicks.
     try:
@@ -671,7 +673,7 @@ def _replay_strategy(page: Any, strategy: dict[str, Any], output_path: Path) -> 
 
     finally:
         try:
-            page.remove_listener("response", on_response)
+            ctx.remove_listener("response", on_response)
         except Exception:
             pass
 
