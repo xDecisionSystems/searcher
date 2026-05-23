@@ -1,0 +1,31 @@
+{
+  "domain": "dl.acm.org",
+  "source_url": "https://dl.acm.org/doi/abs/10.1145/3732945.3732981",
+  "recorded_at": "2026-05-24T00:05:00.000000+00:00",
+  "timeout_seconds": 120,
+  "login_detection": {
+    "enabled": true,
+    "signals": ["log in", "sign in", "access denied", "institutional access", "purchase access", "subscribe"],
+    "auth_domains": ["idp.", "shibboleth.", "auth.", "login."],
+    "threshold": 1
+  },
+  "steps": [
+    {
+      "type": "click",
+      "selector": "button:has-text('Use necessary cookies only')",
+      "element_text": "Use necessary cookies only",
+      "note": "Dismiss cookie consent banner if present"
+    },
+    {
+      "type": "click",
+      "selector": "a:has-text('PDF')",
+      "element_text": "PDF",
+      "note": "ACM article page PDF link — navigates to epdf viewer which fires pdfdirect response"
+    },
+    {
+      "type": "wait_for_pdf_response",
+      "url_pattern": "https://dl\\.acm\\.org/doi/pdfdirect/.*",
+      "example_url": "https://dl.acm.org/doi/pdfdirect/10.1145/3732945.3732981"
+    }
+  ]
+}
