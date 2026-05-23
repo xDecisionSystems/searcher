@@ -1,0 +1,31 @@
+{
+  "domain": "www.nature.com",
+  "source_url": "https://www.nature.com/articles/s41370-024-00737-z",
+  "recorded_at": "2026-05-23T23:06:52.475559+00:00",
+  "timeout_seconds": 120,
+  "login_detection": {
+    "enabled": true,
+    "signals": ["log in", "sign in", "access denied", "institutional access", "purchase access", "subscribe"],
+    "auth_domains": ["idp.", "shibboleth.", "auth.", "login."],
+    "threshold": 1
+  },
+  "steps": [
+    {
+      "type": "click",
+      "selector": "button:has-text('Reject optional cookies')",
+      "element_text": "Reject optional cookies",
+      "note": "Dismiss cookie consent banner if present"
+    },
+    {
+      "type": "click",
+      "selector": "a:has-text('Download PDF')",
+      "element_text": "Download PDF",
+      "note": "Primary Nature download link"
+    },
+    {
+      "type": "wait_for_pdf_response",
+      "url_pattern": "https://(www\\.nature\\.com|media\\.springernature\\.com)/.*\\.pdf",
+      "example_url": "https://www.nature.com/articles/s41370-024-00737-z.pdf"
+    }
+  ]
+}
