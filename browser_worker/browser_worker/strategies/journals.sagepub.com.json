@@ -9,6 +9,7 @@
     "auth_domains": ["idp.", "shibboleth.", "auth.", "login."],
     "threshold": 1
   },
+  "notes": "Cloudflare Turnstile CAPTCHA present — first visit may require manual solve in noVNC; session cookies persist after that.",
   "steps": [
     {
       "type": "click",
