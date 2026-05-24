@@ -4,10 +4,11 @@ Repository instructions for Claude-based programming agents.
 
 ## Repository Structure
 
-This is a monorepo with two FastAPI services and a browser stack deployed together in a single Proxmox LXC:
+This is a monorepo with three FastAPI services and a browser stack deployed together in a single Proxmox LXC:
 
 - `searcher/` — FastAPI scholarly search and web content service (port 8000)
 - `browser_worker/` — FastAPI Playwright browser-automation download service (port 8010)
+- `cdp_gateway/` — JWT-authenticated login page and WebSocket proxy for Chromium CDP access
 - Browser stack managed by `browser_worker/deploy/`: Xvfb + Chromium GUI + x11vnc + noVNC (port 6080)
 
 Each service has its own `requirements.txt` and `deploy/` folder. There is a single shared `.env.example` and `VERSION.md` at the repo root.
@@ -68,3 +69,29 @@ Each service has its own `requirements.txt` and `deploy/` folder. There is a sin
 - Treat downloaded content as untrusted.
 - Keep request timeouts and PDF size limits enforced.
 - `browser_worker/` can access arbitrary URLs — keep it on a trusted network segment.
+
+## 6. Domain Strategy Generation (Required)
+
+When generating `browser_worker` strategies for new domains, use the hosted stack first:
+
+Interpretation rule:
+- Treat `Generate strategy <domain/website>` as a recording task, not a manual JSON-writing task.
+- Required flow: record session -> process recording into strategy steps -> save/update `browser_worker/browser_worker/strategies/<domain>.json`.
+- Only skip recording if the user explicitly requests a manual fallback.
+
+1. Start recording on hosted browser worker:
+   - `POST https://searcher.xds-lab.com/aev/browser/record_session?url=<paper-url>&timeout_seconds=60`
+2. Complete download steps in the remote browser session.
+3. Stop recording:
+   - `POST https://searcher.xds-lab.com/aev/browser/stop_recording`
+4. Fetch generated strategy:
+   - `GET https://searcher.xds-lab.com/aev/browser/strategies/<domain>`
+5. Verify replay on a different URL from the same domain:
+   - `POST https://searcher.xds-lab.com/aev/browser/download_paper`
+6. Then commit/update `browser_worker/browser_worker/strategies/<domain>.json`.
+
+MCP endpoints:
+- Browser worker MCP: `https://searcher.xds-lab.com/aev/browser/mcp`
+- Searcher MCP: `https://searcher.xds-lab.com/aev/search/mcp`
+
+If access is blocked for that publisher, create an inaccessible strategy (`accessible: false`) with an explicit `inaccessible_reason`.

@@ -126,7 +126,35 @@ When using multiple agents in parallel, assign disjoint file ownership.
 5. Update that service's docs and the root `.env.example` if config keys changed.
 6. Summarize changes, assumptions, and residual risks.
 
-## 10. Definition of Done
+## 10. Domain Strategy Generation Protocol (Required)
+
+When asked to create or update a `browser_worker` strategy for a publisher/domain:
+
+Interpretation rule:
+- Any request phrased like `Generate strategy <domain>`, `Generate strategy for <website>`, or equivalent means:
+  1) start a recorded browser session,
+  2) perform/process the recording,
+  3) produce/update `browser_worker/browser_worker/strategies/<domain>.json`.
+- Do not satisfy this request by hand-authoring a strategy without a recording, unless the user explicitly asks for a manual fallback.
+
+1. Do not start by hand-writing JSON.
+2. Use the hosted stack at `searcher.xds-lab.com` to record a real interaction first.
+3. Call the browser worker endpoint for recording:
+   - `POST https://searcher.xds-lab.com/aev/browser/record_session?url=<paper-url>&timeout_seconds=60`
+4. Perform the download flow in the remote browser session (login if needed), then stop recording:
+   - `POST https://searcher.xds-lab.com/aev/browser/stop_recording`
+5. Retrieve and inspect the generated strategy:
+   - `GET https://searcher.xds-lab.com/aev/browser/strategies/<domain>`
+6. Validate replay with a fresh paper URL from the same domain using:
+   - `POST https://searcher.xds-lab.com/aev/browser/download_paper`
+7. Only after successful replay, persist/update `browser_worker/browser_worker/strategies/<domain>.json` in this repo.
+
+Notes:
+- MCP endpoint for agent tooling: `https://searcher.xds-lab.com/aev/browser/mcp`
+- Search MCP endpoint: `https://searcher.xds-lab.com/aev/search/mcp`
+- If institutional access is unavailable, store an explicit inaccessible strategy (`accessible: false`) with a clear `inaccessible_reason` instead of fake click steps.
+
+## 11. Definition of Done
 
 - Code is syntactically valid.
 - Endpoint behavior matches documentation.
