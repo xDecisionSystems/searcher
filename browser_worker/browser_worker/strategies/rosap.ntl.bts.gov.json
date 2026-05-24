@@ -1,0 +1,22 @@
+{
+  "domain": "rosap.ntl.bts.gov",
+  "source_url": "https://rosap.ntl.bts.gov/view/dot/85645",
+  "recorded_at": "2026-05-24T01:35:00.000000+00:00",
+  "timeout_seconds": 120,
+  "login_detection": {
+    "enabled": false
+  },
+  "steps": [
+    {
+      "type": "click",
+      "selector": "a:has-text('Download')",
+      "element_text": "Download",
+      "note": "ROSAP landing page Download link — triggers PDF download directly"
+    },
+    {
+      "type": "wait_for_pdf_response",
+      "url_pattern": "https://rosap\\.ntl\\.bts\\.gov/view/dot/.*\\.pdf",
+      "example_url": "https://rosap.ntl.bts.gov/view/dot/85645/dot_85645_DS1.pdf"
+    }
+  ]
+}
