@@ -1,5 +1,5 @@
 {
-  "domain": "theses.hal.science",
+  "domain": "hal.science",
   "source_url": "https://theses.hal.science/tel-05351543/document",
   "recorded_at": "2026-05-24T00:15:00.000000+00:00",
   "timeout_seconds": 60,
@@ -12,9 +12,9 @@
   "steps": [
     {
       "type": "wait_for_pdf_response",
-      "url_pattern": "https://theses\\.hal\\.science/.*/document",
+      "url_pattern": "https://.*\\.hal\\.science/.*",
       "example_url": "https://theses.hal.science/tel-05351543/document",
-      "note": "hal.science /document URLs serve the PDF directly — first page is a HAL coversheet"
+      "note": "All *.hal.science domains serve PDFs directly — first page is a HAL coversheet"
     }
   ]
 }

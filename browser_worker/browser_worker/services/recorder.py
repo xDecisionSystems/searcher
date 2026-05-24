@@ -382,14 +382,22 @@ def list_strategies() -> list[dict[str, Any]]:
 
 
 def load_strategy(domain: str) -> dict[str, Any] | None:
-    """Load a saved strategy for domain, or None if not found."""
-    path = _strategy_path(domain)
-    if not path.exists():
-        return None
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return None
+    """Load a saved strategy for domain, or None if not found.
+
+    Falls back to progressively shorter domain suffixes so a strategy
+    saved as e.g. 'hal.science' matches 'theses.hal.science',
+    'inria.hal.science', etc.
+    """
+    parts = domain.split(".")
+    for i in range(len(parts) - 1):
+        candidate = ".".join(parts[i:])
+        path = _strategy_path(candidate)
+        if path.exists():
+            try:
+                return json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                return None
+    return None
 
 
 def save_strategy(domain: str, strategy: dict[str, Any]) -> None:
