@@ -1,0 +1,28 @@
+{
+  "domain": "dspace.mit.edu",
+  "source_url": "https://dspace.mit.edu/handle/1721.1/68113",
+  "recorded_at": "2026-05-24T01:45:00.000000+00:00",
+  "timeout_seconds": 120,
+  "login_detection": {
+    "enabled": false
+  },
+  "steps": [
+    {
+      "type": "click",
+      "selector": "button:has-text('Decline')",
+      "element_text": "Decline",
+      "note": "Dismiss cookie consent banner"
+    },
+    {
+      "type": "click",
+      "selector": "a:has-text('Download')",
+      "element_text": "Download",
+      "note": "DSpace bitstream download link"
+    },
+    {
+      "type": "wait_for_pdf_response",
+      "url_pattern": "https://dspace\\.mit\\.edu/server/api/core/bitstreams/.*/content",
+      "example_url": "https://dspace.mit.edu/server/api/core/bitstreams/0888f440-8f66-4bbe-8161-49d99aa19cc6/content"
+    }
+  ]
+}
