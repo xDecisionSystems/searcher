@@ -561,13 +561,20 @@ def search_google_scholar_via_browser(
                 if collected >= limit:
                     break
 
+                # Scroll to bottom so Scholar renders the pagination bar.
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.wait_for_timeout(500)
+
                 # Find the Next link: Scholar renders it as <a href="..."><b>Next</b></a>.
-                next_link = page.query_selector("a:has(b)")
-                # Verify it actually contains "Next" text (not some other a:has(b)).
-                if next_link:
-                    b_text = next_link.query_selector("b")
-                    if not b_text or "Next" not in (b_text.inner_text() or ""):
-                        next_link = None
+                # Use Playwright locator to find by text content rather than CSS :has().
+                next_link = None
+                for a in page.query_selector_all("a"):
+                    try:
+                        if "Next" in (a.inner_text() or ""):
+                            next_link = a
+                            break
+                    except PlaywrightError:
+                        continue
                 if not next_link:
                     log_event("scholar_no_next_page", page_num=len(pages_html))
                     break
