@@ -1,0 +1,31 @@
+{
+  "domain": "enac.hal.science",
+  "source_url": "https://enac.hal.science/hal-01521988/",
+  "recorded_at": "2026-05-24T03:15:00.000000+00:00",
+  "timeout_seconds": 60,
+  "login_detection": {
+    "enabled": false
+  },
+  "post_process": {
+    "strip_first_pages": 1
+  },
+  "steps": [
+    {
+      "type": "click",
+      "selector": "a:has-text('Télécharger le fichier')",
+      "element_text": "Télécharger le fichier",
+      "note": "French: 'Download the file' — ENAC HAL landing page download link"
+    },
+    {
+      "type": "click",
+      "selector": "a:has-text('Download')",
+      "element_text": "Download",
+      "note": "English fallback"
+    },
+    {
+      "type": "wait_for_pdf_response",
+      "url_pattern": "https://enac\\.hal\\.science/.*\\.pdf",
+      "example_url": "https://enac.hal.science/hal-01521988v1/preview/Advanced%20decision%20aids%20for%20Air%20Traffic%20Controllers.pdf"
+    }
+  ]
+}
