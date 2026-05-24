@@ -223,3 +223,8 @@ __marimo__/
 # MCP config (local machine-specific)
 .mcp.json
 mcp_config.json
+
+# Local research data files
+*_papers.json
+*_domains.json
+*_domains_test.json
