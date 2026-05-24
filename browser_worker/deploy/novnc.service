@@ -8,7 +8,8 @@ Type=simple
 User=root
 ExecStart=/usr/share/novnc/utils/novnc_proxy \
     --vnc localhost:5900 \
-    --listen 0.0.0.0:6080
+    --listen 0.0.0.0:6080 \
+    --idle-timeout 0
 Restart=always
 RestartSec=3
 

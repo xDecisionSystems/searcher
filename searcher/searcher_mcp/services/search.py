@@ -427,6 +427,10 @@ def _fetch_scholar_html_via_browser(url: str) -> str:
     return html
 
 
+_re_year = __import__("re").compile(r"\b(?:19|20)\d{2}\b")
+_re_cite = __import__("re").compile(r"Cited by (\d+)")
+
+
 def _parse_scholar_results_page(html: str) -> list[dict[str, Any]]:
     """Parse a Google Scholar results page and extract paper metadata."""
     soup = BeautifulSoup(html, "html.parser")
