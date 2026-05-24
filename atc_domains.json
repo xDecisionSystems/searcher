@@ -1,0 +1,248 @@
+{
+  "query": "decision support tool for air traffic control",
+  "total_domains": 36,
+  "successful_count": 17,
+  "failed_count": 19,
+  "successful": [
+    {
+      "domain": "ieeexplore.ieee.org",
+      "url": "https://ieeexplore.ieee.org/abstract/document/8755486/",
+      "title": "Tackling uncertainty for the development of efficient decision support system in air traffic management",
+      "status": "ok"
+    },
+    {
+      "domain": "arc.aiaa.org",
+      "url": "https://arc.aiaa.org/doi/abs/10.2514/1.I010989",
+      "title": "Situation awareness decision support system for air traffic management using ontological reasoning",
+      "status": "ok"
+    },
+    {
+      "domain": "www.icas.org",
+      "url": "http://www.icas.org/icas_archive/ICAS2002/PAPERS/R45.PDF",
+      "title": "Trajectory modeling accuracy for air traffic management decision support tools",
+      "status": "ok"
+    },
+    {
+      "domain": "www.ojs.cvut.cz",
+      "url": "https://www.ojs.cvut.cz/ojs/index.php/mad/article/view/4143",
+      "title": "Air traffic control tools assessment",
+      "status": "ok"
+    },
+    {
+      "domain": "rosap.ntl.bts.gov",
+      "url": "https://rosap.ntl.bts.gov/view/dot/16689",
+      "title": "Decision support automation research in the en route air traffic control environment",
+      "status": "ok"
+    },
+    {
+      "domain": "wrap.warwick.ac.uk",
+      "url": "https://wrap.warwick.ac.uk/id/eprint/2547/",
+      "title": "The development of decision support models for European air traffic flow management",
+      "status": "ok"
+    },
+    {
+      "domain": "blog.umd.edu",
+      "url": "https://blog.umd.edu/nextor/files/2019/02/2003_JPO_UMD_Benefits-CDM-in-ATM-16h9lc9.pdf",
+      "title": "Assessing the benefits of collaborative decision making in air traffic management",
+      "status": "ok"
+    },
+    {
+      "domain": "elib.dlr.de",
+      "url": "https://elib.dlr.de/208684/",
+      "title": "Flexible air traffic controller deployment with artificial intelligence based decision support : Literature survey and evaluation framework",
+      "status": "ok"
+    },
+    {
+      "domain": "www.mdpi.com",
+      "url": "https://www.mdpi.com/2079-9292/11/3/362",
+      "title": "Uncertainty-driven ontology for decision support system in air transport",
+      "status": "ok"
+    },
+    {
+      "domain": "www.researchgate.net",
+      "url": "https://www.researchgate.net/profile/Craig-Wanke/publication/267420789_Using_Air-Ground_Data_Link_to_Improve_Air_Traffic_Management_Decision_Support_System_Performance/links/54c0f1af0cf28a6324a47933/Using-Air-Ground-Data-Link-to-Improve-Air-Traffic-Management-Decision-Support-System-Performance.pdf",
+      "title": "Using air -ground data link to improve air traffic management decision support system performance",
+      "status": "ok"
+    },
+    {
+      "domain": "www.tandfonline.com",
+      "url": "https://www.tandfonline.com/doi/abs/10.1080/00140139.2011.558635",
+      "title": "Defining the drivers for accepting decision making automation in air traffic management",
+      "status": "ok"
+    },
+    {
+      "domain": "ntrs.nasa.gov",
+      "url": "https://ntrs.nasa.gov/citations/19980211460",
+      "title": "A method for making cross-comparable estimates of the benefits of decision support technologies for air traffic management",
+      "status": "ok"
+    },
+    {
+      "domain": "apps.dtic.mil",
+      "url": "https://apps.dtic.mil/sti/html/tr/ADA389823/",
+      "title": "Air traffic control specialist decision making and strategic planning-a field survey",
+      "status": "ok"
+    },
+    {
+      "domain": "www.glue.umd.edu",
+      "url": "https://www.glue.umd.edu/~hoff/CDMpaper/cdm09-12-98.pdf",
+      "title": "Collaborative decision making in air traffic flow management",
+      "status": "ok"
+    },
+    {
+      "domain": "www.dmame-journal.org",
+      "url": "http://www.dmame-journal.org/index.php/dmame/article/view/58",
+      "title": "\u2026\u00a0IT2FS-DEMATEL-AHP-TOPSIS multicriteria decision making approach: Case study of selection and evaluation of criteria for determination of air traffic control radar\u00a0\u2026",
+      "status": "ok"
+    },
+    {
+      "domain": "archive.ll.mit.edu",
+      "url": "https://archive.ll.mit.edu/publications/journal/pdf/vol16_no1/16_1_5EvansWeber.pdf",
+      "title": "Integrating advanced weather forecast technologies into air traffic management decision support",
+      "status": "ok"
+    },
+    {
+      "domain": "repositum.tuwien.at",
+      "url": "https://repositum.tuwien.at/handle/20.500.12708/6488",
+      "title": "Decision support for air traffic management based on probabilistic weather forecasts",
+      "status": "ok"
+    }
+  ],
+  "failed": [
+    {
+      "domain": "www.sciencedirect.com",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0969699724001133",
+      "title": "Airport Ground Optimizer (AGO): A decision support system initiative for air traffic controllers with optimization and decision - aid algorithms",
+      "status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)",
+      "reason": "error",
+      "detail": "HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "domain": "onlinelibrary.wiley.com",
+      "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.14431",
+      "title": "Design and evaluation study of visual analytics decision support tools in air traffic control",
+      "status": "login_required",
+      "reason": "login_required"
+    },
+    {
+      "domain": "www.inderscienceonline.com",
+      "url": "https://www.inderscienceonline.com/doi/abs/10.1504/IJAOM.2012.045892",
+      "title": "Decision support systems for air traffic controllers based on the analysis of their decision - making processes",
+      "status": "login_required",
+      "reason": "login_required"
+    },
+    {
+      "domain": "research-repository.rmit.edu.au",
+      "url": "https://research-repository.rmit.edu.au/articles/thesis/A_novel_air_traffic_management_decision_support_system/27589038",
+      "title": "A novel air traffic management decision support system",
+      "status": "failed",
+      "reason": "failed"
+    },
+    {
+      "domain": "link.springer.com",
+      "url": "https://link.springer.com/content/pdf/10.1007/978-3-662-04632-6_2?pdf=chapter%20toc",
+      "title": "Collaborative decision making in air traffic management : Current and future research directions",
+      "status": "login_required",
+      "reason": "login_required"
+    },
+    {
+      "domain": "tech.vernadskyjournals.in.ua",
+      "url": "https://tech.vernadskyjournals.in.ua/journals/2024/3_2024/part_1/27.pdf",
+      "title": "Development of requirements for a decision support system for a shift supervisor to manage professional stress of air traffic controllers",
+      "status": "failed",
+      "reason": "failed"
+    },
+    {
+      "domain": "dspace.mit.edu",
+      "url": "https://dspace.mit.edu/handle/1721.1/34945",
+      "title": "Robust decision - support tools for airport surface traffic",
+      "status": "failed",
+      "reason": "failed"
+    },
+    {
+      "domain": "www.academia.edu",
+      "url": "https://www.academia.edu/download/49461755/22_Art_20-_204_20-_20JBATS-VOLUME4-ISSUE1-2008-v007-4.pdf",
+      "title": "Distributed decision support system applied to tactical air traffic flow management in the case of CINDACTA I",
+      "status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)",
+      "reason": "error",
+      "detail": "HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "domain": "www.taylorfrancis.com",
+      "url": "https://www.taylorfrancis.com/chapters/edit/10.4324/9781410610997-34/use-decision-support-tools-assist-atc-traffic-management-coordinators-airport-surface-management-amy-spencer-philip-smith-charles-billings",
+      "title": "Use of decision support tools to assist ATC traffic management coordinators in airport surface management",
+      "status": "failed",
+      "reason": "failed"
+    },
+    {
+      "domain": "pubsonline.informs.org",
+      "url": "https://pubsonline.informs.org/doi/abs/10.1287/mnsc.1080.0878",
+      "title": "An integrated decision - making approach for improving European air traffic management",
+      "status": "login_required",
+      "reason": "login_required"
+    },
+    {
+      "domain": "iris.uniroma1.it",
+      "url": "https://iris.uniroma1.it/handle/11573/1724570",
+      "title": "Examining decision - making in air traffic control . Enhancing transparency and decision support through machine learning, explanation, and visualization. A case study",
+      "status": "failed",
+      "reason": "failed"
+    },
+    {
+      "domain": "enac.hal.science",
+      "url": "https://enac.hal.science/hal-01521988/",
+      "title": "Advanced decision aids for air traffic controllers : Understanding different working methods from a cognitive point of view",
+      "status": "error: Expecting value: line 1 column 1 (char 0)",
+      "reason": "error",
+      "detail": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "domain": "if-mstuca.ru",
+      "url": "https://if-mstuca.ru/konferentciia/images/Sborniki/Sbornik_XIV_MNPK_X-2025_Tom_2.pdf#page=172",
+      "title": "ASSESSMENT OF DECISION SUPPORT SYSTEM EFFECTIVENESS IN A COMPETENCE-ORIENTED MODEL FOR AIR TRAFFIC CONTROLLER TRAINING",
+      "status": "failed",
+      "reason": "failed"
+    },
+    {
+      "domain": "journals.sagepub.com",
+      "url": "https://journals.sagepub.com/doi/abs/10.1518/0018720053653802",
+      "title": "Automation in future air traffic management : Effects of decision aid reliability on controller performance and mental workload",
+      "status": "login_required",
+      "reason": "login_required"
+    },
+    {
+      "domain": "api.taylorfrancis.com",
+      "url": "https://api.taylorfrancis.com/content/chapters/edit/download?identifierName=doi&identifierValue=10.1201/9781003386599-19&type=chapterpdf",
+      "title": "Intelligent decision support system for air traffic management",
+      "status": "failed",
+      "reason": "failed"
+    },
+    {
+      "domain": "www.intechopen.com",
+      "url": "https://www.intechopen.com/chapters/19543",
+      "title": "Air traffic control decision support for integrated community noise management",
+      "status": "login_required",
+      "reason": "login_required"
+    },
+    {
+      "domain": "re.public.polimi.it",
+      "url": "https://re.public.polimi.it/handle/11311/1020703",
+      "title": "Analysis of adaptive traffic control systems design of a decision support system for better choices",
+      "status": "failed",
+      "reason": "failed"
+    },
+    {
+      "domain": "elibrary.ru",
+      "url": "https://elibrary.ru/item.asp?id=48290609",
+      "title": "DEVELOPING A DECISION SUPPORT TOOL FOR AIR ROUTE PLANNING SYSTEM",
+      "status": "failed",
+      "reason": "failed"
+    },
+    {
+      "domain": "search.ebscohost.com",
+      "url": "https://search.ebscohost.com/login.aspx?direct=true&profile=ehost&scope=site&authtype=crawler&jrnl=10540229&AN=37284028&h=IyHfg%2F4nalwLGcpt9pitrFRAJwXmwdzn9%2BCUVhfl48nAuY59KVUo9%2FfBqmo5Ganyhtce8act3ibBout%2FwzmZZQ%3D%3D&crl=c",
+      "title": "Government and Academia Partnership to Test and Evaluate Air Traffic Control Decision Support Software.",
+      "status": "failed",
+      "reason": "failed"
+    }
+  ]
+}

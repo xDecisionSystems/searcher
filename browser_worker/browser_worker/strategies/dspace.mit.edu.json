@@ -9,15 +9,9 @@
   "steps": [
     {
       "type": "click",
-      "selector": "button:has-text('Decline')",
-      "element_text": "Decline",
-      "note": "Dismiss cookie consent banner"
-    },
-    {
-      "type": "click",
-      "selector": "a:has-text('Download')",
+      "selector": "button:has-text('Download')",
       "element_text": "Download",
-      "note": "DSpace bitstream download link"
+      "note": "DSpace bitstream download button — triggers /server/api/core/bitstreams/{uuid}/content response"
     },
     {
       "type": "wait_for_pdf_response",

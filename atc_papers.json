@@ -1,0 +1,1539 @@
+{
+  "query": "decision support tool for air traffic control",
+  "total_results": 98,
+  "results": [
+    {
+      "title": "Tackling uncertainty for the development of efficient decision support system in air traffic management",
+      "url": "https://ieeexplore.ieee.org/abstract/document/8755486/",
+      "snippet": "\u2026 of a decision support system for making a more efficient use of the airspace and ground capacity. The system would be able to provide support for air traffic controllers in handling large \u2026",
+      "publication_year": 2019,
+      "authors": [
+        "P Scala",
+        "MM Mota",
+        "J Ma\u2026"
+      ],
+      "source": "IEEE Transactions on\u00a0\u2026",
+      "citation_count": 31,
+      "pdf_link": "https://enac.hal.science/hal-02166833/document",
+      "index": 1,
+      "download_status": "ok"
+    },
+    {
+      "title": "Airport Ground Optimizer (AGO): A decision support system initiative for air traffic controllers with optimization and decision - aid algorithms",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0969699724001133",
+      "snippet": "\u2026 Hence, Decision Support Systems (DSS) are designed to assist human Air Traffic Controllers (ATCos) \u2026 The Airport Ground Optimizer (AGO) is a DSS designed for ATCos to manage the \u2026",
+      "publication_year": 2024,
+      "authors": [
+        "K D\u00f6nmez"
+      ],
+      "source": "Journal of Air Transport Management",
+      "citation_count": 19,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S0969699724001133",
+      "index": 2,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Design and evaluation study of visual analytics decision support tools in air traffic control",
+      "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.14431",
+      "snippet": "\u2026 air traffic control support system . The evaluation study was performed with domain experts to compare the effects of visualization concepts on operator engagement in processing \u2026",
+      "publication_year": 2022,
+      "authors": [
+        "E Zohrevandi",
+        "CAL Westin",
+        "J Lundberg\u2026"
+      ],
+      "source": "Computer Graphics\u00a0\u2026",
+      "citation_count": 14,
+      "pdf_link": "https://onlinelibrary.wiley.com/doi/pdf/10.1111/cgf.14431",
+      "index": 3,
+      "download_status": "login_required"
+    },
+    {
+      "title": "Decision support system in tactical air traffic flow management for air traffic flow controllers",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0969699708001051",
+      "snippet": "\u2026 A distributed decision support system for tactical air traffic flow management is developed for the First \u2026 in Brazil and describing an initial evaluation of the decision support system . The \u2026",
+      "publication_year": 2008,
+      "authors": [
+        "L Weigang",
+        "BB de Souza",
+        "AMF Crespo\u2026"
+      ],
+      "source": "\u2026\u00a0air transport management",
+      "citation_count": 35,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S0969699708001051",
+      "index": 4,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Situation awareness decision support system for air traffic management using ontological reasoning",
+      "url": "https://arc.aiaa.org/doi/abs/10.2514/1.I010989",
+      "snippet": "\u2026 to support decision making in ATM, including UAV cyber protection and swarms of drones. \u2026 in this paper is the foundation of a decision support system (DSS) for ATM systems. The \u2026",
+      "publication_year": 2022,
+      "authors": [
+        "CC Insaurralde",
+        "E Blasch"
+      ],
+      "source": "Journal of Aerospace Information Systems",
+      "citation_count": 34,
+      "pdf_link": "https://arc.aiaa.org/doi/pdf/10.2514/1.I010989",
+      "index": 5,
+      "download_status": "ok"
+    },
+    {
+      "title": "Digital twin as a decision support tool for airport traffic control",
+      "url": "https://ieeexplore.ieee.org/abstract/document/9259294/",
+      "snippet": "\u2026 It is assumed that in the early stages of using the Digital Twin, the role of the control system can be performed by a user who has the sufficient skills in traffic control . User decisions are \u2026",
+      "publication_year": 2020,
+      "authors": [
+        "F Saifutdinov",
+        "I Jackson",
+        "J Tolujevs\u2026"
+      ],
+      "source": "\u2026\u00a0and Management\u00a0\u2026",
+      "citation_count": 45,
+      "pdf_link": "https://www.researchgate.net/profile/Ilya-Jackson/publication/346220793_Digital_Twin_as_a_Decision_Support_Tool_for_Airport_Traffic_Control/links/5fbce9d992851c933f526456/Digital-Twin-as-a-Decision-Support-Tool-for-Airport-Traffic-Control.pdf",
+      "index": 6,
+      "download_status": "ok"
+    },
+    {
+      "title": "A decision support tool for a Ground Air Traffic Control application",
+      "url": "https://ieeexplore.ieee.org/abstract/document/6289787/",
+      "snippet": "\u2026 In this paper we propose a basic concept for the design of a decision support tool for \u2026 decision support tool We propose the design of a prototype to facilitate the support human decision \u2026",
+      "publication_year": 2012,
+      "authors": [
+        "AL Jousselme",
+        "P Maupin",
+        "B Debaque\u2026"
+      ],
+      "source": "\u2026\u00a0on Information Fusion",
+      "citation_count": 4,
+      "pdf_link": "https://www.researchgate.net/profile/Anne-Laure-Jousselme/publication/261079160_A_decision_support_tool_for_a_Ground_Air_Traffic_Control_application/links/6304f41761e4553b95322ee7/A-decision-support-tool-for-a-Ground-Air-Traffic-Control-application.pdf",
+      "index": 7,
+      "download_status": "ok"
+    },
+    {
+      "title": "Real-time decision support for air traffic management , utilizing machine learning",
+      "url": "https://www.sciencedirect.com/science/article/pii/096706619600113X",
+      "snippet": "\u2026 flows and flight schedules efficiently in a real-time fashion. To meet this objective, in this \u2026 decision support system is described. This system consists of several distributed decision -\u2026",
+      "publication_year": 1996,
+      "authors": [
+        "J Nogami",
+        "S Nakasuka",
+        "T Tanabe"
+      ],
+      "source": "Control Engineering Practice",
+      "citation_count": 22,
+      "pdf_link": "/scholar?output=instlink&q=info:OtIf_e1xqWwJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=18061545562002101461&oi=lle",
+      "index": 8,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Decision support framework to assist air traffic management",
+      "url": "https://ieeexplore.ieee.org/abstract/document/7777974/",
+      "snippet": "\u2026 tools to improve air traffic management . This study aims at intelligently assimilating air traffic specialist decisions \u2026 turn developing a decision - support tool based on these past decisions . \u2026",
+      "publication_year": 2016,
+      "authors": [
+        "S Gorripaty",
+        "M Hansen\u2026"
+      ],
+      "source": "IEEE/AIAA 35th\u00a0\u2026",
+      "citation_count": 11,
+      "pdf_link": "/scholar?output=instlink&q=info:j9IfvZPViNEJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=12715853246836780227&oi=lle",
+      "index": 9,
+      "download_status": "ok"
+    },
+    {
+      "title": "Decision support systems for air traffic controllers based on the analysis of their decision - making processes",
+      "url": "https://www.inderscienceonline.com/doi/abs/10.1504/IJAOM.2012.045892",
+      "snippet": "\u2026 traffic controllers \u2019 decision - making processes. To do this, we have \u2026 -up decision aiding tools . In doing this, we have laid down the foundation for the creation of decision support system . \u2026",
+      "publication_year": 2012,
+      "authors": [
+        "D Annebicque",
+        "I Cr\u00e9vits",
+        "T Poulain\u2026"
+      ],
+      "source": "\u2026\u00a0Management",
+      "citation_count": 3,
+      "pdf_link": "https://www.academia.edu/download/90214541/ijaom.2012.04589220220824-1-2okp32.pdf",
+      "index": 10,
+      "download_status": "login_required"
+    },
+    {
+      "title": "A novel air traffic management decision support system",
+      "url": "https://research-repository.rmit.edu.au/articles/thesis/A_novel_air_traffic_management_decision_support_system/27589038",
+      "snippet": "\u2026 (MOTO) and Dynamic Airspace Management (DAM) models and tools to enhance the performance of Air Traffic Management (ATM) and Air Traffic Flow Management (ATFM) systems, \u2026",
+      "publication_year": 2024,
+      "authors": [
+        "A Gardi - 2024 - research-repository.rmit.edu.au"
+      ],
+      "source": "",
+      "citation_count": 2,
+      "pdf_link": "https://research-repository.rmit.edu.au/articles/thesis/A_novel_air_traffic_management_decision_support_system/27589038/1/files/50759097.pdf",
+      "index": 11,
+      "download_status": "failed"
+    },
+    {
+      "title": "Trajectory modeling accuracy for air traffic management decision support tools",
+      "url": "http://www.icas.org/icas_archive/ICAS2002/PAPERS/R45.PDF",
+      "snippet": "\u2026 The FAA, with assistance from the National Aeronautics and Space \u2026 of \u201cfree flight \u201d DSS tools to a subset of our nation\u2019s Air Traffic Control (ATC) facilities. Although each of these tools \u2026",
+      "publication_year": 2002,
+      "authors": [
+        "S Mondoloni",
+        "M Paglione",
+        "S Green"
+      ],
+      "source": "ICAS  Congress",
+      "citation_count": 45,
+      "pdf_link": "http://www.icas.org/icas_archive/ICAS2002/PAPERS/R45.PDF",
+      "index": 12,
+      "download_status": "ok"
+    },
+    {
+      "title": "Air traffic control tools assessment",
+      "url": "https://www.ojs.cvut.cz/ojs/index.php/mad/article/view/4143",
+      "snippet": "\u2026 tool supports the controller in making decisions as it belongs to the category Decision Support Tools \u2026 characteristics of tools , which should help the air traffic controllers to decrease their \u2026",
+      "publication_year": 2017,
+      "authors": [
+        "T Noskievi\u010d",
+        "J Kraus"
+      ],
+      "source": "MAD-Magazine of Aviation Development",
+      "citation_count": 20,
+      "pdf_link": "https://ojs.cvut.cz/ojs/index.php/mad/article/view/4143/3996",
+      "index": 13,
+      "download_status": "ok"
+    },
+    {
+      "title": "Collaborative decision making in air traffic management : Current and future research directions",
+      "url": "https://link.springer.com/content/pdf/10.1007/978-3-662-04632-6_2?pdf=chapter%20toc",
+      "snippet": "\u2026 of new operational procedures and decision support tools for implementing and managing \u2026 can, and should be; applied to a much broader class of problems in air traffic management . \u2026",
+      "publication_year": 2001,
+      "authors": [
+        "MO Ball",
+        "CY Chen",
+        "R Hoffman",
+        "T Vossen"
+      ],
+      "source": "\u2026\u00a0in air traffic management",
+      "citation_count": 143,
+      "pdf_link": "https://drum.lib.umd.edu/bitstreams/b32e2d52-6358-4c23-9fe7-7d606dcdc7bd/download",
+      "index": 14,
+      "download_status": "login_required"
+    },
+    {
+      "title": "Decision support automation research in the en route air traffic control environment",
+      "url": "https://rosap.ntl.bts.gov/view/dot/16689",
+      "snippet": "\u2026 controller station included a display system replacement console and a prototype decision support tool \u2026 software connected to an operational Host Computer System (HCS). The HCS \u2026",
+      "publication_year": 2002,
+      "authors": [
+        "B Willems",
+        "M Heiney - 2002 - rosap.ntl.bts.gov"
+      ],
+      "source": "",
+      "citation_count": 31,
+      "pdf_link": "https://rosap.ntl.bts.gov/view/dot/16689/dot_16689_DS1.pdf",
+      "index": 15,
+      "download_status": "ok"
+    },
+    {
+      "title": "Analysis of Air Traffic Control Command Entries and the Impact on Decision Support Tool Performance",
+      "url": "https://arc.aiaa.org/doi/abs/10.2514/atcq.22.1.1",
+      "snippet": "\u2026 factors improvements to ERAM\u2019s Decision Support Tools (DSTs) post Release 3, and algorithmic enhancement to the CP to progress the usability of the tools for the near-term timeframe \u2026",
+      "publication_year": 2014,
+      "authors": [
+        "J Rakas",
+        "M Seelhorst",
+        "BB Niu",
+        "J Tom\u2026"
+      ],
+      "source": "Air Traffic Control\u00a0\u2026",
+      "citation_count": 5,
+      "pdf_link": "https://arc.aiaa.org/doi/pdf/10.2514/atcq.22.1.1",
+      "index": 16,
+      "download_status": "ok"
+    },
+    {
+      "title": "The development of decision support models for European air traffic flow management",
+      "url": "https://wrap.warwick.ac.uk/id/eprint/2547/",
+      "snippet": "\u2026 growth in the capacity of the air traffic control (ATC) system . This has started to strain the \u2026 aimed at the development of a decision support system for a particular company could be seen \u2026",
+      "publication_year": 1998,
+      "authors": [
+        "PAL De Matos - 1998 - wrap.warwick.ac.uk"
+      ],
+      "source": "",
+      "citation_count": 9,
+      "pdf_link": "https://wrap.warwick.ac.uk/id/eprint/2547/1/WRAP_THESIS_DeMatos_1998.pdf",
+      "index": 17,
+      "download_status": "ok"
+    },
+    {
+      "title": "Development of requirements for a decision support system for a shift supervisor to manage professional stress of air traffic controllers",
+      "url": "https://tech.vernadskyjournals.in.ua/journals/2024/3_2024/part_1/27.pdf",
+      "snippet": "\u2026 should be provided with decision support tools . It has been \u2026 tools for real-time monitoring and controlling ATCO occupational stress. The idea of developing a decision support system (\u2026",
+      "publication_year": 2024,
+      "authors": [
+        "AS Palonyi"
+      ],
+      "source": "\u0412\u0447\u0435\u043d\u0456 \u0437\u0430\u043f\u0438\u0441\u043a\u0438 \u0442\u0430\u0432\u0440\u0456\u0439\u0441\u044c\u043a\u043e\u0433\u043e\u00a0\u2026",
+      "citation_count": 3,
+      "pdf_link": "https://tech.vernadskyjournals.in.ua/journals/2024/3_2024/part_1/27.pdf",
+      "index": 18,
+      "download_status": "failed"
+    },
+    {
+      "title": "Assessing the benefits of collaborative decision making in air traffic management",
+      "url": "https://blog.umd.edu/nextor/files/2019/02/2003_JPO_UMD_Benefits-CDM-in-ATM-16h9lc9.pdf",
+      "snippet": "\u2026 These algorithms are key components of FSM, the CDM decision support tool . Another fundamental CDM technology is the CDMnet, a private extra-net that connects the ATCSCC, the \u2026",
+      "publication_year": 2001,
+      "authors": [
+        "MO Ball",
+        "RL Hoffman",
+        "D Knorr",
+        "J Wetherly\u2026"
+      ],
+      "source": "\u2026\u00a0in Astronautics and\u00a0\u2026",
+      "citation_count": 135,
+      "pdf_link": "https://blog.umd.edu/nextor/files/2019/02/2003_JPO_UMD_Benefits-CDM-in-ATM-16h9lc9.pdf",
+      "index": 19,
+      "download_status": "ok"
+    },
+    {
+      "title": "Robust decision - support tools for airport surface traffic",
+      "url": "https://dspace.mit.edu/handle/1721.1/34945",
+      "snippet": "\u2026 - support tools for airport surface traffic [\u2026 the monitor ing, prediction, control and management tasks currently performed by human air traffic controllers responsible for airport surface traffic . \u2026",
+      "publication_year": 2004,
+      "authors": [
+        "FR Carr - 2004 - dspace.mit.edu"
+      ],
+      "source": "",
+      "citation_count": 36,
+      "pdf_link": "https://dspace.mit.edu/bitstream/handle/1721.1/34945/210_Carr_PhD.pdf;sequence=1",
+      "index": 20,
+      "download_status": "failed"
+    },
+    {
+      "title": "Distributed decision support system applied to tactical air traffic flow management in the case of CINDACTA I",
+      "url": "https://www.academia.edu/download/49461755/22_Art_20-_204_20-_20JBATS-VOLUME4-ISSUE1-2008-v007-4.pdf",
+      "snippet": "\u2026 Experimental work has demonstrated the significance of our system to air traffic controllers . \u2026 In doing this, we have laid down the foundation for the creation of decision support system . \u2026",
+      "publication_year": 2008,
+      "authors": [
+        "BS Bueno"
+      ],
+      "source": "Journal of the Brazilian\u2026",
+      "citation_count": 8,
+      "pdf_link": "https://www.academia.edu/download/49461755/22_Art_20-_204_20-_20JBATS-VOLUME4-ISSUE1-2008-v007-4.pdf",
+      "index": 21,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Use of decision support tools to assist ATC traffic management coordinators in airport surface management",
+      "url": "https://www.taylorfrancis.com/chapters/edit/10.4324/9781410610997-34/use-decision-support-tools-assist-atc-traffic-management-coordinators-airport-surface-management-amy-spencer-philip-smith-charles-billings",
+      "snippet": "\u2026 This paper discusses the roles and tasks of Air Traffic Control Tower Traffic Management \u2026 the flow of surface traffic at major US airports. It examines decision support tools designed to \u2026",
+      "publication_year": 2005,
+      "authors": [
+        "A Spencer",
+        "PJ Smith",
+        "CE Billings"
+      ],
+      "source": "Human Performance, Situation\u00a0\u2026",
+      "citation_count": 1,
+      "pdf_link": "https://www.researchgate.net/profile/Peter-Hancock-2/publication/235110827_Human_Performance_Situation_Awareness_and_Automation_Current_Research_and_Trends_Volume_1/links/0912f511106b2e58d4000000/Human-Performance-Situation-Awareness-and-Automation-Current-Research-and-Trends-Volume-1.pdf#page=204",
+      "index": 22,
+      "download_status": "failed"
+    },
+    {
+      "title": "Flexible air traffic controller deployment with artificial intelligence based decision support : Literature survey and evaluation framework",
+      "url": "https://elib.dlr.de/208684/",
+      "snippet": "\u2026 By examining the alignment between the literature's results and these predefined categories, the paper aims to identify which AI-based decision support tools are most relevant and \u2026",
+      "publication_year": 2024,
+      "authors": [
+        "J Meier",
+        "M Finke",
+        "O Ohneiser",
+        "M Jameel"
+      ],
+      "source": "Deutscher Luft-und\u00a0\u2026",
+      "citation_count": 4,
+      "pdf_link": "https://elib.dlr.de/208684/1/Flexible%20Air%20Traffic%20Controller%20Deployment%20with%20Artificial%20Intelligence%20based%20Decision%20Support.pdf",
+      "index": 23,
+      "download_status": "ok"
+    },
+    {
+      "title": "Uncertainty-driven ontology for decision support system in air transport",
+      "url": "https://www.mdpi.com/2079-9292/11/3/362",
+      "snippet": "\u2026 overwhelm aircraft pilots, air traffic controllers , and air transport businesses, which prioritize \u2026 clear rules and procedures for unmanned aircraft system Traffic Management (UTM) [10]. \u2026",
+      "publication_year": 2022,
+      "authors": [
+        "CC Insaurralde",
+        "EP Blasch",
+        "PCG Costa\u2026"
+      ],
+      "source": "Electronics",
+      "citation_count": 26,
+      "pdf_link": "https://www.mdpi.com/2079-9292/11/3/362",
+      "index": 24,
+      "download_status": "ok"
+    },
+    {
+      "title": "Using air -ground data link to improve air traffic management decision support system performance",
+      "url": "https://www.researchgate.net/profile/Craig-Wanke/publication/267420789_Using_Air-Ground_Data_Link_to_Improve_Air_Traffic_Management_Decision_Support_System_Performance/links/54c0f1af0cf28a6324a47933/Using-Air-Ground-Data-Link-to-Improve-Air-Traffic-Management-Decision-Support-System-Performance.pdf",
+      "snippet": "\u2026 of decision support tools . This may be achievable by obtaining supplementary data to address the weaknesses in the current data set. This study specifically addresses the use of \u2026",
+      "publication_year": 1997,
+      "authors": [
+        "C Wanke"
+      ],
+      "source": "USA-Europe ATM R&D Seminar",
+      "citation_count": 17,
+      "pdf_link": "https://www.researchgate.net/profile/Craig-Wanke/publication/267420789_Using_Air-Ground_Data_Link_to_Improve_Air_Traffic_Management_Decision_Support_System_Performance/links/54c0f1af0cf28a6324a47933/Using-Air-Ground-Data-Link-to-Improve-Air-Traffic-Management-Decision-Support-System-Performance.pdf",
+      "index": 25,
+      "download_status": "ok"
+    },
+    {
+      "title": "An integrated decision - making approach for improving European air traffic management",
+      "url": "https://pubsonline.informs.org/doi/abs/10.1287/mnsc.1080.0878",
+      "snippet": "\u2026 problem of selecting sustainable ATM system enhancements. By integrated we \u2026 decision analysis (MCDA) techniques, and large-scale optimization tools in a single decision making \u2026",
+      "publication_year": 2008,
+      "authors": [
+        "Y Grushka-Cockayne",
+        "BD Reyck\u2026"
+      ],
+      "source": "Management\u00a0\u2026",
+      "citation_count": 63,
+      "pdf_link": "https://www.jstor.org/stable/pdf/20122487",
+      "index": 26,
+      "download_status": "login_required"
+    },
+    {
+      "title": "Decision - making tool for applying adaptive traffic control systems",
+      "url": "https://rosap.ntl.bts.gov/view/dot/31075",
+      "snippet": "\u2026 decision making tool ) to help traffic engineers and decision makers decide whether or not adaptive control is better suited for a given traffic \u2026 and/or intersection than actuated control . The \u2026",
+      "publication_year": 2016,
+      "authors": [
+        "XJ Ban",
+        "JM Wojtowicz",
+        "W Li - 2016 - rosap.ntl.bts.gov"
+      ],
+      "source": "",
+      "citation_count": 16,
+      "pdf_link": "https://rosap.ntl.bts.gov/view/dot/31075/dot_31075_DS1.pdf",
+      "index": 27,
+      "download_status": "ok"
+    },
+    {
+      "title": "Decision support systems for automated terminal area air traffic control",
+      "url": "https://dspace.mit.edu/handle/1721.1/68057",
+      "snippet": "\u2026 This work studies the automation of the terminal area Air Traffic Management and Control (ATM/C) system . The ATM/C decision - making process is analyzed and broken down into a \u2026",
+      "publication_year": 1982,
+      "authors": [
+        "JD Pararas - 1982 - dspace.mit.edu"
+      ],
+      "source": "",
+      "citation_count": 4,
+      "pdf_link": "https://dspace.mit.edu/bitstream/handle/1721.1/68057/FTL_R_1982_03.pdf?sequence=1",
+      "index": 28,
+      "download_status": "failed"
+    },
+    {
+      "title": "Defining the drivers for accepting decision making automation in air traffic management",
+      "url": "https://www.tandfonline.com/doi/abs/10.1080/00140139.2011.558635",
+      "snippet": "\u2026 the ATM system . The success of this approach is contingent on Air Traffic Control Operators' (\u2026 the application of two new automated decision - making tools were created. The results of an \u2026",
+      "publication_year": 2011,
+      "authors": [
+        "M Bekier",
+        "BRC Molesworth",
+        "A Williamson"
+      ],
+      "source": "Ergonomics",
+      "citation_count": 22,
+      "pdf_link": "https://www.tandfonline.com/doi/pdf/10.1080/00140139.2011.558635",
+      "index": 29,
+      "download_status": "ok"
+    },
+    {
+      "title": "Evaluation of a decision -based invocation strategy for adaptive support for air traffic control",
+      "url": "https://ieeexplore.ieee.org/abstract/document/9927341/",
+      "snippet": "\u2026 the development of controller assistance tools (CATO) [17] and conflict resolution tools for flight -\u2026 D\u2019Arcy and PS Della Rocca, \u201c Air traffic control specialist decision making and strategic \u2026",
+      "publication_year": 2022,
+      "authors": [
+        "M IJtsma",
+        "C Borst",
+        "MM van Paassen\u2026"
+      ],
+      "source": "IEEE Transactions on\u00a0\u2026",
+      "citation_count": 12,
+      "pdf_link": "https://www.researchgate.net/profile/Clark-Borst/publication/365115528_Evaluation_of_a_Decision-Based_Invocation_Strategy_for_Adaptive_Support_for_Air_Traffic_Control/links/637ddff054eb5f547cf878f1/Evaluation-of-a-Decision-Based-Invocation-Strategy-for-Adaptive-Support-for-Air-Traffic-Control.pdf",
+      "index": 30,
+      "download_status": "ok"
+    },
+    {
+      "title": "An intelligent recognition model for dynamic air traffic decision - making",
+      "url": "https://www.sciencedirect.com/science/article/pii/S095070511930574X",
+      "snippet": "\u2026 To solve the problems in air traffic management with the multi-dimensions of the utilization of airspace resources, IATA, European Union, Federal Aviation Administration and Civil \u2026",
+      "publication_year": 2020,
+      "authors": [
+        "X Du",
+        "Z Lu",
+        "D Wu"
+      ],
+      "source": "Knowledge-Based Systems",
+      "citation_count": 12,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S095070511930574X",
+      "index": 31,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Decision analysis of air traffic controller in order to propose decision support systems",
+      "url": "https://ieeexplore.ieee.org/abstract/document/5223804/",
+      "snippet": "\u2026 to identify the decision making process of a decision maker (\u2026 system able to propose solution, compromise to the controller \u2026 for the creation of assistance tools to the air traffic control \", in \u2026",
+      "publication_year": 2009,
+      "authors": [
+        "D Annebicque",
+        "I Crevits",
+        "T Poulain\u2026"
+      ],
+      "source": "\u2026\u00a0on Computers &\u00a0\u2026",
+      "citation_count": 8,
+      "pdf_link": "https://www.researchgate.net/profile/Patrick-Millot/publication/264813287_Decision_support_systems_for_air_traffic_controllers_based_on_the_analysis_of_their_decision-making_processes/links/544f9eda0cf29473161dd404/Decision-support-systems-for-air-traffic-controllers-based-on-the-analysis-of-their-decision-making-processes.pdf",
+      "index": 32,
+      "download_status": "ok"
+    },
+    {
+      "title": "Automation transparency and personalized decision support : Air traffic controller interaction with a resolution advisory system",
+      "url": "https://www.sciencedirect.com/science/article/pii/S2405896316321103",
+      "snippet": "\u2026 ) project, hypothesized that decision support conformal to an controller \u2019s problem solving \u2026 of a decision support system providing conflict resolution advisories. Controllers accepted \u2026",
+      "publication_year": 2016,
+      "authors": [
+        "C Westin",
+        "C Borst",
+        "B Hilburn"
+      ],
+      "source": "IFAC-PapersOnLine",
+      "citation_count": 57,
+      "pdf_link": "https://www.researchgate.net/profile/Carl-Westin-2/publication/309897801_Automation_Transparency_and_Personalized_Decision_Support_Air_Traffic_Controller_Interaction_with_a_Resolution_Advisory_System/links/5a02bd19aca2720df3ce6b02/Automation-Transparency-and-Personalized-Decision-Support-Air-Traffic-Controller-Interaction-with-a-Resolution-Advisory-System.pdf",
+      "index": 33,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "A decision support system for risk reduction in pandemic spread based on the management of passenger air traffic",
+      "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/itor.13576",
+      "snippet": "\u2026 In this paper, the web-based decision support system (DSS) for risk reduction in pandemic spread based on the management of passenger air traffic (RRPS-PAT) is also introduced. \u2026",
+      "publication_year": 2025,
+      "authors": [
+        "GA Pe\u00f1a",
+        "A Mateos",
+        "A Jim\u00e9nez\u2010Mart\u00edn\u2026"
+      ],
+      "source": "International\u00a0\u2026",
+      "citation_count": 3,
+      "pdf_link": "https://onlinelibrary.wiley.com/doi/pdf/10.1111/itor.13576",
+      "index": 34,
+      "download_status": "login_required"
+    },
+    {
+      "title": "Examining decision - making in air traffic control . Enhancing transparency and decision support through machine learning, explanation, and visualization. A case study",
+      "url": "https://iris.uniroma1.it/handle/11573/1724570",
+      "snippet": "\u2026 like Air Traffic Management (ATM), the individual decisions \u2026 in AI algorithms within the Air Traffic Management domain. This \u2026 \u2022 The usability of the decision support system , divided into 3 \u2026",
+      "publication_year": 2024,
+      "authors": [
+        "C Hurter",
+        "A Degas",
+        "A Guibert",
+        "M Poyer\u2026"
+      ],
+      "source": "\u2026\u00a0Conference on Agents\u00a0\u2026",
+      "citation_count": 5,
+      "pdf_link": "https://iris.uniroma1.it/bitstream/11573/1724570/3/Hurter_Examining_2024.pdf",
+      "index": 35,
+      "download_status": "failed"
+    },
+    {
+      "title": "A decision support system for airport strategic planning",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0968090X03000780",
+      "snippet": "This paper describes an integrated set of models for the estimation of the capacity of an airfield and the associated delays. The aim is to develop a decision support tool suitable for \u2026",
+      "publication_year": 2004,
+      "authors": [
+        "MA Stamatopoulos",
+        "KG Zografos",
+        "AR Odoni"
+      ],
+      "source": "Transportation Research Part\u00a0\u2026",
+      "citation_count": 134,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S0968090X03000780",
+      "index": 36,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Advanced decision aids for air traffic controllers : Understanding different working methods from a cognitive point of view",
+      "url": "https://enac.hal.science/hal-01521988/",
+      "snippet": "\u2026 This paper presents some experimental results about a major air traffic controllers \u2019 cognitive process while working with a new decision support system called Erato. This project is \u2026",
+      "publication_year": 2017,
+      "authors": [
+        "MC Bressolle",
+        "R Benhacene",
+        "N Boudes",
+        "R Parise - 2017 - enac.hal.science"
+      ],
+      "source": "",
+      "citation_count": 13,
+      "pdf_link": "https://enac.hal.science/hal-01521988/document",
+      "index": 37,
+      "download_status": "error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "title": "SOP: a decision - aid tool for Global Air Traffic Management System Optimisation",
+      "url": "https://arc.aiaa.org/doi/abs/10.2514/atcq.10.2.131",
+      "snippet": "\u2026 SOP can be seen as a decision aid tool to assist airspace planners in progressively improving airspace structure. The two phases, A and B, in making the Optimal assessment of overall \u2026",
+      "publication_year": 2002,
+      "authors": [
+        "T Champougny",
+        "A Duchene",
+        "A Joubert\u2026"
+      ],
+      "source": "Air Traffic Control\u00a0\u2026",
+      "citation_count": 7,
+      "pdf_link": "https://arc.aiaa.org/doi/pdf/10.2514/atcq.10.2.131",
+      "index": 38,
+      "download_status": "ok"
+    },
+    {
+      "title": "ASSESSMENT OF DECISION SUPPORT SYSTEM EFFECTIVENESS IN A COMPETENCE-ORIENTED MODEL FOR AIR TRAFFIC CONTROLLER TRAINING",
+      "url": "https://if-mstuca.ru/konferentciia/images/Sborniki/Sbornik_XIV_MNPK_X-2025_Tom_2.pdf#page=172",
+      "snippet": "\u2026 justifies assessing air traffic controller (ATC) training quality through a decision support system (DSS). It highlights the need to boost efficiency and objectivity in monitoring ATC \u2026",
+      "publication_year": null,
+      "authors": [
+        "MA Mikhailovna",
+        "RP Vitalievna"
+      ],
+      "source": "\u0420\u0415\u0414\u0410\u041a\u0426\u0418\u041e\u041d\u041d\u0410\u042f \u041a\u041e\u041b\u041b\u0415\u0413\u0418\u042f",
+      "citation_count": null,
+      "pdf_link": "https://if-mstuca.ru/konferentciia/images/Sborniki/Sbornik_XIV_MNPK_X-2025_Tom_2.pdf#page=172",
+      "index": 39,
+      "download_status": "failed"
+    },
+    {
+      "title": "Case study: efficient algorithms for air traffic management decision support tools",
+      "url": "https://ieeexplore.ieee.org/abstract/document/7347701/",
+      "snippet": "\u2026 Decision support tools in operation today barely extend beyond safety net features providing last-minute alerts for evasive actions. Tools \u2026 decision support tools for air traffic controllers . \u2026",
+      "publication_year": 2015,
+      "authors": [
+        "S John",
+        "KL John"
+      ],
+      "source": "Sensor Data Fusion: Trends, Solutions\u00a0\u2026",
+      "citation_count": 3,
+      "pdf_link": "/scholar?output=instlink&q=info:iN8JhtJ0P0IJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=9145489315959062809&oi=lle",
+      "index": 40,
+      "download_status": "ok"
+    },
+    {
+      "title": "Automation in future air traffic management : Effects of decision aid reliability on controller performance and mental workload",
+      "url": "https://journals.sagepub.com/doi/abs/10.1518/0018720053653802",
+      "snippet": "\u2026 traffic controller is not well understood. The present \u2026 decision aid on performance and mental workload of experienced, full-performance level controllers in a simulated Free Flight \u2026",
+      "publication_year": 2005,
+      "authors": [
+        "U Metzger",
+        "R Parasuraman"
+      ],
+      "source": "Human factors",
+      "citation_count": 376,
+      "pdf_link": "https://journals.sagepub.com/doi/pdf/10.1518/0018720053653802",
+      "index": 41,
+      "download_status": "login_required"
+    },
+    {
+      "title": "A method for making cross-comparable estimates of the benefits of decision support technologies for air traffic management",
+      "url": "https://ntrs.nasa.gov/citations/19980211460",
+      "snippet": "\u2026 making cross comparable estimates of the benefits of NASA-developed decision support technologies for air traffic management , \u2026 estimate benefits of three decision support tools (DSTs) \u2026",
+      "publication_year": 1998,
+      "authors": [
+        "D Lee",
+        "D Long",
+        "M Etheridge",
+        "J Plugge",
+        "J Johnson\u2026 - 1998 - ntrs.nasa.gov"
+      ],
+      "source": "",
+      "citation_count": 15,
+      "pdf_link": "https://ntrs.nasa.gov/api/citations/19980211460/downloads/19980211460.pdf",
+      "index": 42,
+      "download_status": "ok"
+    },
+    {
+      "title": "Decision support tools for the tower flight data manager system",
+      "url": "https://ieeexplore.ieee.org/abstract/document/5935290/",
+      "snippet": "\u2026 systems, and the prediction and planning of flight operations on the surface. The ability \u2026 air traffic controllers through a set of decision support tools . These tools provide decision support \u2026",
+      "publication_year": 2011,
+      "authors": [
+        "V Mehta",
+        "ME Miller",
+        "T Reynolds\u2026"
+      ],
+      "source": "\u2026\u00a0, Navigation, and\u00a0\u2026",
+      "citation_count": 10,
+      "pdf_link": "/scholar?output=instlink&q=info:cEZ_i5RhupwJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=9354309413327597858&oi=lle",
+      "index": 43,
+      "download_status": "ok"
+    },
+    {
+      "title": "A decision support system for total airport operations management and planning",
+      "url": "https://onlinelibrary.wiley.com/doi/abs/10.1002/atr.154",
+      "snippet": "\u2026 airport operating under any user-specified air traffic control (\u2026 integrated decision support system enabling airport decision \u2026 performance for the entire airport system . The proposed DSS \u2026",
+      "publication_year": 2013,
+      "authors": [
+        "KG Zografos",
+        "MA Madas\u2026"
+      ],
+      "source": "Journal of advanced\u00a0\u2026",
+      "citation_count": 40,
+      "pdf_link": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/atr.154",
+      "index": 44,
+      "download_status": "login_required"
+    },
+    {
+      "title": "Air traffic control specialist decision making and strategic planning-a field survey",
+      "url": "https://apps.dtic.mil/sti/html/tr/ADA389823/",
+      "snippet": "\u2026 This study investigated Air Traffic Control Specialists' perspective regarding decision making \u2026 Such knowledge may improve the design and implementation of new decision support tools \u2026",
+      "publication_year": 2001,
+      "authors": [
+        "J D'arcy",
+        "PS Rocco - 2001 - apps.dtic.mil"
+      ],
+      "source": "",
+      "citation_count": 52,
+      "pdf_link": "https://apps.dtic.mil/sti/pdfs/ADA389823.pdf",
+      "index": 45,
+      "download_status": "ok"
+    },
+    {
+      "title": "Data-Centric Air Traffic Management Decision Support Tool Model",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.2006-7830",
+      "snippet": "\u2026 flight information, is currently under development by the FAA.In parallel, ATM decision support tools \u2026 capabilities by providing controllers with tools to increase efficiency of air travel while \u2026",
+      "publication_year": 2006,
+      "authors": [
+        "J Murphy",
+        "R Reisman",
+        "R Savoye"
+      ],
+      "source": "6th AIAA Aviation Technology\u00a0\u2026",
+      "citation_count": 3,
+      "pdf_link": "https://scholar.archive.org/work/ihlhh3eggzazxmfa2ku2oqticu/access/wayback/http://pdfs.semanticscholar.org/e0d6/3b19be37d3d4d28e737cca1d45b268e4aeff.pdf",
+      "index": 46,
+      "download_status": "ok"
+    },
+    {
+      "title": "Decision support tool for predicting aircraft arrival rates from weather forecasts",
+      "url": "https://ieeexplore.ieee.org/abstract/document/4559186/",
+      "snippet": "\u2026 to estimate air traffic capacity or decision support tools that \u2026 decision support tool known as the Weather Delay Prediction \u2026 work and their advice on air traffic management and weather \u2026",
+      "publication_year": 2008,
+      "authors": [
+        "DA Smith",
+        "L Sherry"
+      ],
+      "source": "\u2026\u00a0, Navigation and Surveillance Conference",
+      "citation_count": 43,
+      "pdf_link": "https://www.academia.edu/download/46995102/Decision_support_tool_for_predicting_air20160704-15762-celmkr.pdf",
+      "index": 47,
+      "download_status": "ok"
+    },
+    {
+      "title": "A Gaussian process based decision support tool for air traffic management",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.2017-4264",
+      "snippet": "\u2026 provide decision support by visualising the flight corridors and produce air - traffic complexity \u2026 important when providing decision support to the TFM and specific conditions are evaluated. \u2026",
+      "publication_year": 2017,
+      "authors": [
+        "WJ Eerland",
+        "S Box",
+        "H Fangohr\u2026"
+      ],
+      "source": "17th AIAA Aviation\u00a0\u2026",
+      "citation_count": 6,
+      "pdf_link": "https://eprints.soton.ac.uk/408419/2/paper.pdf",
+      "index": 48,
+      "download_status": "ok"
+    },
+    {
+      "title": "Real-time decision support for air traffic management , utilizing concept learning",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.1998-4105",
+      "snippet": "\u2026 traffic flows and flight schedules efficiently in a realtime fashion. To meet this objective, in \u2026 decision support system is described. This system consists of several distributed decision -\u2026",
+      "publication_year": 1998,
+      "authors": [
+        "J Nogami",
+        "S Nakasuka",
+        "K Hori"
+      ],
+      "source": "Guidance, Navigation, and Control\u00a0\u2026",
+      "citation_count": 4,
+      "pdf_link": "",
+      "index": 49,
+      "download_status": "ok"
+    },
+    {
+      "title": "Collaborative decision making in air traffic flow management",
+      "url": "https://www.glue.umd.edu/~hoff/CDMpaper/cdm09-12-98.pdf",
+      "snippet": "\u2026 aOCs to generate the information displayed through the CDM decision support tool , FSM. \u2026 termi\u041b nal area (TMa) decision support systems for air traffic management . NaSa is playing a \u2026",
+      "publication_year": 1999,
+      "authors": [
+        "R Hoffman",
+        "W Hall",
+        "M Ball",
+        "A Odoni\u2026"
+      ],
+      "source": "manuscript in\u00a0\u2026",
+      "citation_count": 44,
+      "pdf_link": "https://www.glue.umd.edu/~hoff/CDMpaper/cdm09-12-98.pdf",
+      "index": 50,
+      "download_status": "ok"
+    },
+    {
+      "title": "Intelligent traffic control decision support system",
+      "url": "https://link.springer.com/chapter/10.1007/978-3-540-71805-5_75",
+      "snippet": "\u2026 decision support system for a traffic control centre. The proposed system uses a decision support tool \u2026 operator of the traffic control center to manage the current traffic state. When a non-\u2026",
+      "publication_year": 2007,
+      "authors": [
+        "K Almejalli",
+        "K Dahal",
+        "MA Hossain"
+      ],
+      "source": "Workshops on Applications of\u00a0\u2026",
+      "citation_count": 36,
+      "pdf_link": "https://bradscholars.brad.ac.uk/bitstreams/46d97084-780c-485b-8f20-50f582955347/download",
+      "index": 51,
+      "download_status": "login_required"
+    },
+    {
+      "title": "Collaborative decision making in air traffic management",
+      "url": "https://link.springer.com/content/pdf/10.1007/978-3-662-04632-6_1?pdf=chapter%20toc",
+      "snippet": "\u2026 In GDE the decision support system , Flight Schedule Monitor (FSM), has been made available to any System Operators that request it so that all participants have the same information \u2026",
+      "publication_year": 2001,
+      "authors": [
+        "MC Wambsganss"
+      ],
+      "source": "New concepts and methods in air traffic management",
+      "citation_count": 39,
+      "pdf_link": "",
+      "index": 52,
+      "download_status": "login_required"
+    },
+    {
+      "title": "EVALUATION OF HUMAN-HUMAN COOPERATION TO D\u00c9SIGNA SUPPORT TOOL FOR AIR - TRAFFIC CONTROL",
+      "url": "https://www.academia.edu/download/83007536/22nd_20European_20Annual_20Conference_20on_20Human_20Decision_20Making_20and_20Manual_20Control.pdf#page=177",
+      "snippet": "\u2026 the support tool part of the team rather than a substitute for air - traffic controllers . With a view to developing such a tool , we studied the cognitive activities of air traffic controllers in a \u2026",
+      "publication_year": 2003,
+      "authors": [
+        "B GUIOST",
+        "S DEBERNARD",
+        "T POULAIN\u2026"
+      ],
+      "source": "\u2026\u00a0Decision Making and\u00a0\u2026",
+      "citation_count": 11,
+      "pdf_link": "https://www.academia.edu/download/83007536/22nd_20European_20Annual_20Conference_20on_20Human_20Decision_20Making_20and_20Manual_20Control.pdf#page=177",
+      "index": 53,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "A Decision Support System for Conflict Resolution: Interfacing a Genetic Algorithm with an Air Traffic Control Simulator",
+      "url": "https://ieeexplore.ieee.org/abstract/document/10976956/",
+      "snippet": "\u2026 In this study, we propose a structured framework for interfacing the Escape simulator with a decision support system for CR. We believe the Escape simulator will play an increasingly \u2026",
+      "publication_year": 2025,
+      "authors": [
+        "M \u00d6zdemir",
+        "\u00d6 Usanmaz",
+        "P Bouchaudon\u2026"
+      ],
+      "source": "\u2026\u00a0, Navigation and\u00a0\u2026",
+      "citation_count": null,
+      "pdf_link": "/scholar?output=instlink&q=info:TdAmFIc4J0UJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=12867544096251457112&oi=lle",
+      "index": 54,
+      "download_status": "ok"
+    },
+    {
+      "title": "Expertise level, control strategies, and robustness in future air traffic control decision aiding",
+      "url": "https://ieeexplore.ieee.org/abstract/document/7095573/",
+      "snippet": "\u2026 \u201d decision support tools for future air traffic controllers . One approach to the design of human-centered decision \u2026 the boundaries of safe system performance rather than prescribing \u2026",
+      "publication_year": 2015,
+      "authors": [
+        "R Klomp",
+        "C Borst",
+        "R Van Paassen\u2026"
+      ],
+      "source": "IEEE Transactions on\u00a0\u2026",
+      "citation_count": 49,
+      "pdf_link": "https://www.researchgate.net/profile/Clark-Borst/publication/276132004_Expertise_Level_Control_Strategies_and_Robustness_in_Future_Air_Traffic_Control_Decision_Aiding/links/5560bc2608ae86c06b64a75e/Expertise-Level-Control-Strategies-and-Robustness-in-Future-Air-Traffic-Control-Decision-Aiding.pdf",
+      "index": 55,
+      "download_status": "ok"
+    },
+    {
+      "title": "A decision support tool for high density area departure traffic management",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.2010-9282",
+      "snippet": "\u2026 Approach Control , and the Airport Traffic Control \u2026 the decision support system components of Figure 2 that define the flow from the TRACON through the ATCT. By decomposing the flight \u2026",
+      "publication_year": 2010,
+      "authors": [
+        "C Taylor",
+        "L Song"
+      ],
+      "source": "10th AIAA Aviation Technology, Integration, and\u00a0\u2026",
+      "citation_count": 2,
+      "pdf_link": "",
+      "index": 56,
+      "download_status": "ok"
+    },
+    {
+      "title": "Reducing Severe Weather Delays in Congested Airspace with Weather Decision Support for Tactical Air Traffic Management",
+      "url": "https://arc.aiaa.org/doi/abs/10.2514/atcq.11.4.311",
+      "snippet": "\u2026 that there are a number of issues that need to be addressed in developing an integrated weather/ATM decision support system for convective weather in these congested corridors: \u2026",
+      "publication_year": 2003,
+      "authors": [
+        "J Evans",
+        "M Robinson",
+        "B Crowe\u2026"
+      ],
+      "source": "Air Traffic Control\u00a0\u2026",
+      "citation_count": 12,
+      "pdf_link": "https://arc.aiaa.org/doi/pdf/10.2514/atcq.11.4.311",
+      "index": 57,
+      "download_status": "ok"
+    },
+    {
+      "title": "\u2026\u00a0IT2FS-DEMATEL-AHP-TOPSIS multicriteria decision making approach: Case study of selection and evaluation of criteria for determination of air traffic control radar\u00a0\u2026",
+      "url": "http://www.dmame-journal.org/index.php/dmame/article/view/58",
+      "snippet": "\u2026 air traffic control (ATC) radar position that provide successfully fulfilled role of radar in air traffic management \u2026 method and a multi-criteria decision making model was proposed. Of the \u2026",
+      "publication_year": 2020,
+      "authors": [
+        "I Petrovic",
+        "M Kankaras"
+      ],
+      "source": "\u2026\u00a0Making: Applications in Management\u00a0\u2026",
+      "citation_count": 100,
+      "pdf_link": "http://www.dmame-journal.org/index.php/dmame/article/download/58/52",
+      "index": 58,
+      "download_status": "ok"
+    },
+    {
+      "title": "ISAC: a CBR system for decision support in air traffic control",
+      "url": "https://link.springer.com/chapter/10.1007/BFb0020601",
+      "snippet": "\u2026 to a real world problem in air traffic control . This application is \u2026 decision support system for conflict resolution in air traffic con\u2026 It is the air traffic controller's job to resolve potential conflicts \u2026",
+      "publication_year": 1996,
+      "authors": [
+        "A Bonzano",
+        "P Cunningham",
+        "C Meckiff"
+      ],
+      "source": "European Workshop on Advances\u00a0\u2026",
+      "citation_count": 45,
+      "pdf_link": "https://www.academia.edu/download/100015092/TCD-CS-96-11.pdf",
+      "index": 59,
+      "download_status": "login_required"
+    },
+    {
+      "title": "Small Aircraft Pilot Assistant: Onboard decision support system for SATS aircraft",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.2005-7382",
+      "snippet": "\u2026 air traffic , leading to delays and flight \u2026 ground traffic controllers will be significantly reduced, and pilots will have more flexibility and more responsibility, especially in ensuring their flight \u2026",
+      "publication_year": 2005,
+      "authors": [
+        "J Rong",
+        "T Spaeth",
+        "J Valasek"
+      ],
+      "source": "\u2026\u00a0and16th Lighter-Than-Air Sys Tech. and\u00a0\u2026",
+      "citation_count": 18,
+      "pdf_link": "https://www.researchgate.net/profile/John-Valasek/publication/228396669_Small_Aircraft_Pilot_Assistant_Onboard_Decision_Support_System_for_SATS_Aircraft/links/53fca1cd0cf2364ccc04b46a/Small-Aircraft-Pilot-Assistant-Onboard-Decision-Support-System-for-SATS-Aircraft.pdf",
+      "index": 60,
+      "download_status": "ok"
+    },
+    {
+      "title": "Modeling air traffic controllers ' decision making processes with relational complexity network",
+      "url": "https://ieeexplore.ieee.org/abstract/document/6958116/",
+      "snippet": "\u2026 supporting system , eg advanced conflict detection and resolution (CD&R) system , decisions made by human air traffic controllers (\u2026 processes of air traffic controllers is necessary for \u2026",
+      "publication_year": 2014,
+      "authors": [
+        "J Zhang",
+        "J Ren",
+        "C Wu"
+      ],
+      "source": "17th International IEEE Conference on\u00a0\u2026",
+      "citation_count": 11,
+      "pdf_link": "/scholar?output=instlink&q=info:SsiHexsLQaMJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=524638759956671644&oi=lle",
+      "index": 61,
+      "download_status": "ok"
+    },
+    {
+      "title": "Integrating advanced weather forecast technologies into air traffic management decision support",
+      "url": "https://archive.ll.mit.edu/publications/journal/pdf/vol16_no1/16_1_5EvansWeber.pdf",
+      "snippet": "\u2026 effective operational decision support system called the Route Availability Planning Tool (RAPT)\u2026 RAPT permits air traffic control (ATC) and airline decision makers to focus on managing \u2026",
+      "publication_year": 2006,
+      "authors": [
+        "JE Evans",
+        "ME Weber",
+        "WR Moser"
+      ],
+      "source": "Lincoln Laboratory Journal",
+      "citation_count": 18,
+      "pdf_link": "https://archive.ll.mit.edu/publications/journal/pdf/vol16_no1/16_1_5EvansWeber.pdf",
+      "index": 62,
+      "download_status": "ok"
+    },
+    {
+      "title": "A human-centred approach based on functional near-infrared spectroscopy for adaptive decision - making in the air traffic control environment: A case study",
+      "url": "https://www.sciencedirect.com/science/article/pii/S1474034621000781",
+      "snippet": "\u2026 adjust the decision support system to HFs. It is hoped that this study can promote the methodology of human-centred subjective and objective data-driven applications in the future ATC \u2026",
+      "publication_year": 2021,
+      "authors": [
+        "Q Li",
+        "KKH Ng",
+        "Z Fan",
+        "X Yuan",
+        "H Liu",
+        "L Bu"
+      ],
+      "source": "Advanced Engineering\u00a0\u2026",
+      "citation_count": 69,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S1474034621000781",
+      "index": 63,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "A flight deck decision support tool for autonomous airborne operations",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.2002-4554",
+      "snippet": "\u2026 reduces reliance on centralized air traffic management . Free \u2026 decision support system as described above expands upon this definition: rather than being limited to traffic, the system \u2026",
+      "publication_year": 2002,
+      "authors": [
+        "M Ballin",
+        "V Sharma",
+        "R Vivona",
+        "E Johnson\u2026"
+      ],
+      "source": "\u2026\u00a0Navigation, and Control\u00a0\u2026",
+      "citation_count": 60,
+      "pdf_link": "https://ntrs.nasa.gov/api/citations/20030015402/downloads/20030015402.pdf",
+      "index": 64,
+      "download_status": "ok"
+    },
+    {
+      "title": "Intelligent decision support system for air traffic management",
+      "url": "https://api.taylorfrancis.com/content/chapters/edit/download?identifierName=doi&identifierValue=10.1201/9781003386599-19&type=chapterpdf",
+      "snippet": "\u2026 operation of the system . In this work, we focus on the air traffic management system (ATM). \u2026 include runway, terminals, air space, ground transportation system , parking areas, etc. Data \u2026",
+      "publication_year": 2023,
+      "authors": [
+        "AR Rababaah",
+        "M Siddig"
+      ],
+      "source": "Applications of Mathematical\u00a0\u2026",
+      "citation_count": null,
+      "pdf_link": "https://www.researchgate.net/profile/Aaron-Rababaah/publication/370397753_Intelligent_decision_support_system_for_air_traffic_management/links/65bccc2534bbff5ba7e984fd/Intelligent-decision-support-system-for-air-traffic-management.pdf",
+      "index": 65,
+      "download_status": "failed"
+    },
+    {
+      "title": "Review of decision support systems in air transport system",
+      "url": "https://www.researchgate.net/profile/Fedja-Netjasov/publication/265420507_Review_of_decision_support_systems_in_air_transport_system/links/540ec5830cf2d8daaacd6e38/Review-of-decision-support-systems-in-air-transport-system.pdf",
+      "snippet": "\u2026 introduced \u201ca decision support system that will allow decision makers and analysts \u2026 Decision support tools for traffic flow management are used by air traffic controllers , but the decisions \u2026",
+      "publication_year": 2014,
+      "authors": [
+        "N Ivanov",
+        "F Netjasov"
+      ],
+      "source": "18th Air Transportation Resarch Soc. World\u00a0\u2026",
+      "citation_count": 7,
+      "pdf_link": "https://www.researchgate.net/profile/Fedja-Netjasov/publication/265420507_Review_of_decision_support_systems_in_air_transport_system/links/540ec5830cf2d8daaacd6e38/Review-of-decision-support-systems-in-air-transport-system.pdf",
+      "index": 66,
+      "download_status": "ok"
+    },
+    {
+      "title": "Air traffic control decision support for integrated community noise management",
+      "url": "https://www.intechopen.com/chapters/19543",
+      "snippet": "\u2026 noise management in the form of a decision support system (DSS) for air traffic controllers . It \u2026 Second, it refers to the integration of environmental management into the air traffic control \u2026",
+      "publication_year": 2011,
+      "authors": [
+        "SJ Hebly",
+        "HG Visser"
+      ],
+      "source": "Aeronautics and Astronautics",
+      "citation_count": 1,
+      "pdf_link": "https://www.intechopen.com/chapters/19543",
+      "index": 67,
+      "download_status": "login_required"
+    },
+    {
+      "title": "A decision support tool for the pushback rate control of airport departures",
+      "url": "https://ieeexplore.ieee.org/abstract/document/6757005/",
+      "snippet": "\u2026 congestion management strategies. This paper describes an effort to develop and evaluate an air traffic controller decision support tool (DST) for airport surface congestion control . \u2026",
+      "publication_year": 2014,
+      "authors": [
+        "M Sandberg",
+        "I Simaiakis\u2026"
+      ],
+      "source": "\u2026\u00a0on Human-Machine\u00a0\u2026",
+      "citation_count": 31,
+      "pdf_link": "https://dspace.mit.edu/bitstream/handle/1721.1/96873/Balakrishnan_A%20decision.pdf?sequence=1&isAllowed=y",
+      "index": 68,
+      "download_status": "ok"
+    },
+    {
+      "title": "Development and application of a human error identification tool for air traffic control",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0003687002000108",
+      "snippet": "This paper outlines a human error identification (HEI) technique called TRACEr\u2014technique for the retrospective and predictive analysis of cognitive errors in air traffic control (ATC). The \u2026",
+      "publication_year": 2002,
+      "authors": [
+        "ST Shorrock",
+        "B Kirwan"
+      ],
+      "source": "Applied ergonomics",
+      "citation_count": 465,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S0003687002000108",
+      "index": 69,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Analysis of adaptive traffic control systems design of a decision support system for better choices",
+      "url": "https://re.public.polimi.it/handle/11311/1020703",
+      "snippet": "\u2026 decision support systems can be proposed in order to choose the adaptive traffic control system \u2026 This decision system would be helpful to governments and authorities by providing them \u2026",
+      "publication_year": 2015,
+      "authors": [
+        "LP Studer",
+        "M Ketabdari",
+        "G Marchionni"
+      ],
+      "source": "Journal of Civil &\u00a0\u2026",
+      "citation_count": 47,
+      "pdf_link": "https://re.public.polimi.it/bitstream/11311/1020703/3/Analysis_of_Adaptive_Traffic_Control_Systems_Desig.pdf",
+      "index": 70,
+      "download_status": "failed"
+    },
+    {
+      "title": "Decision Support Methods and Tools for Traffic Management Systems",
+      "url": "https://rosap.ntl.bts.gov/view/dot/72448",
+      "snippet": "\u2026 traffic management centers (TMCs), support real-time and offline functions, services , actions, activities, and related tasks or decisions (\u2026 In this context, decision - support tools (DSTs) are \u2026",
+      "publication_year": 2023,
+      "authors": [
+        "K Miller",
+        "J Horner",
+        "J Adler",
+        "R Sanchez - 2023 - rosap.ntl.bts.gov"
+      ],
+      "source": "",
+      "citation_count": 4,
+      "pdf_link": "https://rosap.ntl.bts.gov/view/dot/72448/dot_72448_DS1.pdf",
+      "index": 71,
+      "download_status": "ok"
+    },
+    {
+      "title": "A decision support tool for flow contingency management",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.2012-4976",
+      "snippet": "\u2026 decision support system capable of evaluating strategic TFM plans, it is necessary to also capture the impact of Traffic Management \u2026 queuing network models for air traffic as it is defined \u2026",
+      "publication_year": 2012,
+      "authors": [
+        "C Taylor",
+        "C Wanke",
+        "Y Wan",
+        "S Roy"
+      ],
+      "source": "\u2026\u00a0Guidance, Navigation, and Control\u00a0\u2026",
+      "citation_count": 26,
+      "pdf_link": "https://wanlab.uta.edu/files/2021/05/C44.pdf",
+      "index": 72,
+      "download_status": "ok"
+    },
+    {
+      "title": "Development and demonstration of an integrated decision support system for airport performance analysis",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0968090X06000088",
+      "snippet": "\u2026 airport planning necessitates the development and deployment of decision support tools capable to support airport \u2026 Characteristics of the local air traffic control system : separation \u2026",
+      "publication_year": 2006,
+      "authors": [
+        "KG Zografos",
+        "MA Madas"
+      ],
+      "source": "Transportation Research Part C: Emerging\u00a0\u2026",
+      "citation_count": 89,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S0968090X06000088",
+      "index": 73,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Decision support tools to assist in airport surface management",
+      "url": "https://ieeexplore.ieee.org/abstract/document/1244642/",
+      "snippet": "\u2026 National Airspace System (NAS), significant improvements in collaborative decision making are needed. \u2026 in the airport terminal area ( airport surface management and its interaction with \u2026",
+      "publication_year": 2003,
+      "authors": [
+        "A Spencer",
+        "P Smith",
+        "C Billings",
+        "C Brinton\u2026"
+      ],
+      "source": "\u2026\u00a0Theme-System\u00a0\u2026",
+      "citation_count": 4,
+      "pdf_link": "/scholar?output=instlink&q=info:Rj8LD-I6i8EJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=17551735978276883315&oi=lle",
+      "index": 74,
+      "download_status": "ok"
+    },
+    {
+      "title": "An interactive decision support tool for real-time in- flight replanning of autonomous vehicles",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.2004-6526",
+      "snippet": "\u2026 any computer-based decision support tool must be able \u2026 Air traffic control research provides a helpful parallel in modeling the in- flight control problem due to the similarities in monitoring \u2026",
+      "publication_year": 2004,
+      "authors": [
+        "M Cummings",
+        "S Guerlain"
+      ],
+      "source": "AIAA 3rd\" Unmanned Unlimited\" Technical\u00a0\u2026",
+      "citation_count": 35,
+      "pdf_link": "https://www.researchgate.net/profile/Missy-Cummings/publication/245345113_An_Interactive_Decision_Support_Tool_for_Real-time_In-flight_Replanning_of_Autonomous_Vehicles/links/67ced118d7597000650765f8/An-Interactive-Decision-Support-Tool-for-Real-time-In-flight-Replanning-of-Autonomous-Vehicles.pdf",
+      "index": 75,
+      "download_status": "ok"
+    },
+    {
+      "title": "A novel decision support system for optimizing aircraft maintenance check schedule and task allocation",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0167923621000555",
+      "snippet": "\u2026 This paper presents the first decision support system (DSS) developed for optimizing both aircraft maintenance check schedule and task allocation. The DSS integrates aircraft \u2026",
+      "publication_year": 2021,
+      "authors": [
+        "Q Deng",
+        "BF Santos",
+        "WJC Verhagen"
+      ],
+      "source": "Decision Support Systems",
+      "citation_count": 92,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S0167923621000555",
+      "index": 76,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Developing a decision support interface for surface domain Air Traffic Controllers",
+      "url": "https://journals.sagepub.com/doi/abs/10.1177/154193120705100213",
+      "snippet": "\u2026 consideration of tools that provide integrated information and decision support . As air traffic is \u2026 , the benefits of advanced support tools may be that the same-size controller team will be \u2026",
+      "publication_year": 2007,
+      "authors": [
+        "L Martin",
+        "S Verma",
+        "D Ballinger\u2026"
+      ],
+      "source": "Proceedings of the\u00a0\u2026",
+      "citation_count": 5,
+      "pdf_link": "https://journals.sagepub.com/doi/pdf/10.1177/154193120705100213",
+      "index": 77,
+      "download_status": "login_required"
+    },
+    {
+      "title": "DEVELOPING A DECISION SUPPORT TOOL FOR AIR ROUTE PLANNING SYSTEM",
+      "url": "https://elibrary.ru/item.asp?id=48290609",
+      "snippet": "\u2026 an Air Traffic Management (ATM) System . This project focuses on developing \u2026 decision support tool for Air Route Network System at the Strategic ATFM phase. The Flight Route System \u2026",
+      "publication_year": 2021,
+      "authors": [
+        "N Nhut",
+        "ES Neretin",
+        "N Phuong"
+      ],
+      "source": "\u0410\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u044b\u0435 \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u044b \u0438 \u043f\u0435\u0440\u0441\u043f\u0435\u043a\u0442\u0438\u0432\u044b\u00a0\u2026",
+      "citation_count": null,
+      "pdf_link": "",
+      "index": 78,
+      "download_status": "failed"
+    },
+    {
+      "title": "Airport surface traffic management decision support : Perspectives based on tower flight data manager prototype",
+      "url": "https://archive.ll.mit.edu/mission/aviation/publications/publication-files/atc-reports/Mehta_2013_ATC-398_RP-4168.pdf",
+      "snippet": "\u2026 of decision support tools as part of the Terminal Flight Data Manager (\u2026 And decision support tools (DSTs) can be created to take \u2026 to improve the execution of air traffic control procedures. \u2026",
+      "publication_year": 2013,
+      "authors": [
+        "V Mehta",
+        "T Reynolds",
+        "M Ishutkina\u2026"
+      ],
+      "source": "\u2026\u00a0Information Service\u00a0\u2026",
+      "citation_count": 10,
+      "pdf_link": "https://archive.ll.mit.edu/mission/aviation/publications/publication-files/atc-reports/Mehta_2013_ATC-398_RP-4168.pdf",
+      "index": 79,
+      "download_status": "ok"
+    },
+    {
+      "title": "Decision support for flight re-routing in Europe",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0167923602000660",
+      "snippet": "\u2026 air traffic in the US and in Europe for the last 20 years. To protect air traffic control from overloads, air traffic flow management \u2026 for a re-routing decision support system are investigated. A \u2026",
+      "publication_year": 2003,
+      "authors": [
+        "PAL de Matos",
+        "PL Powell"
+      ],
+      "source": "Decision Support Systems",
+      "citation_count": 39,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S0167923602000660",
+      "index": 80,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Data-driven evaluation of a flight re-route air traffic management decision - support tool",
+      "url": "https://api.taylorfrancis.com/content/chapters/edit/download?identifierName=doi&identifierValue=10.1201/b12321-13&type=chapterpdf",
+      "snippet": "\u2026 - control , paralysis, or poor decisions . Developing a decision - support tool to enable air traffic \u2026 , and performance of individual air traffic managers and controllers . This study defined novel \u2026",
+      "publication_year": 2012,
+      "authors": [
+        "LM Hall",
+        "N Underhill",
+        "Y Rodriguez\u2026"
+      ],
+      "source": "Advances in human\u00a0\u2026",
+      "citation_count": 2,
+      "pdf_link": "https://archive.ll.mit.edu/mission/aviation/publications/publication-files/ms-papers/Hall_2012_AHFE_MS-65460_WW-26438-presentation.pdf",
+      "index": 81,
+      "download_status": "failed"
+    },
+    {
+      "title": "How Do Visualization Choices Affect Human Decision - Making ? A Case Study in Air Traffic Control",
+      "url": "https://ieeexplore.ieee.org/abstract/document/11343058/",
+      "snippet": "\u2026 continue to shape the development of decision - support tools in air traffic control [9]\u2013[11]\u2026 decision - support tools (ie, HIPS and SSD) for conflict detection and resolution in air traffic control \u2026",
+      "publication_year": 2025,
+      "authors": [
+        "W Lyu",
+        "C Borst",
+        "MMR Van Paassen\u2026"
+      ],
+      "source": "IEEE International\u00a0\u2026",
+      "citation_count": null,
+      "pdf_link": "/scholar?output=instlink&q=info:lgab94-bfPUJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=13226675817378014111&oi=lle",
+      "index": 82,
+      "download_status": "ok"
+    },
+    {
+      "title": "Government and Academia Partnership to Test and Evaluate Air Traffic Control Decision Support Software.",
+      "url": "https://search.ebscohost.com/login.aspx?direct=true&profile=ehost&scope=site&authtype=crawler&jrnl=10540229&AN=37284028&h=IyHfg%2F4nalwLGcpt9pitrFRAJwXmwdzn9%2BCUVhfl48nAuY59KVUo9%2FfBqmo5Ganyhtce8act3ibBout%2FwzmZZQ%3D%3D&crl=c",
+      "snippet": "\u2026 the Decision Support Tool (DST), which assists air traffic controllers in separating air traffic . Two key fiinctions ofERAM's DST are the prediction of the fliture flight paths of the aircraft and \u2026",
+      "publication_year": 2009,
+      "authors": [
+        "C Santiago",
+        "C Yao",
+        "A Crowd\u2026"
+      ],
+      "source": "ITEA Journal of Test &\u00a0\u2026",
+      "citation_count": 1,
+      "pdf_link": "",
+      "index": 83,
+      "download_status": "failed"
+    },
+    {
+      "title": "DSS on Trial: -validation of decision support systems for air traffic management",
+      "url": "https://www.tandfonline.com/doi/abs/10.1057/ori.2000.1",
+      "snippet": "\u2026 validation of new decision support systems for air traffic control . This paper describes how \u2026 Air Traffic Services Limited validates new decision support sivstenrc for air traffic controllers . \u2026",
+      "publication_year": 2000,
+      "authors": [
+        "PL Matos",
+        "D Marsh"
+      ],
+      "source": "OR Insight",
+      "citation_count": 1,
+      "pdf_link": "/scholar?output=instlink&q=info:t2CkBTXpP6kJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=5839976512930797132&oi=lle",
+      "index": 84,
+      "download_status": "ok"
+    },
+    {
+      "title": "Transforming the NAS: The next generation air traffic control system",
+      "url": "https://ntrs.nasa.gov/citations/20050110294",
+      "snippet": "\u2026 is to provide controllers with decision support tools . Although such tools may offer small \u2026 Decision support tools for control of arrival traffic are important candidates for transformation \u2026",
+      "publication_year": 2004,
+      "authors": [
+        "H Erzberger - 2004 - ntrs.nasa.gov"
+      ],
+      "source": "",
+      "citation_count": 287,
+      "pdf_link": "https://ntrs.nasa.gov/api/citations/20050110294/downloads/20050110294.pdf",
+      "index": 85,
+      "download_status": "ok"
+    },
+    {
+      "title": "Design of a real-time visual analytics decision support interface to manage air traffic complexity",
+      "url": "https://ieeexplore.ieee.org/abstract/document/10771104/",
+      "snippet": "\u2026 supported by the domain-specific feedback we received from six fully licensed and operational air traffic controllers \u2026 visual analytics decision support tools in air traffic control . Computer \u2026",
+      "publication_year": 2024,
+      "authors": [
+        "E Zohrevandi",
+        "K Vrotsou",
+        "CAL Westin\u2026"
+      ],
+      "source": "\u2026\u00a0and Visual Analytics\u00a0\u2026",
+      "citation_count": 2,
+      "pdf_link": "https://www.diva-portal.org/smash/get/diva2:1915725/FULLTEXT02",
+      "index": 86,
+      "download_status": "ok"
+    },
+    {
+      "title": "Human-in-the-loop evaluation of a multi-strategy traffic management decision support capability",
+      "url": "https://www.researchgate.net/profile/Craig-Wanke/publication/242272830_HUMAN-IN-THE-LOOP_EVALUATION_OF_A_MULTI-STRATEGY_TRAFFIC_MANAGEMENT_DECISION_SUPPORT_CAPABILITY/links/54200e900cf203f155c2a011/HUMAN-IN-THE-LOOP-EVALUATION-OF-A-MULTI-STRATEGY-TRAFFIC-MANAGEMENT-DECISION-SUPPORT-CAPABILITY.pdf",
+      "snippet": "\u2026 Decision support tools could assist traffic managers in \u2026 19 years on decision support systems for air traffic management \u2026 the past 18 years on air traffic control applications, most currently \u2026",
+      "publication_year": 2003,
+      "authors": [
+        "CR Wanke",
+        "NJ Taber",
+        "SL Miller",
+        "CG Ball\u2026"
+      ],
+      "source": "Proceedings of the 5th\u00a0\u2026",
+      "citation_count": 12,
+      "pdf_link": "https://www.researchgate.net/profile/Craig-Wanke/publication/242272830_HUMAN-IN-THE-LOOP_EVALUATION_OF_A_MULTI-STRATEGY_TRAFFIC_MANAGEMENT_DECISION_SUPPORT_CAPABILITY/links/54200e900cf203f155c2a011/HUMAN-IN-THE-LOOP-EVALUATION-OF-A-MULTI-STRATEGY-TRAFFIC-MANAGEMENT-DECISION-SUPPORT-CAPABILITY.pdf",
+      "index": 87,
+      "download_status": "ok"
+    },
+    {
+      "title": "Innovative decision support system for railway traffic control",
+      "url": "https://ieeexplore.ieee.org/abstract/document/5433766/",
+      "snippet": "\u2026 can be envisaged in air traffic control [11]). A conflict detection procedure checks whether the timetable is deadlock-free and detects potential conflicting train paths in a given period of \u2026",
+      "publication_year": 2009,
+      "authors": [
+        "A D'Ariano"
+      ],
+      "source": "IEEE Intelligent Transportation Systems Magazine",
+      "citation_count": 82,
+      "pdf_link": "/scholar?output=instlink&q=info:896SXOjMzRIJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=4466285764544441261&oi=lle",
+      "index": 88,
+      "download_status": "ok"
+    },
+    {
+      "title": "Decision support for air traffic management based on probabilistic weather forecasts",
+      "url": "https://repositum.tuwien.at/handle/20.500.12708/6488",
+      "snippet": "\u2026 support related to ATFCM and weather, other specific fields such as support tools in the air traffic control systems to support ATCOs with ensuring aircraft separation will not be discussed\u2026",
+      "publication_year": 2019,
+      "authors": [
+        "M Steinheimer - 2019 - repositum.tuwien.at"
+      ],
+      "source": "",
+      "citation_count": null,
+      "pdf_link": "https://repositum.tuwien.at/bitstream/20.500.12708/6488/2/Steinheimer%20Martin%20-%202019%20-%20Decision%20support%20for%20air%20traffic%20management%20based%20on...pdf",
+      "index": 89,
+      "download_status": "ok"
+    },
+    {
+      "title": "Common trajectory modeling for national airspace system : Decision support tools",
+      "url": "https://arc.aiaa.org/doi/abs/10.2514/atcq.13.1.55",
+      "snippet": "\u2026 air traffic operations is responsible for separating and managing the flow of air traffic in the National Airspace System \u2026 , operational personnel use Decision Support Tools (DSTs), many \u2026",
+      "publication_year": 2005,
+      "authors": [
+        "KS Lindsay",
+        "SM Green",
+        "S Mondoloni\u2026"
+      ],
+      "source": "Air Traffic Control\u00a0\u2026",
+      "citation_count": 12,
+      "pdf_link": "https://arc.aiaa.org/doi/pdf/10.2514/atcq.13.1.55",
+      "index": 90,
+      "download_status": "ok"
+    },
+    {
+      "title": "Concept of future air traffic management and its real-time decision support utilizing concept learning",
+      "url": "https://www.sciencedirect.com/science/article/pii/S1474667017589880",
+      "snippet": "\u2026 ('d, which can manage air traffic flows and flight schedules strategically in real t.ime fashion. For t.his objective, ill this paper, an automated decision support . system for the efficient. ATM \u2026",
+      "publication_year": 1996,
+      "authors": [
+        "J Nogami",
+        "S Nakasuka",
+        "T Tanabe"
+      ],
+      "source": "IFAC Proceedings Volumes",
+      "citation_count": 2,
+      "pdf_link": "/scholar?output=instlink&q=info:WPSJAZytFFQJ:scholar.google.com/&hl=en&as_sdt=0,10&scillfp=8566600582510770194&oi=lle",
+      "index": 91,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "High-speed prediction of air traffic for real-time decision support",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.2011-6660",
+      "snippet": "\u2026 Present air traffic management methodology is based on a fixed airspace structure tied to \u2026 the air traffic management (ATM) system . In Trajectory-based operations, all ATM decisions \u2026",
+      "publication_year": 2011,
+      "authors": [
+        "M Tandale",
+        "S Wiraatmadja",
+        "P Menon\u2026"
+      ],
+      "source": "\u2026\u00a0, Navigation, and Control\u00a0\u2026",
+      "citation_count": 7,
+      "pdf_link": "https://www.academia.edu/download/32529059/High-Speed_Prediction_of_Air_Traffic_for_Real-Time_Decision_Support.pdf",
+      "index": 92,
+      "download_status": "ok"
+    },
+    {
+      "title": "Modeling traffic prediction uncertainty for traffic management decision support",
+      "url": "https://arc.aiaa.org/doi/pdf/10.2514/6.2004-5230",
+      "snippet": "\u2026 areas, TFM is a central component of the nation\u2019s air traffic management (ATM) system . \u2026 uncertainties, decision support tools could compute \u201coptimal\u201d congestion management solutions \u2026",
+      "publication_year": 2004,
+      "authors": [
+        "C Wanke",
+        "S Mulgund",
+        "D Greenbaum\u2026"
+      ],
+      "source": "\u2026\u00a0, Navigation, and Control\u00a0\u2026",
+      "citation_count": 42,
+      "pdf_link": "https://www.academia.edu/download/48512133/Modeling_Traffic_Prediction_Uncertainty_20160902-3553-hanmk7.pdf",
+      "index": 93,
+      "download_status": "ok"
+    },
+    {
+      "title": "A Logical Architecture for Decision - Making Support in Air Traffic Management",
+      "url": "https://www.academia.edu/download/47475933/A_Logical_Architecture_for_Decision-Maki20160724-28583-onj9v3.pdf",
+      "snippet": "\u2026 advanced systems, many of these decisions will be automatically proposed \u2026 air traffic scenario is then clear. This study proposes the modeling of the interaction between air traffic control \u2026",
+      "publication_year": 2006,
+      "authors": [
+        "\u00cdR de Oliveira",
+        "PS Cugnasca",
+        "FAG Lubacheski\u2026 - 2006 - academia.edu"
+      ],
+      "source": "",
+      "citation_count": 2,
+      "pdf_link": "https://www.academia.edu/download/47475933/A_Logical_Architecture_for_Decision-Maki20160724-28583-onj9v3.pdf",
+      "index": 94,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Tactical weather decision support to complement \u201cstrategic\u201d traffic flow management for convective weather",
+      "url": "https://archive.ll.mit.edu/mission/aviation/publications/publication-files/ms-papers/Evans_2001_ATM_MS-28575_WW-10282.pdf",
+      "snippet": "\u2026 and ATM decision support tools . The tactical capacity depends critically on the tactical weather products, ATM decision support tools and, capability of the air traffic controller team and \u2026",
+      "publication_year": 2001,
+      "authors": [
+        "JE Evans"
+      ],
+      "source": "4th USA/Europe Air Traffic Management R&D Seminar",
+      "citation_count": 34,
+      "pdf_link": "https://archive.ll.mit.edu/mission/aviation/publications/publication-files/ms-papers/Evans_2001_ATM_MS-28575_WW-10282.pdf",
+      "index": 95,
+      "download_status": "ok"
+    },
+    {
+      "title": "Distributed decision support system for airport ground handling management using WSN and MAS",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0952197611002168",
+      "snippet": "\u2026 airport , airlines are assigned with no preferences given to any individual airline, similar to the air traffic control \u2026 perform complex calculations, monitor usage and provide status reporting. \u2026",
+      "publication_year": 2012,
+      "authors": [
+        "PG Ansola",
+        "J De Las Morenas",
+        "A Garcia\u2026"
+      ],
+      "source": "\u2026\u00a0Applications of Artificial\u00a0\u2026",
+      "citation_count": 47,
+      "pdf_link": "https://www.sciencedirect.com/science/article/pii/S0952197611002168",
+      "index": 96,
+      "download_status": "error: HTTPSConnectionPool(host='searcher.xds-lab.com', port=443): Read timed out. (read timeout=120)"
+    },
+    {
+      "title": "Cognitive complexity in air traffic control : A literature review",
+      "url": "https://www.researchgate.net/profile/Brian-Hilburn-2/publication/265291100_Cognitive_complexity_in_air_traffic_control_a_literature_review/links/5a159e4e0f7e9bc6481c572d/Cognitive-complexity-in-air-traffic-control-a-literature-review.pdf",
+      "snippet": "\u2026 Because heuristics can colour our expectations, however, there are occasions when they can introduce decision making biases and sub-optimal strategies. Some of these sub-optimal \u2026",
+      "publication_year": 2004,
+      "authors": [
+        "B Hilburn"
+      ],
+      "source": "EEC note",
+      "citation_count": 312,
+      "pdf_link": "https://www.researchgate.net/profile/Brian-Hilburn-2/publication/265291100_Cognitive_complexity_in_air_traffic_control_a_literature_review/links/5a159e4e0f7e9bc6481c572d/Cognitive-complexity-in-air-traffic-control-a-literature-review.pdf",
+      "index": 97,
+      "download_status": "ok"
+    },
+    {
+      "title": "CRCT (Collaborative Routing Coordination Tools ) and TFM ( Traffic Flow Management ) Decision Support Tool Prototyping",
+      "url": "https://journals.sagepub.com/doi/abs/10.1177/154193120204600131",
+      "snippet": "\u2026 The MITRE Corporation\u2019s Center for Advanced Aviation System Development (CAASD) has \u2026 decision support concepts and capabilities for TFM, the branch of Air Traffic Management \u2026",
+      "publication_year": 2002,
+      "authors": [
+        "AJ Masalonis"
+      ],
+      "source": "Proceedings of the Human Factors and\u00a0\u2026",
+      "citation_count": 1,
+      "pdf_link": "https://journals.sagepub.com/doi/pdf/10.1177/154193120204600131",
+      "index": 98,
+      "download_status": "login_required"
+    }
+  ]
+}
