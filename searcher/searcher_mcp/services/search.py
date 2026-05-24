@@ -440,27 +440,34 @@ def _parse_scholar_results_page(html: str) -> list[dict[str, Any]]:
         snippet_tag = div.select_one("div.gs_rs")
         snippet = snippet_tag.get_text(" ", strip=True) if snippet_tag else ""
 
+        # Preserve raw bytes so \xa0 separators are intact for splitting.
         meta_tag = div.select_one("div.gs_a")
-        meta_text = meta_tag.get_text(" ", strip=True) if meta_tag else ""
+        meta_raw = meta_tag.get_text("", strip=False) if meta_tag else ""
 
-        # Scholar meta format: "A Author, B Author - Journal, YYYY - Publisher"
-        # Split on " - " to separate author segment, venue+year, publisher.
-        parts = meta_text.split(" - ")
+        # Scholar meta: "A Author, B Author\xa0- Venue, YYYY - Publisher"
+        # \xa0- is the reliable author/venue boundary.
+        meta_parts = meta_raw.split("\xa0-", maxsplit=1)
+        author_segment = meta_parts[0]
+        remainder = meta_parts[1] if len(meta_parts) > 1 else ""
 
-        # Year: find the first 4-digit year anywhere in the meta text.
+        # Year: first 4-digit year anywhere in the meta.
         pub_year: int | None = None
-        year_match = _re_year.search(meta_text)
+        year_match = _re_year.search(meta_raw)
         if year_match:
             pub_year = int(year_match.group(0))
 
-        # Authors: first segment, split on comma, strip non-breaking spaces and year tokens.
-        authors: list[str] = []
-        if parts:
-            raw_authors = parts[0].replace(" ", " ")
-            authors = [
-                a.strip() for a in raw_authors.split(",")
-                if a.strip() and not _re_year.fullmatch(a.strip())
-            ]
+        # Authors: comma-split the author segment; drop ellipsis and year-only tokens.
+        authors = [
+            a.strip() for a in author_segment.split(",")
+            if a.strip() and a.strip() != "\u2026" and not _re_year.fullmatch(a.strip())
+        ]
+
+        # Source: strip trailing " - Publisher" from remainder, drop year.
+        source = ""
+        if remainder:
+            src = remainder.rsplit(" - ", maxsplit=1)[0]
+            src = _re_year.sub("", src).strip(" ,")
+            source = src
 
         # Citation count
         citation_count: int | None = None
@@ -484,16 +491,12 @@ def _parse_scholar_results_page(html: str) -> list[dict[str, Any]]:
                 "snippet": snippet,
                 "publication_year": pub_year,
                 "authors": authors,
-                "source": parts[1].strip() if len(parts) > 1 else "",
+                "source": source,
                 "citation_count": citation_count,
                 "pdf_link": pdf_link,
             })
 
     return results
-
-
-_re_year = __import__("re").compile(r"\b(?:19|20)\d{2}\b")
-_re_cite = __import__("re").compile(r"Cited by (\d+)")
 
 
 def _search_google_scholar_browser(
