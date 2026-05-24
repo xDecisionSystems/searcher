@@ -556,18 +556,23 @@ def search_google_scholar_via_browser(
                 log_event("scholar_page_collected", page_num=len(pages_html), html_len=len(html))
 
                 # Count results on this page (rough estimate — caller will parse exactly).
-                collected += html.count("class=\"gs_r gs_or gs_scl\"")
+                collected += html.count('class="gs_r gs_or gs_scl"')
 
                 if collected >= limit:
                     break
 
-                # Click the Next button.
-                next_btn = page.query_selector("button#gs_n td.gs_n a, a.gs_ico_nav_next, td.gs_n a[href]")
-                if not next_btn:
-                    log_event("scholar_no_next_button", page_num=len(pages_html))
+                # Find the Next link: Scholar renders it as <a href="..."><b>Next</b></a>.
+                next_link = page.query_selector("a:has(b)")
+                # Verify it actually contains "Next" text (not some other a:has(b)).
+                if next_link:
+                    b_text = next_link.query_selector("b")
+                    if not b_text or "Next" not in (b_text.inner_text() or ""):
+                        next_link = None
+                if not next_link:
+                    log_event("scholar_no_next_page", page_num=len(pages_html))
                     break
 
-                next_btn.click()
+                next_link.click()
                 page.wait_for_load_state("domcontentloaded", timeout=15000)
                 page.wait_for_timeout(int(page_delay_seconds * 1000))
 
