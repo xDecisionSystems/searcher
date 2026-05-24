@@ -443,18 +443,24 @@ def _parse_scholar_results_page(html: str) -> list[dict[str, Any]]:
         meta_tag = div.select_one("div.gs_a")
         meta_text = meta_tag.get_text(" ", strip=True) if meta_tag else ""
 
-        # Parse year from meta (format: "Author - Venue, YYYY - Publisher")
+        # Scholar meta format: "A Author, B Author - Journal, YYYY - Publisher"
+        # Split on " - " to separate author segment, venue+year, publisher.
+        parts = meta_text.split(" - ")
+
+        # Year: find the first 4-digit year anywhere in the meta text.
         pub_year: int | None = None
-        import re as _re
         year_match = _re_year.search(meta_text)
         if year_match:
-            pub_year = int(year_match.group(1))
+            pub_year = int(year_match.group(0))
 
-        # Authors are the first segment before " - "
+        # Authors: first segment, split on comma, strip non-breaking spaces and year tokens.
         authors: list[str] = []
-        parts = meta_text.split(" - ")
         if parts:
-            authors = [a.strip() for a in parts[0].split(",") if a.strip()]
+            raw_authors = parts[0].replace(" ", " ")
+            authors = [
+                a.strip() for a in raw_authors.split(",")
+                if a.strip() and not _re_year.fullmatch(a.strip())
+            ]
 
         # Citation count
         citation_count: int | None = None
@@ -486,7 +492,7 @@ def _parse_scholar_results_page(html: str) -> list[dict[str, Any]]:
     return results
 
 
-_re_year = __import__("re").compile(r"\b(19|20)\d{2}\b")
+_re_year = __import__("re").compile(r"\b(?:19|20)\d{2}\b")
 _re_cite = __import__("re").compile(r"Cited by (\d+)")
 
 
