@@ -509,6 +509,35 @@ def _apply_post_processing(path: Path, post_process: dict[str, Any]) -> None:
               original_pages=total, remaining_pages=end - start)
 
 
+# ── Generic page fetch ─────────────────────────────────────────────────────────
+
+def fetch_page_via_browser(url: str) -> dict[str, Any]:
+    """Navigate to url in the real Chromium instance and return the rendered HTML.
+
+    Uses the same persistent browser context as download_paper_via_browser, so any
+    session cookies (e.g. a solved Google Scholar CAPTCHA) are shared automatically.
+    """
+    _validate_http_url(url)
+    log_event("fetch_page_start", url=url)
+
+    try:
+        with sync_playwright() as playwright:
+            ctx = _get_browser_context(playwright)
+            pages = ctx.pages
+            page = pages[0] if pages else ctx.new_page()
+
+            response, final_url, html = _navigate(page, url)
+
+            status = response.status if response is not None else None
+            log_event("fetch_page_done", url=url, final_url=final_url, http_status=status)
+            _close_context_if_needed(ctx)
+
+        return {"url": final_url, "status": status, "html": html}
+
+    except PlaywrightError as exc:
+        raise HTTPException(status_code=502, detail=f"Browser fetch failed: {exc}") from exc
+
+
 # ── Main entry point ───────────────────────────────────────────────────────────
 
 def download_paper_via_browser(url: str, filename: str | None = None) -> dict[str, Any]:

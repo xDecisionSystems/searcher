@@ -9,6 +9,7 @@ from .services.page import review_page as review_page_service
 from .services.pdf import download_pdf as download_pdf_service
 from .services.search import (
     search_google_scholar as search_google_scholar_service,
+    search_google_scholar_browser as search_google_scholar_browser_service,
     search_ieeexplore as search_ieeexplore_service,
     search_scholar as search_scholar_service,
     search_scopus as search_scopus_service,
@@ -35,7 +36,7 @@ def health() -> dict[str, str]:
 def fetch_page(
     url: str,
     include_html: bool = Query(default=False),
-    max_chars: int = Query(default=12000, ge=500, le=100000),
+    max_chars: int = Query(default=12000, ge=500),
 ) -> dict[str, Any]:
     return fetch_page_service(url=url, include_html=include_html, max_chars=max_chars)
 
@@ -44,7 +45,7 @@ def fetch_page(
 def review_page(
     url: str,
     include_html: bool = Query(default=False),
-    max_chars: int = Query(default=12000, ge=500, le=100000),
+    max_chars: int = Query(default=12000, ge=500),
 ) -> dict[str, Any]:
     return review_page_service(url=url, include_html=include_html, max_chars=max_chars)
 
@@ -52,11 +53,11 @@ def review_page(
 @app.get("/search_scholar")
 def search_scholar(
     query: str,
-    limit: int = Query(default=5, ge=1, le=20),
+    limit: int = Query(default=5, ge=1),
     provider: str = Query(default="auto"),
-    start_record: int = Query(default=1, ge=1, le=2000),
-    wos_page: int = Query(default=1, ge=1, le=1000),
-    scopus_start: int = Query(default=0, ge=0, le=6000),
+    start_record: int = Query(default=1, ge=1),
+    wos_page: int = Query(default=1, ge=1),
+    scopus_start: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
     return search_scholar_service(
         query=query,
@@ -71,8 +72,8 @@ def search_scholar(
 @app.get("/search_scopus")
 def search_scopus(
     query: str,
-    limit: int = Query(default=5, ge=1, le=25),
-    start: int = Query(default=0, ge=0, le=6000),
+    limit: int = Query(default=5, ge=1),
+    start: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
     return search_scopus_service(query=query, limit=limit, start=start)
 
@@ -80,7 +81,7 @@ def search_scopus(
 @app.get("/search_google_scholar")
 def search_google_scholar(
     query: str,
-    limit: int = Query(default=200, ge=1, le=200),
+    limit: int = Query(default=200, ge=1, description="Number of results to return (max 200)."),
     start_index: int = Query(default=0, ge=0, description="Result offset for pagination."),
     year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
     year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
@@ -96,11 +97,37 @@ def search_google_scholar(
     )
 
 
+@app.get("/search_google_scholar_browser")
+def search_google_scholar_browser(
+    query: str,
+    limit: int = Query(default=200, ge=1),
+    start_index: int = Query(default=0, ge=0, description="Result offset for pagination."),
+    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
+    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
+    exclude_domains: Annotated[list[str] | None, Query(description="Domains to exclude. Defaults to researchgate.net, books.google.com, search.proquest.com. Pass empty list to disable filtering.")] = None,
+) -> dict[str, Any]:
+    """Search Google Scholar by driving the real Chromium browser.
+
+    Unlike /search_google_scholar (which uses the scholarly library and is prone to
+    CAPTCHA blocks), this endpoint navigates the browser_worker's persistent Chromium
+    instance. After solving a CAPTCHA once via noVNC, the session persists for subsequent
+    calls. Returns results in the same schema as /search_google_scholar.
+    """
+    return search_google_scholar_browser_service(
+        query=query,
+        limit=limit,
+        start_index=start_index,
+        year_low=year_low,
+        year_high=year_high,
+        exclude_domains=exclude_domains,
+    )
+
+
 @app.get("/search_ieeexplore")
 def search_ieeexplore(
     query: str,
-    limit: int = Query(default=5, ge=1, le=20),
-    start_record: int = Query(default=1, ge=1, le=2000),
+    limit: int = Query(default=5, ge=1),
+    start_record: int = Query(default=1, ge=1),
 ) -> dict[str, Any]:
     return search_ieeexplore_service(query=query, limit=limit, start_record=start_record)
 
@@ -108,8 +135,8 @@ def search_ieeexplore(
 @app.get("/search_web_of_science")
 def search_web_of_science(
     query: str,
-    limit: int = Query(default=5, ge=1, le=20),
-    page: int = Query(default=1, ge=1, le=1000),
+    limit: int = Query(default=5, ge=1),
+    page: int = Query(default=1, ge=1),
 ) -> dict[str, Any]:
     return search_web_of_science_service(query=query, limit=limit, page=page)
 

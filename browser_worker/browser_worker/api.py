@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from .config import VERSION_NAME
 from .logger import tail_log
-from .services.download import download_paper_via_browser
+from .services.download import download_paper_via_browser, fetch_page_via_browser
 from .services.recorder import (
     delete_strategy,
     get_recording_status,
@@ -140,6 +140,19 @@ def delete_strategy_endpoint(domain: str) -> dict[str, Any]:
     if not deleted:
         raise HTTPException(status_code=404, detail=f"No strategy found for domain '{domain}'.")
     return {"status": "deleted", "domain": domain}
+
+
+@app.get("/fetch_page")
+def fetch_page(
+    url: str = Query(..., description="URL to navigate to and return rendered HTML from."),
+) -> dict[str, Any]:
+    """Fetch a page using the real Chromium browser and return its rendered HTML.
+
+    Shares the same browser session as download_paper, so cookies (e.g. a solved
+    CAPTCHA) persist across calls. Use this to access pages that block plain HTTP
+    requests, such as Google Scholar after CAPTCHA resolution.
+    """
+    return fetch_page_via_browser(url=url)
 
 
 @app.post("/download_paper")

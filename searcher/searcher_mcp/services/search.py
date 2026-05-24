@@ -1,17 +1,20 @@
 import threading
 import time
 from typing import Any
+from urllib.parse import quote_plus, urljoin
 
+from bs4 import BeautifulSoup
 from fastapi import HTTPException
 
 from ..config import (
+    BROWSER_WORKER_URL,
     ELSEVIER_API_KEY,
     IEEE_XPLORE_API_KEY,
     SEMANTIC_SCHOLAR_API_KEY,
     SERPAPI_API_KEY,
     WEB_OF_SCIENCE_API_KEY,
 )
-from ..http_client import request_json
+from ..http_client import request_json, session
 
 _semantic_scholar_lock = threading.Lock()
 _semantic_scholar_last_call: float = 0.0
@@ -406,6 +409,144 @@ def search_scholar(
     return {"provider": provider, "query": query, **data}
 
 
+def _fetch_scholar_html_via_browser(url: str) -> str:
+    """Fetch a Scholar page through the browser_worker's Chromium instance."""
+    try:
+        resp = session.get(
+            f"{BROWSER_WORKER_URL}/fetch_page",
+            params={"url": url},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"browser_worker fetch failed: {exc}") from exc
+    html = data.get("html", "")
+    if not html or html == "__AUTO_DOWNLOAD__":
+        raise HTTPException(status_code=502, detail="browser_worker returned no HTML for Scholar page.")
+    return html
+
+
+def _parse_scholar_results_page(html: str) -> list[dict[str, Any]]:
+    """Parse a Google Scholar results page and extract paper metadata."""
+    soup = BeautifulSoup(html, "html.parser")
+    results: list[dict[str, Any]] = []
+
+    for div in soup.select("div.gs_r.gs_or.gs_scl"):
+        title_tag = div.select_one("h3.gs_rt a")
+        title = title_tag.get_text(" ", strip=True) if title_tag else ""
+        url = str(title_tag.get("href", "")) if title_tag else ""
+
+        snippet_tag = div.select_one("div.gs_rs")
+        snippet = snippet_tag.get_text(" ", strip=True) if snippet_tag else ""
+
+        meta_tag = div.select_one("div.gs_a")
+        meta_text = meta_tag.get_text(" ", strip=True) if meta_tag else ""
+
+        # Parse year from meta (format: "Author - Venue, YYYY - Publisher")
+        pub_year: int | None = None
+        import re as _re
+        year_match = _re_year.search(meta_text)
+        if year_match:
+            pub_year = int(year_match.group(1))
+
+        # Authors are the first segment before " - "
+        authors: list[str] = []
+        parts = meta_text.split(" - ")
+        if parts:
+            authors = [a.strip() for a in parts[0].split(",") if a.strip()]
+
+        # Citation count
+        citation_count: int | None = None
+        for a in div.select("a"):
+            text = a.get_text(strip=True)
+            cite_match = _re_cite.match(text)
+            if cite_match:
+                citation_count = int(cite_match.group(1))
+                break
+
+        # PDF link from left-hand gs_or_ggsm block
+        pdf_link = ""
+        pdf_tag = div.select_one("div.gs_or_ggsm a")
+        if pdf_tag:
+            pdf_link = str(pdf_tag.get("href", ""))
+
+        if title or url:
+            results.append({
+                "title": title,
+                "url": url,
+                "snippet": snippet,
+                "publication_year": pub_year,
+                "authors": authors,
+                "source": parts[1].strip() if len(parts) > 1 else "",
+                "citation_count": citation_count,
+                "pdf_link": pdf_link,
+            })
+
+    return results
+
+
+_re_year = __import__("re").compile(r"\b(19|20)\d{2}\b")
+_re_cite = __import__("re").compile(r"Cited by (\d+)")
+
+
+def _search_google_scholar_browser(
+    query: str,
+    limit: int,
+    start_index: int = 0,
+    year_low: int | None = None,
+    year_high: int | None = None,
+    exclude_domains: list[str] | None = None,
+) -> dict[str, Any]:
+    """Search Google Scholar by driving the real Chromium browser.
+
+    Reuses any existing browser session (including a solved CAPTCHA). Paginates
+    through Scholar results pages (10 results per page) until limit is reached.
+    """
+    blocked = set(exclude_domains if exclude_domains is not None else _DEFAULT_EXCLUDE_DOMAINS)
+    results: list[dict[str, Any]] = []
+    start = start_index
+
+    while len(results) < limit:
+        params = f"q={quote_plus(query)}&start={start}&hl=en"
+        if year_low:
+            params += f"&as_ylo={year_low}"
+        if year_high:
+            params += f"&as_yhi={year_high}"
+        url = f"https://scholar.google.com/scholar?{params}"
+
+        html = _fetch_scholar_html_via_browser(url)
+
+        # CAPTCHA / bot-check detection
+        if "scholar_share_token" not in html and "gs_r" not in html:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "Google Scholar returned a CAPTCHA or empty page. "
+                    "Open the noVNC browser, solve the CAPTCHA, then retry."
+                ),
+            )
+
+        page_results = _parse_scholar_results_page(html)
+        if not page_results:
+            break
+
+        for item in page_results:
+            if len(results) >= limit:
+                break
+            pub_url = item.get("url", "")
+            if blocked and _url_domain(pub_url) in blocked:
+                continue
+            item["index"] = len(results) + 1
+            results.append(item)
+
+        if len(page_results) < 10:
+            break
+        start += 10
+
+    return {"total_records": None, "results": results}
+
+
 def search_google_scholar(
     query: str,
     limit: int,
@@ -423,6 +564,25 @@ def search_google_scholar(
         exclude_domains=exclude_domains,
     )
     return {"provider": "google_scholar_scholarly", "query": query, **data}
+
+
+def search_google_scholar_browser(
+    query: str,
+    limit: int,
+    start_index: int = 0,
+    year_low: int | None = None,
+    year_high: int | None = None,
+    exclude_domains: list[str] | None = None,
+) -> dict[str, Any]:
+    data = _search_google_scholar_browser(
+        query=query,
+        limit=limit,
+        start_index=start_index,
+        year_low=year_low,
+        year_high=year_high,
+        exclude_domains=exclude_domains,
+    )
+    return {"provider": "google_scholar_browser", "query": query, **data}
 
 
 def search_ieeexplore(query: str, limit: int, start_record: int) -> dict[str, Any]:

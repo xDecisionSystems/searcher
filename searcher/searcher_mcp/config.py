@@ -11,6 +11,8 @@ PDF_MAX_MB = int(os.getenv("PDF_MAX_MB", "50"))
 DOWNLOAD_DIR = Path(os.getenv("DOWNLOAD_DIR", tempfile.gettempdir()))
 VERSION_FILE = Path(__file__).resolve().parent.parent.parent / "VERSION.md"
 
+BROWSER_WORKER_URL = os.getenv("BROWSER_WORKER_URL", "http://127.0.0.1:8010")
+
 SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")
 IEEE_XPLORE_API_KEY = os.getenv("IEEE_XPLORE_API_KEY")
 SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
