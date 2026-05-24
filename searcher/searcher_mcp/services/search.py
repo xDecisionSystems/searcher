@@ -92,7 +92,6 @@ def _search_scholar_semantic(query: str, limit: int) -> dict[str, Any]:
 
 
 _DEFAULT_EXCLUDE_DOMAINS: list[str] = [
-    "www.researchgate.net",
     "books.google.com",
     "search.proquest.com",
 ]
