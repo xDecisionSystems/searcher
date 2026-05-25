@@ -616,7 +616,7 @@ def search_ebsco_via_browser(
                     log_event("ebsco_signed_in", url=page.url)
                 except PlaywrightError as exc:
                     log_event("ebsco_sign_in_failed", error=str(exc))
-                    return _login_required_response(search_url, page.url)
+                    # Sign-in click failed — session may still be valid, continue.
 
             # Click the search submit button to trigger the results fetch.
             # EBSCO's React app requires this even when the query is in the URL.
@@ -633,14 +633,24 @@ def search_ebsco_via_browser(
                 pass
             page.wait_for_timeout(2000)
 
-            # Simulate real mouse-wheel scrolling so EBSCO's scroll listener fires.
-            # JS scrollTop assignment doesn't dispatch scroll events that the React
-            # SPA listens to — mouse.wheel does.
-            page.mouse.move(600, 400)
-            for _ in range(15):
-                page.mouse.wheel(0, 600)
-                page.wait_for_timeout(300)
-            page.wait_for_timeout(1000)
+            # Drag the browser's right-side scrollbar to the bottom, exactly as
+            # the user does manually. The scrollbar thumb sits near the top-right
+            # of the viewport; dragging it to the bottom of the viewport scrolls
+            # the page and fires the native scroll events EBSCO listens to.
+            viewport = page.viewport_size or {"width": 1280, "height": 720}
+            sb_x = viewport["width"] - 8        # scrollbar track, ~8px from right edge
+            sb_top = 60                          # below the header
+            sb_bottom = viewport["height"] - 10  # bottom of track
+            page.mouse.move(sb_x, sb_top)
+            page.mouse.down()
+            # Drag incrementally to the bottom so scroll events fire throughout.
+            steps = 10
+            for i in range(1, steps + 1):
+                y = sb_top + (sb_bottom - sb_top) * i // steps
+                page.mouse.move(sb_x, y)
+                page.wait_for_timeout(200)
+            page.mouse.up()
+            page.wait_for_timeout(1500)
 
             # Snapshot the page and log selectors to diagnose if results are empty.
             html = page.content()
@@ -653,12 +663,15 @@ def search_ebsco_via_browser(
                       count=page.locator(result_selector).count())
 
             while collected < limit:
-                # Simulate mouse-wheel scroll to trigger EBSCO's lazy load.
-                page.mouse.move(600, 400)
-                for _ in range(10):
-                    page.mouse.wheel(0, 600)
-                    page.wait_for_timeout(300)
-                page.wait_for_timeout(600)
+                # Drag scrollbar to bottom before each snapshot.
+                page.mouse.move(sb_x, sb_top)
+                page.mouse.down()
+                for i in range(1, steps + 1):
+                    y = sb_top + (sb_bottom - sb_top) * i // steps
+                    page.mouse.move(sb_x, y)
+                    page.wait_for_timeout(150)
+                page.mouse.up()
+                page.wait_for_timeout(1000)
 
                 html = page.content()
                 pages_html.append(html)
