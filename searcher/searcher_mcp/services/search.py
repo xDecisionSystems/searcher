@@ -616,55 +616,59 @@ def _parse_ebsco_results_page(html: str) -> list[dict[str, Any]]:
     soup = BeautifulSoup(html, "html.parser")
     results: list[dict[str, Any]] = []
 
-    for card in soup.find_all(attrs={"data-auto": "result-list-item"}):
+    for card in soup.find_all(attrs={"data-auto": "search-result-item"}):
         # Title and detail URL
-        title_tag = card.select_one("h3 a") or card.select_one("h3")
+        title_tag = card.find(attrs={"data-auto": "result-item-title__link"})
+        if not title_tag:
+            title_tag = card.select_one("[data-auto='result-item-title'] a") or card.select_one("h3 a")
         title = title_tag.get_text(" ", strip=True) if title_tag else ""
         url = ""
-        if title_tag and title_tag.name == "a":
-            url = str(title_tag.get("href", ""))
-        if url and url.startswith("/"):
-            url = "https://research.ebsco.com" + url
+        if title_tag:
+            href = str(title_tag.get("href", ""))
+            if href.startswith("/"):
+                url = "https://research.ebsco.com" + href
+            elif href.startswith("http"):
+                url = href
 
-        # Authors: EBSCO renders them in a delimited list with data-auto="delimited-list"
+        # Authors
         authors: list[str] = []
-        author_container = card.find(attrs={"data-auto": "delimited-list"})
-        if author_container:
-            for a in author_container.find_all("a"):
+        contributors = card.find(attrs={"data-auto": "result-item-metadata-content--contributors"})
+        if contributors:
+            for a in contributors.find_all("a"):
                 name = a.get_text(" ", strip=True)
                 if name:
                     authors.append(name)
-        if not authors:
-            # Fallback: look for author spans with common class patterns
-            for span in card.select("span[class*='author'], a[class*='author']"):
-                name = span.get_text(" ", strip=True)
-                if name:
-                    authors.append(name)
+            if not authors:
+                text = contributors.get_text(" ", strip=True)
+                authors = [a.strip() for a in text.split(";") if a.strip()]
 
-        # Publication year: look for 4-digit year in metadata text
-        meta_text = card.get_text(" ", strip=True)
+        # Publication year
         pub_year: int | None = None
-        year_match = _re_year.search(meta_text)
-        if year_match:
-            pub_year = int(year_match.group(0))
+        published = card.find(attrs={"data-auto": "result-item-metadata-content--published"})
+        if published:
+            year_match = _re_year.search(published.get_text(" ", strip=True))
+            if year_match:
+                pub_year = int(year_match.group(0))
+        if pub_year is None:
+            year_match = _re_year.search(card.get_text(" ", strip=True))
+            if year_match:
+                pub_year = int(year_match.group(0))
 
-        # Source/journal: EBSCO renders it as a pill or labeled span
+        # Source/journal
         source = ""
-        for tag in card.select("[data-auto='pill'], [data-auto='pill-label']"):
-            text = tag.get_text(" ", strip=True)
-            if text and not text.isdigit():
-                source = text
-                break
+        db_tag = card.find(attrs={"data-auto": "result-item-metadata-content--database-hyperlink"})
+        if not db_tag:
+            db_tag = card.find(attrs={"data-auto": "result-item-metadata-content--database"})
+        if db_tag:
+            source = db_tag.get_text(" ", strip=True)
 
         # Abstract/snippet
         snippet = ""
-        for sel in ["[data-auto='content-holder-inner']", "p[class*='abstract']", "p[class*='snippet']"]:
-            tag = card.select_one(sel)
-            if tag:
-                snippet = tag.get_text(" ", strip=True)
-                break
+        abstract_tag = card.find(attrs={"data-auto": "abstract-content"})
+        if abstract_tag:
+            snippet = abstract_tag.get_text(" ", strip=True)
 
-        # DOI: look for doi.org links
+        # DOI
         doi = ""
         for a in card.select("a[href*='doi.org']"):
             href = str(a.get("href", ""))

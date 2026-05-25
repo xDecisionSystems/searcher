@@ -644,20 +644,7 @@ def search_ebsco_via_browser(
             data_autos = sorted(set(_re.findall(r'data-auto="([^"]+)"', html)))
             log_event("ebsco_page_ready", html_len=len(html), data_autos=data_autos)
 
-            # Determine which selector EBSCO is actually using for result cards.
-            _RESULT_SELECTORS = [
-                "[data-auto='result-list-item']",
-                "li[data-auto]",
-                "article[data-auto]",
-            ]
-            result_selector = _RESULT_SELECTORS[0]
-            for sel in _RESULT_SELECTORS:
-                try:
-                    if page.locator(sel).count() > 0:
-                        result_selector = sel
-                        break
-                except PlaywrightError:
-                    continue
+            result_selector = "[data-auto='search-result-item']"
             log_event("ebsco_result_selector", selector=result_selector,
                       count=page.locator(result_selector).count())
 
@@ -677,13 +664,20 @@ def search_ebsco_via_browser(
                     break
 
                 show_more = None
-                for btn in page.query_selector_all("button"):
-                    try:
-                        if "Show more" in (btn.inner_text() or ""):
-                            show_more = btn
-                            break
-                    except PlaywrightError:
-                        continue
+                try:
+                    loc = page.locator("[data-auto='show-more-button']").first
+                    if loc.count():
+                        show_more = loc
+                except PlaywrightError:
+                    pass
+                if show_more is None:
+                    for btn in page.query_selector_all("button"):
+                        try:
+                            if "Show more" in (btn.inner_text() or ""):
+                                show_more = btn
+                                break
+                        except PlaywrightError:
+                            continue
 
                 if not show_more:
                     log_event("ebsco_no_show_more", snapshot=len(pages_html))
