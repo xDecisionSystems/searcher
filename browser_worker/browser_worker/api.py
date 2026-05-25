@@ -34,6 +34,18 @@ class DownloadRequest(BaseModel):
     filename: str = Field(default="", description="Optional output filename. Leave empty to auto-generate.")
 
 
+class DownloadManyRequest(BaseModel):
+    urls: list[str] = Field(..., description="List of paper URLs to download sequentially.")
+    stop_on_login: bool = Field(
+        default=True,
+        description=(
+            "If True (default), pause the queue when login/CAPTCHA is required and return "
+            "immediately so the user can resolve it. If False, skip papers requiring login "
+            "and continue with the rest."
+        ),
+    )
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "browser_worker", "version_name": VERSION_NAME}
@@ -195,6 +207,58 @@ def download_paper(request: DownloadRequest) -> dict[str, Any]:
     return download_paper_via_browser(url=request.url, filename=request.filename or None)
 
 
+@app.post("/download_papers")
+def download_papers(request: DownloadManyRequest) -> dict[str, Any]:
+    """Download multiple papers sequentially, one at a time.
+
+    Processes each URL in order. On login_required or busy, stops the queue
+    immediately (if stop_on_login=True) and returns results so far plus the
+    pending URLs so the user can resolve the issue and retry the remainder.
+
+    Returns:
+      - completed: list of successful download results
+      - failed: list of {url, status, message} for no_access / failed
+      - paused_at: URL that caused a login/CAPTCHA pause (if any)
+      - pending: remaining URLs not yet attempted
+      - user_prompt: prompt to show user if paused_at is set
+    """
+    completed: list[dict[str, Any]] = []
+    failed: list[dict[str, Any]] = []
+
+    for i, url in enumerate(request.urls):
+        try:
+            result = download_paper_via_browser(url=url)
+        except HTTPException as exc:
+            result = exc.detail if isinstance(exc.detail, dict) else {"status": "error", "message": str(exc.detail)}
+
+        status = result.get("status", "ok") if isinstance(result, dict) else "ok"
+
+        if status in ("login_required", "busy"):
+            if request.stop_on_login:
+                return {
+                    "status": "paused",
+                    "completed": completed,
+                    "failed": failed,
+                    "paused_at": url,
+                    "pending": request.urls[i:],
+                    "user_prompt": result.get("user_prompt") or result.get("message", ""),
+                }
+            else:
+                failed.append({"url": url, **result})
+        elif status in ("no_access", "inaccessible", "failed", "error"):
+            failed.append({"url": url, **result})
+        else:
+            completed.append(result)
+
+    return {
+        "status": "done",
+        "completed": completed,
+        "failed": failed,
+        "paused_at": None,
+        "pending": [],
+    }
+
+
 # ─── MCP server ───────────────────────────────────────────────────────────────
 mcp = FastApiMCP(
     app,
@@ -202,7 +266,8 @@ mcp = FastApiMCP(
     description=(
         "Download academic papers from publisher portals using a real Chromium browser. "
         "Only one download runs at a time. "
-        "Call download_paper with the paper URL. "
+        "To download multiple papers, use download_papers with a list of URLs — it processes them sequentially. "
+        "Call download_paper with the paper URL for a single download. "
         "If the response has status='busy', inform the user and do NOT retry until the current download finishes. "
         "If the response has status='login_required', show the user_prompt to the user "
         "and wait for them to press OK (then retry the same call) or Stop (then abort). "
