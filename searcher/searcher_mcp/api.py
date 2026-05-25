@@ -101,7 +101,7 @@ def search_google_scholar(
 @app.get("/search_ebsco")
 def search_ebsco(
     query: str,
-    limit: int = Query(default=10, ge=1),
+    limit: int = Query(default=100, ge=1),
     year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
     year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
 ) -> dict[str, Any]:

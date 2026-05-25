@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s *)",
+      "Bash(curl -sS *)",
+      "Bash(curl -s)",
+      "Bash(lsof -i *)",
+      "Bash(ps -p *)",
+      "mcp__browser_worker__get_logs_logs_get",
+      "mcp__browser_worker__health_health_get",
+      "mcp__searcher__health_health_get",
+      "mcp__browser_worker__fetch_page_fetch_page_get",
+      "mcp__browser_worker__recording_status_recording_status_get",
+      "mcp__browser_worker__list_strategies_endpoint_strategies_get"
+    ]
+  }
+}

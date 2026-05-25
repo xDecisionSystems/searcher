@@ -647,7 +647,7 @@ def search_ebsco_via_browser(
             log_event("ebsco_result_selector", selector=result_selector,
                       count=page.locator(result_selector).count())
 
-            while collected < limit:
+            while True:
                 html = page.content()
                 pages_html.append(html)
                 collected = page.locator(result_selector).count()

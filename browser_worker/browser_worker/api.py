@@ -157,7 +157,7 @@ def delete_strategy_endpoint(domain: str) -> dict[str, Any]:
 @app.get("/search_ebsco")
 def search_ebsco(
     query: str = Query(..., description="Search query."),
-    limit: int = Query(default=10, ge=1, description="Approximate number of results to collect (EBSCO loads in batches)."),
+    limit: int = Query(default=100, ge=1, description="Approximate number of results to collect (EBSCO loads in batches)."),
     year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
     year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
     page_delay_seconds: float = Query(default=2.0, ge=0.5, description="Seconds to wait after clicking 'Show more results'."),
