@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from .config import VERSION_NAME
 from .logger import tail_log
-from .services.download import download_paper_via_browser, fetch_page_via_browser, search_google_scholar_via_browser
+from .services.download import download_paper_via_browser, fetch_page_via_browser, search_ebsco_via_browser, search_google_scholar_via_browser
 from .services.recorder import (
     delete_strategy,
     get_recording_status,
@@ -152,6 +152,30 @@ def delete_strategy_endpoint(domain: str) -> dict[str, Any]:
     if not deleted:
         raise HTTPException(status_code=404, detail=f"No strategy found for domain '{domain}'.")
     return {"status": "deleted", "domain": domain}
+
+
+@app.get("/search_ebsco")
+def search_ebsco(
+    query: str = Query(..., description="Search query."),
+    limit: int = Query(default=10, ge=1, description="Approximate number of results to collect (EBSCO loads in batches)."),
+    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
+    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
+    page_delay_seconds: float = Query(default=2.0, ge=0.5, description="Seconds to wait after clicking 'Show more results'."),
+) -> dict[str, Any]:
+    """Search EBSCO Research using the real Chromium browser.
+
+    Navigates to research.ebsco.com, waits for the React SPA to render results,
+    then clicks 'Show more results' until the requested limit is reached.
+    Returns raw HTML snapshots for the searcher service to parse.
+    Session cookies persist so institutional access stays active.
+    """
+    return search_ebsco_via_browser(
+        query=query,
+        limit=limit,
+        year_low=year_low,
+        year_high=year_high,
+        page_delay_seconds=page_delay_seconds,
+    )
 
 
 @app.get("/search_google_scholar")

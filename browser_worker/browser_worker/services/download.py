@@ -543,6 +543,105 @@ def _apply_post_processing(path: Path, post_process: dict[str, Any]) -> None:
               original_pages=total, remaining_pages=end - start)
 
 
+# ── EBSCO browser search ──────────────────────────────────────────────────────
+
+def search_ebsco_via_browser(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+    page_delay_seconds: float = 2.0,
+) -> dict:
+    """Search EBSCO Research via the real Chromium browser.
+
+    Navigates to the search results page, waits for the React SPA to finish
+    loading, collects HTML, then clicks "Show more results" until limit items
+    are collected or the button disappears. Returns raw HTML per snapshot for
+    the caller to parse.
+    """
+    from urllib.parse import quote_plus
+    from ..config import EBSCO_OPID
+
+    limiters = ["FT:Y", "FT1:Y"]
+    if year_low or year_high:
+        lo = f"{year_low}-01-01" if year_low else ""
+        hi = f"{year_high}-12-31" if year_high else ""
+        limiters.append(f"DT1:{lo}/{hi}")
+
+    params = (
+        f"q={quote_plus(query)}"
+        f"&autocorrect=y&expanders=concept&searchMode=all&searchSegment=all-results"
+        f"&limiters={quote_plus(','.join(limiters))}"
+    )
+    search_url = f"https://research.ebsco.com/c/{EBSCO_OPID}/search/results?{params}"
+
+    log_event("ebsco_search_start", query=query, limit=limit, url=search_url)
+
+    pages_html: list[str] = []
+    collected = 0
+
+    try:
+        with sync_playwright() as playwright:
+            ctx = _get_browser_context(playwright)
+            pages = ctx.pages
+            page = pages[0] if pages else ctx.new_page()
+
+            page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
+
+            # EBSCO is a React SPA — wait for the result cards to render.
+            try:
+                page.wait_for_selector("[data-auto='result-list-item']", timeout=15000)
+            except PlaywrightError:
+                # Fallback: networkidle gives the SPA time to finish.
+                try:
+                    page.wait_for_load_state("networkidle", timeout=10000)
+                except PlaywrightError:
+                    pass
+
+            while collected < limit:
+                html = page.content()
+                pages_html.append(html)
+                # Count rendered result cards (exact parse happens in searcher service).
+                collected = html.count('data-auto="result-list-item"')
+                log_event("ebsco_page_collected", snapshot=len(pages_html),
+                          html_len=len(html), estimated_results=collected)
+
+                if collected >= limit:
+                    break
+
+                # Scroll to reveal the "Show more results" button.
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.wait_for_timeout(800)
+
+                show_more = None
+                for btn in page.query_selector_all("button"):
+                    try:
+                        if "Show more" in (btn.inner_text() or ""):
+                            show_more = btn
+                            break
+                    except PlaywrightError:
+                        continue
+
+                if not show_more:
+                    log_event("ebsco_no_show_more", snapshot=len(pages_html))
+                    break
+
+                show_more.click()
+                page.wait_for_timeout(int(page_delay_seconds * 1000))
+                try:
+                    page.wait_for_load_state("networkidle", timeout=8000)
+                except PlaywrightError:
+                    pass
+
+            _close_context_if_needed(ctx)
+
+    except PlaywrightError as exc:
+        raise HTTPException(status_code=502, detail=f"EBSCO browser search failed: {exc}") from exc
+
+    log_event("ebsco_search_done", snapshots=len(pages_html), collected=collected)
+    return {"pages_html": pages_html, "page_count": len(pages_html)}
+
+
 # ── Google Scholar browser search ─────────────────────────────────────────────
 
 def search_google_scholar_via_browser(

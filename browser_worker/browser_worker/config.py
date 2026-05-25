@@ -41,3 +41,6 @@ CDP_URL: str | None = os.getenv("BROWSER_WORKER_CDP_URL", "http://127.0.0.1:9222
 
 # Public noVNC URL shown to users when interactive login is required.
 NOVNC_URL: str = os.getenv("BROWSER_WORKER_NOVNC_URL", "http://localhost:6080/vnc.html")
+
+# EBSCO institutional opid (the path segment after /c/ in research.ebsco.com URLs).
+EBSCO_OPID: str = os.getenv("EBSCO_OPID", "bdq7wt")

@@ -8,6 +8,7 @@ from .services.page import fetch_page as fetch_page_service
 from .services.page import review_page as review_page_service
 from .services.pdf import download_pdf as download_pdf_service
 from .services.search import (
+    search_ebsco_browser as search_ebsco_browser_service,
     search_google_scholar as search_google_scholar_service,
     search_google_scholar_browser as search_google_scholar_browser_service,
     search_ieeexplore as search_ieeexplore_service,
@@ -94,6 +95,27 @@ def search_google_scholar(
         year_low=year_low,
         year_high=year_high,
         exclude_domains=exclude_domains,
+    )
+
+
+@app.get("/search_ebsco")
+def search_ebsco(
+    query: str,
+    limit: int = Query(default=10, ge=1),
+    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
+    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
+) -> dict[str, Any]:
+    """Search EBSCO Research by driving the real Chromium browser.
+
+    Requires an active institutional browser session. If access is blocked,
+    open noVNC, log in through the institution portal, then retry.
+    Returns results in the same schema as other search endpoints.
+    """
+    return search_ebsco_browser_service(
+        query=query,
+        limit=limit,
+        year_low=year_low,
+        year_high=year_high,
     )
 
 

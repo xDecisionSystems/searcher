@@ -580,6 +580,153 @@ def search_google_scholar(
     return {"provider": "google_scholar_scholarly", "query": query, **data}
 
 
+def _fetch_ebsco_pages_via_browser(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+) -> list[str]:
+    """Drive browser_worker to search EBSCO and return a list of HTML snapshot strings."""
+    params: dict[str, Any] = {"query": query, "limit": limit}
+    if year_low is not None:
+        params["year_low"] = year_low
+    if year_high is not None:
+        params["year_high"] = year_high
+    try:
+        resp = session.get(
+            f"{BROWSER_WORKER_URL}/search_ebsco",
+            params=params,
+            timeout=120,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"browser_worker EBSCO search failed: {exc}") from exc
+    pages = data.get("pages_html", [])
+    if not pages:
+        raise HTTPException(
+            status_code=503,
+            detail="EBSCO returned no pages. Ensure you are logged in via noVNC and retry.",
+        )
+    return pages
+
+
+def _parse_ebsco_results_page(html: str) -> list[dict[str, Any]]:
+    """Parse an EBSCO search results HTML snapshot and extract paper metadata."""
+    soup = BeautifulSoup(html, "html.parser")
+    results: list[dict[str, Any]] = []
+
+    for card in soup.find_all(attrs={"data-auto": "result-list-item"}):
+        # Title and detail URL
+        title_tag = card.select_one("h3 a") or card.select_one("h3")
+        title = title_tag.get_text(" ", strip=True) if title_tag else ""
+        url = ""
+        if title_tag and title_tag.name == "a":
+            url = str(title_tag.get("href", ""))
+        if url and url.startswith("/"):
+            url = "https://research.ebsco.com" + url
+
+        # Authors: EBSCO renders them in a delimited list with data-auto="delimited-list"
+        authors: list[str] = []
+        author_container = card.find(attrs={"data-auto": "delimited-list"})
+        if author_container:
+            for a in author_container.find_all("a"):
+                name = a.get_text(" ", strip=True)
+                if name:
+                    authors.append(name)
+        if not authors:
+            # Fallback: look for author spans with common class patterns
+            for span in card.select("span[class*='author'], a[class*='author']"):
+                name = span.get_text(" ", strip=True)
+                if name:
+                    authors.append(name)
+
+        # Publication year: look for 4-digit year in metadata text
+        meta_text = card.get_text(" ", strip=True)
+        pub_year: int | None = None
+        year_match = _re_year.search(meta_text)
+        if year_match:
+            pub_year = int(year_match.group(0))
+
+        # Source/journal: EBSCO renders it as a pill or labeled span
+        source = ""
+        for tag in card.select("[data-auto='pill'], [data-auto='pill-label']"):
+            text = tag.get_text(" ", strip=True)
+            if text and not text.isdigit():
+                source = text
+                break
+
+        # Abstract/snippet
+        snippet = ""
+        for sel in ["[data-auto='content-holder-inner']", "p[class*='abstract']", "p[class*='snippet']"]:
+            tag = card.select_one(sel)
+            if tag:
+                snippet = tag.get_text(" ", strip=True)
+                break
+
+        # DOI: look for doi.org links
+        doi = ""
+        for a in card.select("a[href*='doi.org']"):
+            href = str(a.get("href", ""))
+            doi_match = __import__("re").search(r"10\.\d{4,}/\S+", href)
+            if doi_match:
+                doi = doi_match.group(0).rstrip(".")
+                break
+
+        if title or url:
+            results.append({
+                "title": title,
+                "url": url,
+                "snippet": snippet,
+                "publication_year": pub_year,
+                "authors": authors,
+                "source": source,
+                "doi": doi,
+                "pdf_link": "",
+            })
+
+    return results
+
+
+def _search_ebsco_browser(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+) -> dict[str, Any]:
+    pages_html = _fetch_ebsco_pages_via_browser(
+        query=query,
+        limit=limit,
+        year_low=year_low,
+        year_high=year_high,
+    )
+
+    # Use the last snapshot — it has the most accumulated results after "Show more" clicks.
+    results: list[dict[str, Any]] = []
+    if pages_html:
+        results = _parse_ebsco_results_page(pages_html[-1])
+        results = results[:limit]
+        for i, r in enumerate(results):
+            r["index"] = i + 1
+
+    return {"total_records": None, "results": results}
+
+
+def search_ebsco_browser(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+) -> dict[str, Any]:
+    data = _search_ebsco_browser(
+        query=query,
+        limit=limit,
+        year_low=year_low,
+        year_high=year_high,
+    )
+    return {"provider": "ebsco_browser", "query": query, **data}
+
+
 def search_google_scholar_browser(
     query: str,
     limit: int,
