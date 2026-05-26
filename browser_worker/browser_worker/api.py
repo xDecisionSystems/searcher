@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from .config import VERSION_NAME
 from .logger import tail_log
-from .services.download import download_paper_via_browser, fetch_page_via_browser, search_ebsco_via_browser, search_google_scholar_via_browser
+from .services.download import download_ebsco_paper, download_paper_via_browser, fetch_page_via_browser, search_ebsco_via_browser, search_google_scholar_via_browser
 from .services.recorder import (
     delete_strategy,
     get_recording_status,
@@ -176,6 +176,45 @@ def search_ebsco(
         year_high=year_high,
         page_delay_seconds=page_delay_seconds,
     )
+
+
+@app.get("/download_ebsco_paper")
+def download_ebsco_paper_endpoint(
+    url: str = Query(..., description="EBSCO paper detail page URL (research.ebsco.com/c/.../search/details/...)."),
+) -> dict[str, Any]:
+    """Download a single paper from an EBSCO detail page.
+
+    Navigates to the detail URL, clicks Download twice (first opens popup,
+    second confirms), then captures and saves the PDF from the API response.
+    Requires an active institutional browser session.
+    """
+    return download_ebsco_paper(url=url)
+
+
+@app.post("/download_ebsco_papers")
+def download_ebsco_papers(request: DownloadManyRequest) -> dict[str, Any]:
+    """Download multiple EBSCO papers sequentially by their detail page URLs.
+
+    Each URL must be an EBSCO detail page (research.ebsco.com/c/.../search/details/...).
+    Returns completed downloads and any failures.
+    """
+    completed: list[dict[str, Any]] = []
+    failed: list[dict[str, Any]] = []
+
+    for url in request.urls:
+        try:
+            result = download_ebsco_paper(url=url)
+            completed.append({"url": url, **result})
+        except HTTPException as exc:
+            failed.append({"url": url, "status": "error", "message": str(exc.detail)})
+
+    return {
+        "status": "done",
+        "completed": completed,
+        "failed": failed,
+        "total": len(request.urls),
+        "succeeded": len(completed),
+    }
 
 
 @app.get("/search_google_scholar")

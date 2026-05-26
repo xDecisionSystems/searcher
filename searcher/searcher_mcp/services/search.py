@@ -315,13 +315,17 @@ def _search_web_of_science(query: str, limit: int, page: int) -> dict[str, Any]:
     }
 
 
-def _search_scopus(query: str, limit: int, start: int) -> dict[str, Any]:
+def _search_sciencedirect(query: str, limit: int, start: int, year_low: int | None = None, year_high: int | None = None) -> dict[str, Any]:
     if not ELSEVIER_API_KEY:
         raise HTTPException(status_code=400, detail="ELSEVIER_API_KEY is not configured.")
 
+    params: dict[str, Any] = {"query": query, "count": limit, "start": start}
+    if year_low:
+        params["date"] = f"{year_low}-{year_high or 9999}"
+
     payload = request_json(
-        "https://api.elsevier.com/content/search/scopus",
-        params={"query": query, "count": limit, "start": start},
+        "https://api.elsevier.com/content/search/sciencedirect",
+        params=params,
         headers={"X-ELS-APIKey": ELSEVIER_API_KEY, "Accept": "application/json"},
     )
 
@@ -333,7 +337,7 @@ def _search_scopus(query: str, limit: int, start: int) -> dict[str, Any]:
         total_records = None
 
     results: list[dict[str, Any]] = []
-    for item in (search_results.get("entry") or [])[:limit]:
+    for i, item in enumerate((search_results.get("entry") or [])[:limit], start + 1):
         if not isinstance(item, dict):
             continue
 
@@ -353,24 +357,24 @@ def _search_scopus(query: str, limit: int, start: int) -> dict[str, Any]:
 
         results.append(
             {
+                "index": i,
                 "title": item.get("dc:title", ""),
                 "url": url,
                 "snippet": item.get("dc:description", ""),
                 "publication_year": pub_year,
                 "authors": authors,
                 "doi": doi,
+                "pdf_link": "",
                 "source": item.get("prism:publicationName", ""),
-                "citation_count": item.get("citedby-count"),
-                "scopus_id": item.get("dc:identifier", ""),
             }
         )
 
     return {"start": start, "total_records": total_records, "results": results}
 
 
-def search_scopus(query: str, limit: int, start: int) -> dict[str, Any]:
-    data = _search_scopus(query=query, limit=limit, start=start)
-    return {"provider": "scopus", "query": query, **data}
+def search_sciencedirect(query: str, limit: int, start: int, year_low: int | None = None, year_high: int | None = None) -> dict[str, Any]:
+    data = _search_sciencedirect(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high)
+    return {"provider": "sciencedirect", "query": query, **data}
 
 
 def search_scholar(
@@ -395,14 +399,14 @@ def search_scholar(
         data = _search_ieeexplore(query=query, limit=limit, start_record=start_record)
     elif provider == "web_of_science":
         data = _search_web_of_science(query=query, limit=limit, page=wos_page)
-    elif provider == "scopus":
-        data = _search_scopus(query=query, limit=limit, start=scopus_start)
+    elif provider == "sciencedirect":
+        data = _search_sciencedirect(query=query, limit=limit, start=scopus_start)
     else:
         raise HTTPException(
             status_code=400,
             detail=(
                 "Invalid provider. Use auto, semantic_scholar, google_scholar_scholarly, "
-                "google_scholar_serpapi, ieeexplore, web_of_science, or scopus."
+                "google_scholar_serpapi, ieeexplore, web_of_science, or sciencedirect."
             ),
         )
 
@@ -746,6 +750,34 @@ def search_ebsco_browser(
         year_high=year_high,
     )
     return {"provider": "ebsco_browser", "query": query, **data}
+
+
+def download_ebsco_paper(url: str) -> dict[str, Any]:
+    """Download a single EBSCO paper by its detail page URL."""
+    try:
+        resp = session.get(
+            f"{BROWSER_WORKER_URL}/download_ebsco_paper",
+            params={"url": url},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"EBSCO download failed: {exc}") from exc
+
+
+def download_ebsco_papers(urls: list[str]) -> dict[str, Any]:
+    """Download multiple EBSCO papers by their detail page URLs."""
+    try:
+        resp = session.post(
+            f"{BROWSER_WORKER_URL}/download_ebsco_papers",
+            json={"urls": urls},
+            timeout=60 * len(urls) + 30,
+        )
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"EBSCO batch download failed: {exc}") from exc
 
 
 def search_google_scholar_browser(

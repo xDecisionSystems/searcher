@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 
-from fastapi import FastAPI, Query
+from fastapi import Body, FastAPI, Query
 from fastapi_mcp import FastApiMCP
 
 from .config import VERSION_NAME
@@ -8,12 +8,14 @@ from .services.page import fetch_page as fetch_page_service
 from .services.page import review_page as review_page_service
 from .services.pdf import download_pdf as download_pdf_service
 from .services.search import (
+    download_ebsco_paper as download_ebsco_paper_service,
+    download_ebsco_papers as download_ebsco_papers_service,
     search_ebsco_browser as search_ebsco_browser_service,
     search_google_scholar as search_google_scholar_service,
     search_google_scholar_browser as search_google_scholar_browser_service,
     search_ieeexplore as search_ieeexplore_service,
     search_scholar as search_scholar_service,
-    search_scopus as search_scopus_service,
+    search_sciencedirect as search_sciencedirect_service,
     search_web_of_science as search_web_of_science_service,
 )
 
@@ -22,7 +24,7 @@ app = FastAPI(
     description=(
         "Scholarly paper search and retrieval service. "
         "Search across Semantic Scholar, Google Scholar, IEEE Xplore, "
-        "Web of Science, and Scopus. Fetch web pages and download PDFs."
+        "Web of Science, and ScienceDirect. Fetch web pages and download PDFs."
     ),
     version=VERSION_NAME,
 )
@@ -58,7 +60,7 @@ def search_scholar(
     provider: str = Query(default="auto"),
     start_record: int = Query(default=1, ge=1),
     wos_page: int = Query(default=1, ge=1),
-    scopus_start: int = Query(default=0, ge=0),
+    sd_start: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
     return search_scholar_service(
         query=query,
@@ -66,17 +68,20 @@ def search_scholar(
         provider=provider,
         start_record=start_record,
         wos_page=wos_page,
-        scopus_start=scopus_start,
+        scopus_start=sd_start,
     )
 
 
-@app.get("/search_scopus")
-def search_scopus(
+@app.get("/search_sciencedirect")
+def search_sciencedirect(
     query: str,
-    limit: int = Query(default=5, ge=1),
+    limit: int = Query(default=20, ge=1),
     start: int = Query(default=0, ge=0),
+    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
+    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
 ) -> dict[str, Any]:
-    return search_scopus_service(query=query, limit=limit, start=start)
+    """Search ScienceDirect (Elsevier) via the Elsevier API."""
+    return search_sciencedirect_service(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high)
 
 
 @app.get("/search_google_scholar")
@@ -117,6 +122,30 @@ def search_ebsco(
         year_low=year_low,
         year_high=year_high,
     )
+
+
+@app.get("/download_ebsco_paper")
+def download_ebsco_paper(
+    url: str = Query(..., description="EBSCO paper detail page URL (research.ebsco.com/c/.../search/details/...)."),
+) -> dict[str, Any]:
+    """Download a single paper from an EBSCO detail page URL.
+
+    Navigates to the detail page, clicks Download twice (first opens popup,
+    second confirms), then captures and saves the PDF.
+    """
+    return download_ebsco_paper_service(url=url)
+
+
+@app.post("/download_ebsco_papers")
+def download_ebsco_papers(
+    urls: list[str] = Body(..., description="List of EBSCO paper detail page URLs."),
+) -> dict[str, Any]:
+    """Download multiple EBSCO papers sequentially by their detail page URLs.
+
+    Pass a JSON array of EBSCO detail page URLs. Each is downloaded in order.
+    Returns completed downloads and any failures.
+    """
+    return download_ebsco_papers_service(urls=urls)
 
 
 @app.get("/search_google_scholar_browser")
@@ -176,7 +205,7 @@ mcp = FastApiMCP(
     name="Searcher MCP",
     description=(
         "Search and retrieve academic papers from Semantic Scholar, Google Scholar, "
-        "IEEE Xplore, Web of Science, and Scopus. Also fetches web pages and downloads PDFs."
+        "IEEE Xplore, Web of Science, and ScienceDirect. Also fetches web pages and downloads PDFs."
     ),
     exclude_operations=["health"],
 )

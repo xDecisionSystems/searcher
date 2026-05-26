@@ -1,0 +1,27 @@
+{
+  "domain": "research.ebsco.com",
+  "source_url": "https://research.ebsco.com/c/bdq7wt/search/details/e22xbphkif",
+  "recorded_at": "2026-05-25T23:50:14.900056+00:00",
+  "steps": [
+    {
+      "type": "navigate",
+      "url_pattern": "https://research.ebsco.com/",
+      "example_url": "https://research.ebsco.com/c/bdq7wt/search/details/e22xbphkif"
+    },
+    {
+      "type": "click",
+      "selector": "button:has-text('Download')",
+      "element_text": "Download"
+    },
+    {
+      "type": "click",
+      "selector": "button:has-text('Download')",
+      "element_text": "Download"
+    },
+    {
+      "type": "wait_for_pdf_response",
+      "url_pattern": "https://research.ebsco.com/api/search/v1/record/",
+      "example_url": "https://research.ebsco.com/api/search/v1/record/a76ro5o62z/fulltext/pdf?sourceRecordId=e22xbphkif&opid=bdq7wt&intent=download&lang=en"
+    }
+  ]
+}

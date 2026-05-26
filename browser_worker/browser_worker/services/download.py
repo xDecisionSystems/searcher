@@ -545,6 +545,124 @@ def _apply_post_processing(path: Path, post_process: dict[str, Any]) -> None:
 
 # ── EBSCO browser search ──────────────────────────────────────────────────────
 
+def _ebsco_ensure_signed_in(page: Any) -> None:
+    """If EBSCO shows a guest banner, click Sign in to establish institutional session."""
+    try:
+        page.wait_for_load_state("networkidle", timeout=10000)
+    except PlaywrightError:
+        pass
+    html = page.content()
+    if "Sign in to your institution" in html or "Welcome, Guest" in html:
+        log_event("ebsco_guest_banner_detected")
+        try:
+            page.locator("button:has-text('Sign in')").first.click(timeout=5000)
+            try:
+                page.wait_for_load_state("networkidle", timeout=15000)
+            except PlaywrightError:
+                pass
+            page.wait_for_timeout(2000)
+            log_event("ebsco_signed_in", url=page.url)
+        except PlaywrightError as exc:
+            log_event("ebsco_sign_in_failed", error=str(exc))
+
+
+def download_ebsco_paper(url: str) -> dict:
+    """Download a single paper from an EBSCO detail page URL.
+
+    Navigates to the detail page, handles institutional sign-in if needed,
+    clicks Download (twice — first opens a popup, second confirms), then
+    captures the PDF from the API response.
+    """
+    from ..config import DOWNLOAD_DIR, MAX_DOWNLOAD_MB
+
+    _validate_http_url(url)
+    filename = f"ebsco-{uuid.uuid4().hex[:12]}.pdf"
+    out_path = DOWNLOAD_DIR / filename
+
+    log_event("ebsco_download_start", url=url)
+
+    try:
+        with sync_playwright() as playwright:
+            ctx = _get_browser_context(playwright)
+            pages = ctx.pages
+            page = pages[0] if pages else ctx.new_page()
+
+            captured_pdf: list[tuple[str, bytes]] = []
+
+            def on_response(response: Any) -> None:
+                try:
+                    ct = (response.headers.get("content-type") or "").lower()
+                    ru = response.url
+                    if "pdf" in ct or ru.lower().endswith(".pdf"):
+                        data = response.body()
+                        if data and len(data) > 10000:
+                            captured_pdf.append((ru, data))
+                            log_event("ebsco_pdf_captured", url=ru, size=len(data))
+                except Exception:
+                    pass
+
+            ctx.on("response", on_response)
+            try:
+                page.goto(url, wait_until="domcontentloaded", timeout=30000)
+
+                # Wait for detail content to render.
+                try:
+                    page.wait_for_load_state("networkidle", timeout=10000)
+                except PlaywrightError:
+                    pass
+                page.wait_for_timeout(1500)
+
+                # First click opens the download popup.
+                try:
+                    page.locator("button:has-text('Download')").first.click(timeout=8000)
+                    page.wait_for_timeout(1500)
+                    log_event("ebsco_download_click1")
+                except PlaywrightError as exc:
+                    log_event("ebsco_download_click1_failed", error=str(exc))
+
+                # Second click inside the popup confirms the download.
+                try:
+                    page.locator("button:has-text('Download')").first.click(timeout=8000)
+                    page.wait_for_timeout(1000)
+                    log_event("ebsco_download_click2")
+                except PlaywrightError as exc:
+                    log_event("ebsco_download_click2_failed", error=str(exc))
+
+                # Wait for PDF response to be captured.
+                deadline = 30.0
+                waited = 0.0
+                while waited < deadline and not captured_pdf:
+                    page.wait_for_timeout(500)
+                    waited += 0.5
+
+            finally:
+                try:
+                    ctx.remove_listener("response", on_response)
+                except Exception:
+                    pass
+                _close_context_if_needed(ctx)
+
+    except PlaywrightError as exc:
+        raise HTTPException(status_code=502, detail=f"EBSCO download failed: {exc}") from exc
+
+    if not captured_pdf:
+        raise HTTPException(status_code=502, detail="No PDF captured from EBSCO detail page.")
+
+    pdf_url, data = captured_pdf[0]
+    max_bytes = MAX_DOWNLOAD_MB * 1024 * 1024
+    if len(data) > max_bytes:
+        raise HTTPException(status_code=413, detail=f"Download exceeded {MAX_DOWNLOAD_MB} MB limit.")
+    out_path.write_bytes(data)
+    log_event("ebsco_download_done", url=pdf_url, size=len(data), path=str(out_path))
+    return {
+        "status": "downloaded",
+        "filename": out_path.name,
+        "size_bytes": len(data),
+        "source_url": pdf_url,
+        "local_path": str(out_path),
+    }
+
+
 def search_ebsco_via_browser(
     query: str,
     limit: int,
@@ -616,13 +734,23 @@ def search_ebsco_via_browser(
                 page.wait_for_load_state("networkidle", timeout=10000)
             except PlaywrightError:
                 pass
+            page.wait_for_timeout(1500)
+
+            # Drag the right-side scrollbar to the bottom to trigger EBSCO's
+            # scroll listener and ensure the first batch of results renders.
+            viewport = page.viewport_size or {"width": 1280, "height": 720}
+            sb_x = viewport["width"] - 8
+            sb_top = 60
+            sb_bottom = viewport["height"] - 10
+            page.mouse.move(sb_x, sb_top)
+            page.mouse.down()
+            for i in range(1, 11):
+                page.mouse.move(sb_x, sb_top + (sb_bottom - sb_top) * i // 10)
+                page.wait_for_timeout(100)
+            page.mouse.up()
+            page.wait_for_timeout(1500)
 
             result_selector = "[data-auto='search-result-item']"
-            # Wait for at least one result card to appear in the DOM.
-            try:
-                page.wait_for_selector(result_selector, timeout=10000)
-            except PlaywrightError:
-                pass
             log_event("ebsco_page_ready", count=page.locator(result_selector).count())
 
             while True:
@@ -632,7 +760,8 @@ def search_ebsco_via_browser(
                 if collected >= limit:
                     break
 
-                # Click "Show more results" to load the next batch.
+                # Scroll to and click "Show more results", then scroll to bottom
+                # again so the next batch renders before we check the count.
                 show_more = page.locator("[data-auto='show-more-button']").first
                 if not show_more.count():
                     log_event("ebsco_no_show_more", collected=collected)
@@ -640,15 +769,16 @@ def search_ebsco_via_browser(
 
                 show_more.scroll_into_view_if_needed()
                 show_more.click()
-                # Wait until the DOM item count grows, then settle.
-                try:
-                    page.wait_for_function(
-                        f"document.querySelectorAll(\"[data-auto='search-result-item']\").length > {collected}",
-                        timeout=12000,
-                    )
-                except PlaywrightError:
-                    pass
                 page.wait_for_timeout(int(page_delay_seconds * 1000))
+
+                # Scroll to bottom again after click to trigger next batch load.
+                page.mouse.move(sb_x, sb_top)
+                page.mouse.down()
+                for i in range(1, 11):
+                    page.mouse.move(sb_x, sb_top + (sb_bottom - sb_top) * i // 10)
+                    page.wait_for_timeout(100)
+                page.mouse.up()
+                page.wait_for_timeout(1000)
 
             # Take a single snapshot after all items are loaded.
             html = page.content()
