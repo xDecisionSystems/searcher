@@ -634,12 +634,21 @@ def download_ebsco_paper(url: str) -> dict:
                 except PlaywrightError as exc:
                     log_event("ebsco_download_click1_failed", error=str(exc))
 
-                # Wait for the modal to appear then click Download inside it.
+                # Wait for the modal URL to load (click1 navigates to ?modal=details-bulk-download).
                 try:
-                    modal = page.locator(".ReactModalPortal").first
-                    modal.wait_for(state="visible", timeout=8000)
-                    page.wait_for_timeout(800)
-                    modal.locator("button:has-text('Download')").first.click(timeout=8000)
+                    page.wait_for_url("**/search/details/**modal=details-bulk-download**", timeout=8000)
+                    log_event("ebsco_modal_url_detected", url=page.url)
+                except PlaywrightError:
+                    log_event("ebsco_modal_url_wait_timeout", url=page.url)
+
+                # Click the Download button inside the modal (bottom-right submit button, not the title).
+                try:
+                    page.wait_for_timeout(1000)
+                    # Target the submit Download button — use last() since the modal title "Download" may also match text.
+                    download_btn = page.get_by_role("button", name="Download").last
+                    download_btn.wait_for(state="visible", timeout=8000)
+                    download_btn.scroll_into_view_if_needed()
+                    download_btn.click(timeout=8000)
                     log_event("ebsco_download_click2")
                 except PlaywrightError as exc:
                     log_event("ebsco_download_click2_failed", error=str(exc))
