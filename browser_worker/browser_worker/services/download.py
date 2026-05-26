@@ -621,15 +621,16 @@ def download_ebsco_paper(url: str) -> dict:
                 # First click opens the download popup.
                 try:
                     page.locator("button:has-text('Download')").first.click(timeout=8000)
-                    page.wait_for_timeout(1500)
                     log_event("ebsco_download_click1")
                 except PlaywrightError as exc:
                     log_event("ebsco_download_click1_failed", error=str(exc))
 
-                # Second click inside the popup confirms the download.
+                # Wait for the modal to appear then click Download inside it.
                 try:
-                    page.locator("button:has-text('Download')").first.click(timeout=8000)
-                    page.wait_for_timeout(1000)
+                    modal = page.locator(".ReactModalPortal")
+                    modal.wait_for(state="visible", timeout=8000)
+                    page.wait_for_timeout(500)
+                    modal.locator("button:has-text('Download')").first.click(timeout=8000)
                     log_event("ebsco_download_click2")
                 except PlaywrightError as exc:
                     log_event("ebsco_download_click2_failed", error=str(exc))
