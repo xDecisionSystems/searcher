@@ -618,18 +618,25 @@ def download_ebsco_paper(url: str) -> dict:
                     pass
                 page.wait_for_timeout(1500)
 
+                # Wait for any OIDC/auth redirect to finish before clicking.
+                try:
+                    page.wait_for_load_state("networkidle", timeout=8000)
+                except PlaywrightError:
+                    pass
+                page.wait_for_timeout(1000)
+
                 # First click opens the download popup.
                 try:
-                    page.locator("button:has-text('Download')").first.click(timeout=8000)
+                    page.locator("button:has-text('Download')").first.click(timeout=10000)
                     log_event("ebsco_download_click1")
                 except PlaywrightError as exc:
                     log_event("ebsco_download_click1_failed", error=str(exc))
 
                 # Wait for the modal to appear then click Download inside it.
                 try:
-                    modal = page.locator(".ReactModalPortal")
+                    modal = page.locator(".ReactModalPortal").first
                     modal.wait_for(state="visible", timeout=8000)
-                    page.wait_for_timeout(500)
+                    page.wait_for_timeout(800)
                     modal.locator("button:has-text('Download')").first.click(timeout=8000)
                     log_event("ebsco_download_click2")
                 except PlaywrightError as exc:
