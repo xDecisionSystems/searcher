@@ -561,7 +561,7 @@ def _ebsco_ensure_signed_in(page: Any, wait_for_selector: str | None = None) -> 
     if "Sign in to your institution" in html or "Welcome, Guest" in html:
         log_event("ebsco_guest_banner_detected")
         try:
-            page.locator("button:has-text('Sign in')").first.click(timeout=5000)
+            page.get_by_role("button", name="Sign in").or_(page.get_by_role("link", name="Sign in")).first.click(timeout=5000)
             try:
                 page.wait_for_load_state("networkidle", timeout=15000)
             except PlaywrightError:
@@ -734,7 +734,7 @@ def search_ebsco_via_browser(
             if "Sign in to your institution" in html_check or "Welcome, Guest" in html_check:
                 log_event("ebsco_guest_banner_detected")
                 try:
-                    page.locator("button:has-text('Sign in')").first.click(timeout=5000)
+                    page.get_by_role("button", name="Sign in").or_(page.get_by_role("link", name="Sign in")).first.click(timeout=5000)
                     try:
                         page.wait_for_load_state("networkidle", timeout=15000)
                     except PlaywrightError:
