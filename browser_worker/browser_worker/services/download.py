@@ -611,19 +611,15 @@ def download_ebsco_paper(url: str) -> dict:
             try:
                 page.goto(url, wait_until="domcontentloaded", timeout=30000)
 
-                # Wait for detail content to render.
+                # Handle guest banner / institutional sign-in.
+                _ebsco_ensure_signed_in(page)
+
+                # Wait for detail content to render after sign-in.
                 try:
                     page.wait_for_load_state("networkidle", timeout=10000)
                 except PlaywrightError:
                     pass
                 page.wait_for_timeout(1500)
-
-                # Wait for any OIDC/auth redirect to finish before clicking.
-                try:
-                    page.wait_for_load_state("networkidle", timeout=8000)
-                except PlaywrightError:
-                    pass
-                page.wait_for_timeout(1000)
 
                 # First click opens the download popup.
                 try:
