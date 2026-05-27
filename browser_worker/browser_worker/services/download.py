@@ -938,11 +938,41 @@ def search_web_of_science_via_browser(
             page.wait_for_timeout(2000)
 
             # Fill the search box and submit.
-            search_box = page.locator("textarea, input[type='text']:not([name='startDate']):not([name='endDate'])").first
+            # basic-search uses input[type='search'], smart-search uses textarea.
+            search_box = page.locator(
+                "input[type='search'], input[aria-label*='search' i], "
+                "textarea, input[type='text']:not([name='startDate']):not([name='endDate'])"
+            ).first
             search_box.wait_for(state="visible", timeout=10000)
             search_box.click()
             search_box.fill(query)
             page.wait_for_timeout(500)
+
+            # Apply date range filter before submitting if requested.
+            if year_low or year_high:
+                try:
+                    # Open the date filter panel (calendar/filter SVG toggle).
+                    page.locator("svg").first.click(timeout=5000)
+                    page.wait_for_timeout(500)
+                    # Select "Custom" date range option.
+                    page.locator("div").filter(has_text=re.compile(r"^Custom$")).first.click(timeout=5000)
+                    page.wait_for_timeout(500)
+                    # Fill start date (YYYY-MM-DD).
+                    if year_low:
+                        start_input = page.locator("#mat-input-1")
+                        start_input.click(click_count=3)
+                        start_input.fill(f"{year_low}-01-01")
+                        page.wait_for_timeout(300)
+                    # Fill end date (YYYY-MM-DD).
+                    if year_high:
+                        end_input = page.locator("#mat-input-2")
+                        end_input.click(click_count=3)
+                        end_input.fill(f"{year_high}-12-31")
+                        page.wait_for_timeout(300)
+                    log_event("wos_date_filter_set", year_low=year_low, year_high=year_high)
+                except PlaywrightError as exc:
+                    log_event("wos_date_filter_failed", error=str(exc))
+
             page.keyboard.press("Enter")
 
             # Wait for results summary URL.
@@ -983,7 +1013,8 @@ def search_web_of_science_via_browser(
 
             # Select "Records from" radio and set the count.
             page.locator("#radio3-input").click(timeout=8000)
-            count_input = page.locator("#mat-input-1")
+            # The count input has a dynamic mat-input ID — find it by proximity to the radio.
+            count_input = page.locator("input[aria-label*='record' i], input[id^='mat-input']").last
             count_input.click(click_count=3)
             count_input.fill(str(limit))
             page.wait_for_timeout(500)
