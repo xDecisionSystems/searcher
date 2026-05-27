@@ -70,14 +70,18 @@ def search_scopus(
     year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
     year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
     subj: str | None = Query(default="ENGI", description="Subject area code (e.g. ENGI, COMP, MATE, PHYS). See Scopus subject list."),
+    include_abstract: bool = Query(default=False, description="If true, fetch the full abstract for each result via the Abstract Retrieval API. Makes one extra API call per result — use with small limits."),
 ) -> dict[str, Any]:
     """Search Scopus (Elsevier) via the Scopus Search API.
 
     Supports Boolean queries. Results sorted by relevance. Paginates automatically
     to return up to limit results. Use subj to filter by subject area
     (ENGI=Engineering, COMP=Computer Science, MATE=Materials Science, etc).
+
+    Set include_abstract=true to populate the snippet field with the full abstract.
+    This makes one additional API call per result, so use a small limit when enabled.
     """
-    return search_scopus_service(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high, subj=subj)
+    return search_scopus_service(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high, subj=subj, include_abstract=include_abstract)
 
 
 @app.get("/search_sciencedirect")

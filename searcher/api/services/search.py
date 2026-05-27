@@ -371,20 +371,45 @@ def _scopus_parse_entries(entries: list, offset: int) -> list[dict[str, Any]]:
         authors = [a.strip() for a in creator.split(";") if a.strip()] if creator else []
         doi = item.get("prism:doi", "")
         url = f"https://doi.org/{doi}" if doi else ""
+        abstract_url = ""
         if not url:
             for link in item.get("link", []):
                 if isinstance(link, dict) and link.get("@ref") == "scopus":
                     url = link.get("@href", "")
                     break
-        results.append(_result(
+        for link in item.get("link", []):
+            if isinstance(link, dict) and link.get("@ref") == "self":
+                abstract_url = link.get("@href", "")
+                break
+        if not abstract_url:
+            abstract_url = item.get("prism:url", "")
+        entry = _result(
             title=item.get("dc:title", ""),
             url=url,
             publication_year=pub_year,
             authors=authors,
             doi=doi,
             source=item.get("prism:publicationName", ""),
-        ))
+        )
+        entry["_abstract_url"] = abstract_url
+        results.append(entry)
     return results
+
+
+def _fetch_scopus_abstract(abstract_url: str) -> str:
+    """Fetch the abstract text for a single Scopus record via the Abstract Retrieval API."""
+    if not abstract_url or not ELSEVIER_API_KEY:
+        return ""
+    try:
+        payload = request_json(
+            abstract_url,
+            headers={"X-ELS-APIKey": ELSEVIER_API_KEY, "Accept": "application/json"},
+        )
+        abstracts_retrieval = payload.get("abstracts-retrieval-response") or {}
+        coredata = abstracts_retrieval.get("coredata") or {}
+        return coredata.get("dc:description", "") or ""
+    except HTTPException:
+        return ""
 
 
 def _search_scopus(
@@ -394,6 +419,7 @@ def _search_scopus(
     year_low: int | None = None,
     year_high: int | None = None,
     subj: str | None = None,
+    include_abstract: bool = False,
 ) -> dict[str, Any]:
     if not ELSEVIER_API_KEY:
         raise HTTPException(status_code=400, detail="ELSEVIER_API_KEY is not configured.")
@@ -402,7 +428,6 @@ def _search_scopus(
         "query": query,
         "sort": "relevancy",
         "count": _SCOPUS_PAGE_SIZE,
-        "view": "COMPLETE",
     }
     if year_low or year_high:
         lo = year_low or 1900
@@ -442,7 +467,18 @@ def _search_scopus(
         if len(entries) < _SCOPUS_PAGE_SIZE:
             break
 
-    return {"start": start, "total_records": total_records, "results": results[:limit]}
+    results = results[:limit]
+
+    if include_abstract:
+        for item in results:
+            abstract_url = item.pop("_abstract_url", "")
+            if abstract_url:
+                item["snippet"] = _fetch_scopus_abstract(abstract_url)
+    else:
+        for item in results:
+            item.pop("_abstract_url", None)
+
+    return {"start": start, "total_records": total_records, "results": results}
 
 
 def search_scopus(
@@ -452,8 +488,9 @@ def search_scopus(
     year_low: int | None = None,
     year_high: int | None = None,
     subj: str | None = None,
+    include_abstract: bool = False,
 ) -> dict[str, Any]:
-    data = _search_scopus(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high, subj=subj)
+    data = _search_scopus(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high, subj=subj, include_abstract=include_abstract)
     return _envelope("scopus", query, data["results"], data.get("total_records"))
 
 
