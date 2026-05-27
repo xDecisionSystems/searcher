@@ -2,7 +2,6 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
-from fastapi_mcp import FastApiMCP
 from pydantic import BaseModel, Field
 
 from .config import VERSION_NAME
@@ -342,28 +341,3 @@ def download_papers(request: DownloadManyRequest) -> dict[str, Any]:
         "pending": [],
     }
 
-
-# ─── MCP server ───────────────────────────────────────────────────────────────
-mcp = FastApiMCP(
-    app,
-    name="Browser Worker MCP",
-    description=(
-        "Download academic papers from publisher portals using a real Chromium browser. "
-        "Only one download runs at a time. "
-        "To download multiple papers, use download_papers with a list of URLs — it processes them sequentially. "
-        "Call download_paper with the paper URL for a single download. "
-        "If the response has status='busy', inform the user and do NOT retry until the current download finishes. "
-        "If the response has status='login_required', show the user_prompt to the user "
-        "and wait for them to press OK (then retry the same call) or Stop (then abort). "
-        "Do not retry automatically — always wait for explicit user confirmation. "
-        "If the response has status='inaccessible', inform the user that the institution "
-        "does not have access to that publisher and show the 'message' field verbatim. "
-        "If the response has status='no_access', inform the user that the institution does "
-        "not have access to that specific paper and show the 'message' field verbatim. "
-        "If the response contains a 'strategy_hint' field, show that message to the user verbatim. "
-        "Call get_logs to inspect recent download events for self-diagnosis when a "
-        "download fails or behaves unexpectedly."
-    ),
-    exclude_operations=["health"],
-)
-mcp.mount()

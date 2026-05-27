@@ -1,7 +1,6 @@
 from typing import Annotated, Any
 
 from fastapi import Body, FastAPI, Query
-from fastapi_mcp import FastApiMCP
 
 from .config import VERSION_NAME
 from .services.page import fetch_page as fetch_page_service
@@ -187,17 +186,3 @@ def search_web_of_science(
 def download_pdf(url: str) -> dict[str, int | str]:
     return download_pdf_service(url=url)
 
-
-# ─── MCP server ───────────────────────────────────────────────────────────────
-# Mounts at /mcp — exposes all endpoints above as MCP tools.
-# Claude Code config: { "url": "http://<host>:8000/mcp" }
-mcp = FastApiMCP(
-    app,
-    name="Searcher MCP",
-    description=(
-        "Search and retrieve academic papers from Semantic Scholar, Google Scholar, "
-        "IEEE Xplore, Web of Science, and ScienceDirect. Also fetches web pages and downloads PDFs."
-    ),
-    exclude_operations=["health"],
-)
-mcp.mount()
