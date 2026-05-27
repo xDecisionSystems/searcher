@@ -956,13 +956,18 @@ def search_web_of_science_via_browser(
                 pass
             page.wait_for_timeout(1500)
 
-            # Click the Export button — recorded as a <span> with text "Export expand_more".
+            # Click the Export button — opens a dropdown menu with format options.
             export_btn = page.get_by_text("Export expand_more", exact=True).first
             export_btn.wait_for(state="visible", timeout=10000)
             export_btn.click(timeout=10000)
             log_event("wos_export_clicked")
+            page.wait_for_timeout(800)
 
-            # Wait for export overlay (URL gains overlay:export/exbt — BibTeX pre-selected).
+            # Click BibTeX from the dropdown.
+            page.get_by_text("BibTeX", exact=True).first.click(timeout=8000)
+            log_event("wos_bibtex_selected")
+
+            # Wait for the export overlay to render.
             try:
                 page.wait_for_url("**overlay:export**", timeout=10000)
                 log_event("wos_export_overlay_url", url=page.url)
@@ -970,9 +975,8 @@ def search_web_of_science_via_browser(
                 log_event("wos_export_overlay_timeout", url=page.url)
             page.wait_for_timeout(1500)
 
-            # Select "Records from" and set the count — recorded as label click then radio.
-            page.get_by_text("Records from:", exact=True).first.click(timeout=5000)
-            page.locator("#radio3-input").click(timeout=5000)
+            # Select "Records from" radio and set the count.
+            page.locator("#radio3-input").click(timeout=8000)
             count_input = page.locator("#mat-input-1")
             count_input.click()
             count_input.triple_click()

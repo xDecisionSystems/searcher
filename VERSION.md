@@ -1,1 +1,1 @@
-VERSION_NAME=searcher-stack-v1.1.122
+VERSION_NAME=searcher-stack-v1.1.124
