@@ -1026,8 +1026,12 @@ def search_web_of_science_via_browser(
 
             # Select "Records from" radio and set the count.
             page.locator("#radio3-input").click(timeout=8000)
-            # The count input has a dynamic mat-input ID — find it by proximity to the radio.
-            count_input = page.locator("input[aria-label*='record' i], input[id^='mat-input']").last
+            page.wait_for_timeout(300)
+            # The count input is a number field inside the export overlay — find it by type or placeholder.
+            count_input = page.locator(
+                "input[type='number'], input[placeholder*='record' i], "
+                "mat-form-field input:not([type='checkbox']):not([type='radio'])"
+            ).last
             count_input.click(click_count=3)
             count_input.fill(str(limit))
             page.wait_for_timeout(500)
