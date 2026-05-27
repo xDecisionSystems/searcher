@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from .config import VERSION_NAME
 from .logger import tail_log
-from .services.download import download_ebsco_paper, download_paper_via_browser, fetch_page_via_browser, search_ebsco_via_browser, search_google_scholar_via_browser
+from .services.download import download_ebsco_paper, download_paper_via_browser, fetch_page_via_browser, search_ebsco_via_browser, search_google_scholar_via_browser, search_web_of_science_via_browser
 from .services.recorder import (
     delete_strategy,
     get_recording_status,
@@ -237,6 +237,29 @@ def search_google_scholar(
         query=query,
         limit=limit,
         start_index=start_index,
+        year_low=year_low,
+        year_high=year_high,
+        page_delay_seconds=page_delay_seconds,
+    )
+
+
+@app.get("/search_web_of_science")
+def search_web_of_science(
+    query: str = Query(..., description="Search query."),
+    limit: int = Query(default=10, ge=1, description="Approximate number of results to collect."),
+    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
+    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
+    page_delay_seconds: float = Query(default=2.0, ge=0.5, description="Seconds to wait between pages."),
+) -> dict[str, Any]:
+    """Search Web of Science using the real Chromium browser.
+
+    Navigates to webofscience.com, submits the query, and paginates via the
+    Next button until limit results are collected or no more pages exist.
+    Returns raw HTML per page for the searcher service to parse.
+    """
+    return search_web_of_science_via_browser(
+        query=query,
+        limit=limit,
         year_low=year_low,
         year_high=year_high,
         page_delay_seconds=page_delay_seconds,

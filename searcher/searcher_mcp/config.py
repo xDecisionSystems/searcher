@@ -13,10 +13,8 @@ VERSION_FILE = Path(__file__).resolve().parent.parent.parent / "VERSION.md"
 
 BROWSER_WORKER_URL = os.getenv("BROWSER_WORKER_URL", "http://127.0.0.1:8010")
 
-SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")
 IEEE_XPLORE_API_KEY = os.getenv("IEEE_XPLORE_API_KEY")
 SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
-WEB_OF_SCIENCE_API_KEY = os.getenv("WEB_OF_SCIENCE_API_KEY")
 ELSEVIER_API_KEY = os.getenv("ELSEVIER_API_KEY")
 
 

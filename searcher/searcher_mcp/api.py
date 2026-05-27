@@ -11,11 +11,10 @@ from .services.search import (
     download_ebsco_paper as download_ebsco_paper_service,
     download_ebsco_papers as download_ebsco_papers_service,
     search_ebsco_browser as search_ebsco_browser_service,
-    search_google_scholar as search_google_scholar_service,
     search_google_scholar_browser as search_google_scholar_browser_service,
     search_ieeexplore as search_ieeexplore_service,
-    search_scholar as search_scholar_service,
     search_sciencedirect as search_sciencedirect_service,
+    search_semantic_scholar as search_semantic_scholar_service,
     search_web_of_science as search_web_of_science_service,
 )
 
@@ -23,7 +22,7 @@ app = FastAPI(
     title="Searcher MCP API",
     description=(
         "Scholarly paper search and retrieval service. "
-        "Search across Semantic Scholar, Google Scholar, IEEE Xplore, "
+        "Search across Google Scholar, EBSCO, IEEE Xplore, "
         "Web of Science, and ScienceDirect. Fetch web pages and download PDFs."
     ),
     version=VERSION_NAME,
@@ -53,25 +52,6 @@ def review_page(
     return review_page_service(url=url, include_html=include_html, max_chars=max_chars)
 
 
-@app.get("/search_scholar")
-def search_scholar(
-    query: str,
-    limit: int = Query(default=5, ge=1),
-    provider: str = Query(default="auto"),
-    start_record: int = Query(default=1, ge=1),
-    wos_page: int = Query(default=1, ge=1),
-    sd_start: int = Query(default=0, ge=0),
-) -> dict[str, Any]:
-    return search_scholar_service(
-        query=query,
-        limit=limit,
-        provider=provider,
-        start_record=start_record,
-        wos_page=wos_page,
-        scopus_start=sd_start,
-    )
-
-
 @app.get("/search_sciencedirect")
 def search_sciencedirect(
     query: str,
@@ -84,23 +64,13 @@ def search_sciencedirect(
     return search_sciencedirect_service(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high)
 
 
-@app.get("/search_google_scholar")
-def search_google_scholar(
+@app.get("/search_semantic_scholar")
+def search_semantic_scholar(
     query: str,
-    limit: int = Query(default=200, ge=1, description="Number of results to return (max 200)."),
-    start_index: int = Query(default=0, ge=0, description="Result offset for pagination."),
-    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
-    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
-    exclude_domains: Annotated[list[str] | None, Query(description="Domains to exclude. Defaults to researchgate.net, books.google.com, search.proquest.com. Pass empty list to disable filtering.")] = None,
+    limit: int = Query(default=10, ge=1),
 ) -> dict[str, Any]:
-    return search_google_scholar_service(
-        query=query,
-        limit=limit,
-        start_index=start_index,
-        year_low=year_low,
-        year_high=year_high,
-        exclude_domains=exclude_domains,
-    )
+    """Search Semantic Scholar via their public API."""
+    return search_semantic_scholar_service(query=query, limit=limit)
 
 
 @app.get("/search_ebsco")
@@ -186,10 +156,12 @@ def search_ieeexplore(
 @app.get("/search_web_of_science")
 def search_web_of_science(
     query: str,
-    limit: int = Query(default=5, ge=1),
-    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=10, ge=1),
+    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
+    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
 ) -> dict[str, Any]:
-    return search_web_of_science_service(query=query, limit=limit, page=page)
+    """Search Web of Science by driving the real Chromium browser."""
+    return search_web_of_science_service(query=query, limit=limit, year_low=year_low, year_high=year_high)
 
 
 @app.get("/download_pdf")

@@ -1,5 +1,3 @@
-import threading
-import time
 from typing import Any
 
 
@@ -11,25 +9,8 @@ from ..config import (
     ELSEVIER_API_KEY,
     IEEE_XPLORE_API_KEY,
     SEMANTIC_SCHOLAR_API_KEY,
-    SERPAPI_API_KEY,
-    WEB_OF_SCIENCE_API_KEY,
 )
 from ..http_client import request_json, session
-
-_semantic_scholar_lock = threading.Lock()
-_semantic_scholar_last_call: float = 0.0
-_SEMANTIC_SCHOLAR_MIN_INTERVAL = 1.0
-
-
-def _semantic_scholar_throttle() -> None:
-    global _semantic_scholar_last_call
-    with _semantic_scholar_lock:
-        now = time.monotonic()
-        wait = _SEMANTIC_SCHOLAR_MIN_INTERVAL - (now - _semantic_scholar_last_call)
-        if wait > 0:
-            time.sleep(wait)
-        _semantic_scholar_last_call = time.monotonic()
-
 
 def _normalize_authors(raw: Any) -> list[str]:
     if isinstance(raw, list):
@@ -58,42 +39,6 @@ def _normalize_authors(raw: Any) -> list[str]:
     return []
 
 
-def _search_scholar_semantic(query: str, limit: int) -> dict[str, Any]:
-    _semantic_scholar_throttle()
-    headers: dict[str, str] = {}
-    if SEMANTIC_SCHOLAR_API_KEY:
-        headers["x-api-key"] = SEMANTIC_SCHOLAR_API_KEY
-
-    payload = request_json(
-        "https://api.semanticscholar.org/graph/v1/paper/search",
-        params={
-            "query": query,
-            "limit": limit,
-            "fields": "title,year,authors,url,abstract,openAccessPdf,citationCount,venue",
-        },
-        headers=headers or None,
-    )
-
-    results: list[dict[str, Any]] = []
-    for item in payload.get("data", [])[:limit]:
-        authors = [author.get("name", "") for author in item.get("authors", []) if author.get("name")]
-        open_access_pdf = item.get("openAccessPdf") or {}
-        results.append(
-            {
-                "title": item.get("title", ""),
-                "url": item.get("url", ""),
-                "snippet": item.get("abstract", "") or "",
-                "publication_year": item.get("year"),
-                "authors": authors,
-                "citation_count": item.get("citationCount"),
-                "source": item.get("venue"),
-                "pdf_link": open_access_pdf.get("url", "") if isinstance(open_access_pdf, dict) else "",
-            }
-        )
-
-    return {"total_records": payload.get("total"), "results": results}
-
-
 _DEFAULT_EXCLUDE_DOMAINS: list[str] = [
     "books.google.com",
 ]
@@ -104,123 +49,40 @@ def _url_domain(url: str) -> str:
     return urlparse(url).netloc.lower()
 
 
-def _search_scholar_scholarly(
-    query: str,
-    limit: int,
-    start_index: int = 0,
-    year_low: int | None = None,
-    year_high: int | None = None,
-    exclude_domains: list[str] | None = None,
-) -> dict[str, Any]:
-    try:
-        from scholarly import scholarly as _scholarly  # noqa: PLC0415
-    except ImportError:
-        raise HTTPException(status_code=500, detail="scholarly package is not installed.")
-
-    blocked = set(exclude_domains if exclude_domains is not None else _DEFAULT_EXCLUDE_DOMAINS)
-
-    results: list[dict[str, Any]] = []
-    try:
-        search_iter = _scholarly.search_pubs(
-            query,
-            start_index=start_index,
-            year_low=year_low,
-            year_high=year_high,
-        )
-        # Pull up to limit*3 candidates so filtering doesn't leave us short.
-        candidates_checked = 0
-        max_candidates = limit * 3
-        while len(results) < limit and candidates_checked < max_candidates:
-            try:
-                item = next(search_iter)
-            except StopIteration:
-                break
-            candidates_checked += 1
-
-            pub_url = item.get("pub_url", "") or item.get("eprint_url", "") or ""
-            if blocked and _url_domain(pub_url) in blocked:
-                continue
-
-            bib = item.get("bib", {})
-            author_field = bib.get("author", "")
-            if isinstance(author_field, str):
-                authors = [a.strip() for a in author_field.split(" and ") if a.strip()]
-            elif isinstance(author_field, list):
-                authors = [str(a).strip() for a in author_field if str(a).strip()]
-            else:
-                authors = []
-
-            year_raw = bib.get("pub_year", "")
-            try:
-                pub_year = int(str(year_raw).strip())
-            except (TypeError, ValueError):
-                pub_year = None
-
-            results.append(
-                {
-                    "title": bib.get("title", ""),
-                    "url": pub_url,
-                    "snippet": bib.get("abstract", ""),
-                    "publication_year": pub_year,
-                    "authors": authors,
-                    "source": bib.get("venue", ""),
-                    "citation_count": item.get("num_citations"),
-                    "pdf_link": item.get("eprint_url", ""),
-                }
-            )
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"scholarly search failed: {exc}") from exc
-
-    return {"total_records": None, "results": results}
-
-
-def _search_scholar_serpapi(query: str, limit: int) -> dict[str, Any]:
-    if not SERPAPI_API_KEY:
-        raise HTTPException(status_code=400, detail="SERPAPI_API_KEY is not configured.")
-
+def _search_semantic_scholar(query: str, limit: int) -> dict[str, Any]:
+    import threading, time  # noqa: PLC0415
+    headers: dict[str, str] = {}
+    if SEMANTIC_SCHOLAR_API_KEY:
+        headers["x-api-key"] = SEMANTIC_SCHOLAR_API_KEY
     payload = request_json(
-        "https://serpapi.com/search.json",
+        "https://api.semanticscholar.org/graph/v1/paper/search",
         params={
-            "engine": "google_scholar",
-            "q": query,
-            "num": limit,
-            "api_key": SERPAPI_API_KEY,
+            "query": query,
+            "limit": limit,
+            "fields": "title,year,authors,url,abstract,openAccessPdf,citationCount,venue",
         },
+        headers=headers or None,
     )
-
     results: list[dict[str, Any]] = []
-    for item in payload.get("organic_results", [])[:limit]:
-        resources = item.get("resources", [])
-        pdf_link = ""
-        if isinstance(resources, list):
-            for resource in resources:
-                if not isinstance(resource, dict):
-                    continue
-                if "pdf" in str(resource.get("file_format", "")).lower():
-                    pdf_link = str(resource.get("link", ""))
-                    break
+    for item in payload.get("data", [])[:limit]:
+        authors = [a.get("name", "") for a in item.get("authors", []) if a.get("name")]
+        open_access_pdf = item.get("openAccessPdf") or {}
+        results.append({
+            "title": item.get("title", ""),
+            "url": item.get("url", ""),
+            "snippet": item.get("abstract", "") or "",
+            "publication_year": item.get("year"),
+            "authors": authors,
+            "citation_count": item.get("citationCount"),
+            "source": item.get("venue"),
+            "pdf_link": open_access_pdf.get("url", "") if isinstance(open_access_pdf, dict) else "",
+        })
+    return {"total_records": payload.get("total"), "results": results}
 
-        publication_info = item.get("publication_info") or {}
-        author_names = _normalize_authors(publication_info.get("authors", []))
 
-        results.append(
-            {
-                "title": item.get("title", ""),
-                "url": item.get("link", ""),
-                "snippet": item.get("snippet", ""),
-                "publication_info": publication_info,
-                "authors": author_names,
-                "result_id": item.get("result_id"),
-                "pdf_link": pdf_link,
-            }
-        )
-
-    search_info = payload.get("search_information")
-    total_records = None
-    if isinstance(search_info, dict):
-        total_records = search_info.get("total_results")
-
-    return {"total_records": total_records, "results": results}
+def search_semantic_scholar(query: str, limit: int) -> dict[str, Any]:
+    data = _search_semantic_scholar(query=query, limit=limit)
+    return {"provider": "semantic_scholar", "query": query, **data}
 
 
 def _search_ieeexplore(query: str, limit: int, start_record: int) -> dict[str, Any]:
@@ -261,58 +123,98 @@ def _search_ieeexplore(query: str, limit: int, start_record: int) -> dict[str, A
     }
 
 
-def _search_web_of_science(query: str, limit: int, page: int) -> dict[str, Any]:
-    if not WEB_OF_SCIENCE_API_KEY:
-        raise HTTPException(status_code=400, detail="WEB_OF_SCIENCE_API_KEY is not configured.")
-
-    payload = request_json(
-        "https://api.clarivate.com/apis/wos-starter/v1/documents",
-        params={"q": query, "limit": limit, "page": page},
-        headers={"X-ApiKey": WEB_OF_SCIENCE_API_KEY, "Accept": "application/json"},
-    )
-
-    hits = payload.get("hits")
-    if not isinstance(hits, list):
-        hits = []
-
-    results: list[dict[str, Any]] = []
-    for item in hits[:limit]:
-        if not isinstance(item, dict):
-            continue
-
-        source = item.get("source") if isinstance(item.get("source"), dict) else {}
-        identifiers = item.get("identifiers") if isinstance(item.get("identifiers"), dict) else {}
-        links = item.get("links") if isinstance(item.get("links"), dict) else {}
-
-        abstract = item.get("abstract", "")
-        if isinstance(abstract, list):
-            abstract = " ".join(str(part).strip() for part in abstract if str(part).strip())
-        elif abstract is None:
-            abstract = ""
-
-        authors = _normalize_authors(item.get("names"))
-
-        results.append(
-            {
-                "uid": item.get("uid"),
-                "title": item.get("title", ""),
-                "url": links.get("record", "") or links.get("url", ""),
-                "snippet": str(abstract),
-                "publication_year": source.get("publishYear") or item.get("publishYear"),
-                "authors": authors,
-                "doi": identifiers.get("doi") or item.get("doi"),
-                "source": source.get("sourceTitle") or source.get("title"),
-                "citation_count": item.get("timesCited"),
-            }
+def _fetch_wos_pages_via_browser(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+) -> list[str]:
+    params: dict[str, Any] = {"query": query, "limit": limit}
+    if year_low is not None:
+        params["year_low"] = year_low
+    if year_high is not None:
+        params["year_high"] = year_high
+    try:
+        resp = session.get(
+            f"{BROWSER_WORKER_URL}/search_web_of_science",
+            params=params,
+            timeout=120,
         )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"browser_worker WoS search failed: {exc}") from exc
+    pages = data.get("pages_html", [])
+    if not pages:
+        raise HTTPException(status_code=503, detail="Web of Science returned no pages. Ensure you are logged in via noVNC and retry.")
+    return pages
 
-    metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
 
-    return {
-        "page": page,
-        "total_records": metadata.get("total"),
-        "results": results,
-    }
+def _parse_wos_results_page(html: str) -> list[dict[str, Any]]:
+    soup = BeautifulSoup(html, "html.parser")
+    results: list[dict[str, Any]] = []
+
+    for record in soup.select("app-summary-title, wos-record-card, .search-results-item"):
+        title_tag = record.select_one("a.title, .title a, app-summary-title a")
+        title = title_tag.get_text(" ", strip=True) if title_tag else ""
+        url = str(title_tag.get("href", "")) if title_tag else ""
+        if url and url.startswith("/"):
+            url = "https://www.webofscience.com" + url
+
+        author_tags = record.select(".authors a, .author-name")
+        authors = [a.get_text(" ", strip=True) for a in author_tags if a.get_text(strip=True)]
+
+        pub_year: int | None = None
+        year_match = _re_year.search(record.get_text(" ", strip=True))
+        if year_match:
+            pub_year = int(year_match.group(0))
+
+        source_tag = record.select_one(".source-title, .journal-title")
+        source = source_tag.get_text(" ", strip=True) if source_tag else ""
+
+        snippet_tag = record.select_one(".abstract, .snippet")
+        snippet = snippet_tag.get_text(" ", strip=True) if snippet_tag else ""
+
+        doi = ""
+        for a in record.select("a[href*='doi.org']"):
+            href = str(a.get("href", ""))
+            doi_match = __import__("re").search(r"10\.\d{4,}/\S+", href)
+            if doi_match:
+                doi = doi_match.group(0).rstrip(".")
+                break
+
+        if title or url:
+            results.append({
+                "title": title,
+                "url": url,
+                "snippet": snippet,
+                "publication_year": pub_year,
+                "authors": authors,
+                "source": source,
+                "doi": doi,
+                "pdf_link": "",
+            })
+
+    return results
+
+
+def _search_web_of_science_browser(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+) -> dict[str, Any]:
+    pages_html = _fetch_wos_pages_via_browser(query=query, limit=limit, year_low=year_low, year_high=year_high)
+    results: list[dict[str, Any]] = []
+    for html in pages_html:
+        for item in _parse_wos_results_page(html):
+            if len(results) >= limit:
+                break
+            item["index"] = len(results) + 1
+            results.append(item)
+        if len(results) >= limit:
+            break
+    return {"total_records": None, "results": results}
 
 
 def _search_sciencedirect(query: str, limit: int, start: int, year_low: int | None = None, year_high: int | None = None) -> dict[str, Any]:
@@ -375,42 +277,6 @@ def _search_sciencedirect(query: str, limit: int, start: int, year_low: int | No
 def search_sciencedirect(query: str, limit: int, start: int, year_low: int | None = None, year_high: int | None = None) -> dict[str, Any]:
     data = _search_sciencedirect(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high)
     return {"provider": "sciencedirect", "query": query, **data}
-
-
-def search_scholar(
-    query: str,
-    limit: int,
-    provider: str,
-    start_record: int = 1,
-    wos_page: int = 1,
-    scopus_start: int = 0,
-) -> dict[str, Any]:
-    provider = provider.lower().strip()
-    if provider == "auto":
-        provider = "semantic_scholar"
-
-    if provider == "semantic_scholar":
-        data = _search_scholar_semantic(query=query, limit=limit)
-    elif provider == "google_scholar_scholarly":
-        data = _search_scholar_scholarly(query=query, limit=limit)
-    elif provider == "google_scholar_serpapi":
-        data = _search_scholar_serpapi(query=query, limit=limit)
-    elif provider == "ieeexplore":
-        data = _search_ieeexplore(query=query, limit=limit, start_record=start_record)
-    elif provider == "web_of_science":
-        data = _search_web_of_science(query=query, limit=limit, page=wos_page)
-    elif provider == "sciencedirect":
-        data = _search_sciencedirect(query=query, limit=limit, start=scopus_start)
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "Invalid provider. Use auto, semantic_scholar, google_scholar_scholarly, "
-                "google_scholar_serpapi, ieeexplore, web_of_science, or sciencedirect."
-            ),
-        )
-
-    return {"provider": provider, "query": query, **data}
 
 
 def _fetch_scholar_pages_via_browser(
@@ -563,25 +429,6 @@ def _search_google_scholar_browser(
             break
 
     return {"total_records": None, "results": results}
-
-
-def search_google_scholar(
-    query: str,
-    limit: int,
-    start_index: int = 0,
-    year_low: int | None = None,
-    year_high: int | None = None,
-    exclude_domains: list[str] | None = None,
-) -> dict[str, Any]:
-    data = _search_scholar_scholarly(
-        query=query,
-        limit=limit,
-        start_index=start_index,
-        year_low=year_low,
-        year_high=year_high,
-        exclude_domains=exclude_domains,
-    )
-    return {"provider": "google_scholar_scholarly", "query": query, **data}
 
 
 def _fetch_ebsco_pages_via_browser(
@@ -804,6 +651,11 @@ def search_ieeexplore(query: str, limit: int, start_record: int) -> dict[str, An
     return {"provider": "ieeexplore", "query": query, **data}
 
 
-def search_web_of_science(query: str, limit: int, page: int) -> dict[str, Any]:
-    data = _search_web_of_science(query=query, limit=limit, page=page)
-    return {"provider": "web_of_science", "query": query, **data}
+def search_web_of_science(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+) -> dict[str, Any]:
+    data = _search_web_of_science_browser(query=query, limit=limit, year_low=year_low, year_high=year_high)
+    return {"provider": "web_of_science_browser", "query": query, **data}

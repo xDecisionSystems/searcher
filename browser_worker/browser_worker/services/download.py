@@ -901,6 +901,85 @@ def search_google_scholar_via_browser(
     return {"pages_html": pages_html, "page_count": len(pages_html)}
 
 
+def search_web_of_science_via_browser(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+    page_delay_seconds: float = 2.0,
+) -> dict:
+    """Search Web of Science via the real Chromium browser.
+
+    Navigates to the WoS search page, submits the query, collects result pages
+    by clicking Next until limit results are collected or no Next button is found.
+    Returns raw HTML per page for the caller to parse.
+    """
+    from urllib.parse import quote_plus
+
+    params = f"queryString={quote_plus(query)}"
+    if year_low or year_high:
+        lo = year_low or 1900
+        hi = year_high or 2100
+        params += f"&publishTimeSpan={lo}%2F{hi}"
+    search_url = f"https://www.webofscience.com/wos/woscc/basic-search?{params}"
+
+    log_event("wos_search_start", query=query, limit=limit, url=search_url)
+
+    pages_html: list[str] = []
+    collected = 0
+
+    try:
+        with sync_playwright() as playwright:
+            ctx = _get_browser_context(playwright)
+            pages = ctx.pages
+            page = pages[0] if pages else ctx.new_page()
+
+            page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
+            try:
+                page.wait_for_load_state("networkidle", timeout=15000)
+            except PlaywrightError:
+                pass
+            page.wait_for_timeout(2000)
+
+            while collected < limit:
+                html = page.content()
+                pages_html.append(html)
+                # Estimate count by a common WoS result item marker.
+                collected += html.count("app-summary-title")
+                log_event("wos_page_collected", page_num=len(pages_html), estimated=collected)
+
+                if collected >= limit:
+                    break
+
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.wait_for_timeout(500)
+
+                # WoS Next button: aria-label="Next page" or text "Next".
+                next_btn = page.locator("button[aria-label='Next page'], button:has-text('Next')").first
+                try:
+                    next_btn.wait_for(state="visible", timeout=3000)
+                    if not next_btn.is_enabled():
+                        log_event("wos_next_disabled", page_num=len(pages_html))
+                        break
+                    next_btn.click()
+                    try:
+                        page.wait_for_load_state("networkidle", timeout=15000)
+                    except PlaywrightError:
+                        pass
+                    page.wait_for_timeout(int(page_delay_seconds * 1000))
+                except PlaywrightError:
+                    log_event("wos_no_next_page", page_num=len(pages_html))
+                    break
+
+            _close_context_if_needed(ctx)
+
+    except PlaywrightError as exc:
+        raise HTTPException(status_code=502, detail=f"Web of Science browser search failed: {exc}") from exc
+
+    log_event("wos_search_done", pages=len(pages_html), estimated_results=collected)
+    return {"pages_html": pages_html, "page_count": len(pages_html)}
+
+
 # ── Generic page fetch ─────────────────────────────────────────────────────────
 
 def fetch_page_via_browser(url: str) -> dict[str, Any]:
