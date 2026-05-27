@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 
 APP_USER_AGENT = os.getenv(
-    "MCP_USER_AGENT",
-    "searcher-mcp/1.0 (+https://localhost)",
+    "USER_AGENT",
+    "searcher/1.0 (+https://localhost)",
 )
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT_SECONDS", "20"))
 PDF_MAX_MB = int(os.getenv("PDF_MAX_MB", "50"))
@@ -22,7 +22,7 @@ ELSEVIER_API_KEY = os.getenv("ELSEVIER_API_KEY")
 
 
 def load_version_name() -> str:
-    default_version_name = os.getenv("VERSION_NAME", "searcher-mcp-dev")
+    default_version_name = os.getenv("VERSION_NAME", "searcher-dev")
     try:
         content = VERSION_FILE.read_text(encoding="utf-8")
     except OSError:

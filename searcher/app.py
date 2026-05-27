@@ -1,3 +1,3 @@
-from searcher_mcp.api import app
+from api.api import app
 
 __all__ = ["app"]

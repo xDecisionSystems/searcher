@@ -17,7 +17,7 @@ Prioritize correctness, safe defaults, and predictable API behavior.
 searcher/
 ├── searcher/                        # Search API service
 │   ├── app.py                       # Entrypoint
-│   ├── searcher_mcp/                # API routes and business logic
+│   ├── api/                         # API routes and business logic
 │   │   ├── api.py
 │   │   ├── config.py
 │   │   ├── http_client.py
@@ -27,7 +27,7 @@ searcher/
 │   │       ├── pdf.py
 │   │       └── search.py
 │   ├── requirements.txt
-│   ├── deploy/searcher-mcp.service
+│   ├── deploy/searcher.service
 │   ├── testing/
 │   ├── README.md
 │   └── ARCHITECTURE.md
@@ -77,7 +77,7 @@ If you add or change behavior in a service, update that service's `README.md` an
 
 ## 5. Agent Roles
 
-- **Implementer agent**: owns code changes inside a service's module (`searcher_mcp/` or `browser_worker/`).
+- **Implementer agent**: owns code changes inside a service's module (`api/` or `browser_worker/`).
 - **Documentation agent**: owns `README.md`, `ARCHITECTURE.md`, root `.env.example`.
 - **Verification agent**: runs syntax checks and smoke tests for the affected service.
 
@@ -125,7 +125,7 @@ When using multiple agents in parallel, assign disjoint file ownership.
 3. Implement the smallest coherent change.
 4. Run syntax checks for the affected service.
 5. Update that service's docs and the root `.env.example` if config keys changed.
-6. **API reference page:** whenever an endpoint is added, removed, or its parameters change, update `searcher/searcher_mcp/static/api_reference.html` in the same change. This file is served live at `/api-reference` and is the authoritative reference for AI agents.
+6. **API reference page:** whenever an endpoint is added, removed, or its parameters change, update `searcher/api/static/api_reference.html` in the same change. This file is served live at `/api-reference` and is the authoritative reference for AI agents.
 7. Summarize changes, assumptions, and residual risks.
 
 ## 11. Domain Strategy Generation Protocol (Required)

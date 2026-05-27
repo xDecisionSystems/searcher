@@ -1,5 +1,5 @@
 [Unit]
-Description=Searcher MCP FastAPI Service
+Description=Searcher FastAPI Service
 After=network.target
 
 [Service]

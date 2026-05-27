@@ -78,8 +78,8 @@ log "Updating searcher dependencies ..."
 run "${SEARCHER_DIR}/.venv/bin/python" -m pip install --quiet --upgrade pip
 run "${SEARCHER_DIR}/.venv/bin/python" -m pip install --quiet -r "${SEARCHER_DIR}/requirements.txt"
 
-log "Refreshing searcher-mcp systemd unit ..."
-run cp "${SEARCHER_DIR}/deploy/searcher-mcp.service" /etc/systemd/system/searcher-mcp.service
+log "Refreshing searcher systemd unit ..."
+run cp "${SEARCHER_DIR}/deploy/searcher.service" /etc/systemd/system/searcher.service
 
 # ─── Update browser_worker deps ───────────────────────────────────────────────
 log "Updating browser_worker dependencies ..."
@@ -136,19 +136,19 @@ for i in $(seq 1 10); do
 done
 pass "browser-worker"
 
-log "Restarting searcher-mcp ..."
-run systemctl restart searcher-mcp
+log "Restarting searcher ..."
+run systemctl restart searcher
 for i in $(seq 1 10); do
   curl -sf "http://127.0.0.1:${SEARCHER_PORT}/health" > /dev/null 2>&1 && break
-  [[ "$i" == "10" ]] && die "searcher-mcp did not pass health check"
+  [[ "$i" == "10" ]] && die "searcher did not pass health check"
   sleep 2
 done
-pass "searcher-mcp"
+pass "searcher"
 
 # ─── Summary ──────────────────────────────────────────────────────────────────
 echo ""
 log "=== Update complete ==="
 log "  ${OLD_VERSION} → ${NEW_VERSION}"
 echo ""
-systemctl is-active xvfb x11vnc chromium-display novnc browser-worker searcher-mcp 2>/dev/null | \
-  paste - - - - - - | awk '{printf "  xvfb:%s  x11vnc:%s  chromium:%s  novnc:%s  browser-worker:%s  searcher-mcp:%s\n",$1,$2,$3,$4,$5,$6}'
+systemctl is-active xvfb x11vnc chromium-display novnc browser-worker searcher 2>/dev/null | \
+  paste - - - - - - | awk '{printf "  xvfb:%s  x11vnc:%s  chromium:%s  novnc:%s  browser-worker:%s  searcher:%s\n",$1,$2,$3,$4,$5,$6}'

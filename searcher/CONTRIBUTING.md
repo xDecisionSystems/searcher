@@ -1,6 +1,6 @@
 # CONTRIBUTING.md
 
-Thanks for contributing to Searcher MCP.
+Thanks for contributing to Searcher.
 
 ## 1. Prerequisites
 
@@ -30,7 +30,7 @@ Add API keys in `.env.dev` as needed.
 
 Minimum required before merge:
 
-- `.venv/bin/python -m py_compile app.py searcher_mcp/*.py searcher_mcp/services/*.py`
+- `.venv/bin/python -m py_compile app.py api/*.py api/services/*.py`
 - Confirm `/health` responds.
 - Confirm changed endpoints return expected JSON shape.
 - Confirm failures return reasonable HTTP codes/messages.

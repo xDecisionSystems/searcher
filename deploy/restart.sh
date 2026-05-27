@@ -22,7 +22,7 @@ log()  { echo "[restart] $*"; }
 pass() { echo "[restart] OK: $*"; }
 fail() { echo "[restart] FAIL: $*" >&2; exit 1; }
 
-SERVICES=(xvfb x11vnc chromium-display novnc browser-worker searcher-mcp)
+SERVICES=(xvfb x11vnc chromium-display novnc browser-worker searcher)
 
 if [[ "$STATUS_ONLY" == "1" ]]; then
   echo "Service status:"
@@ -69,17 +69,17 @@ for i in $(seq 1 10); do
 done
 pass "browser-worker"
 
-log "Restarting searcher-mcp ..."
-systemctl restart searcher-mcp
+log "Restarting searcher ..."
+systemctl restart searcher
 for i in $(seq 1 10); do
   curl -sf "http://127.0.0.1:${SEARCHER_PORT}/health" > /dev/null 2>&1 && break
-  [[ "$i" == "10" ]] && fail "searcher-mcp did not pass health check"
+  [[ "$i" == "10" ]] && fail "searcher did not pass health check"
   sleep 2
 done
-pass "searcher-mcp"
+pass "searcher"
 
 echo ""
 echo "All services restarted successfully."
 echo ""
 systemctl is-active "${SERVICES[@]}" 2>/dev/null | paste - - - - - - | \
-  awk '{printf "  xvfb:%s  x11vnc:%s  chromium:%s  novnc:%s  browser-worker:%s  searcher-mcp:%s\n",$1,$2,$3,$4,$5,$6}'
+  awk '{printf "  xvfb:%s  x11vnc:%s  chromium:%s  novnc:%s  browser-worker:%s  searcher:%s\n",$1,$2,$3,$4,$5,$6}'

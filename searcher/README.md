@@ -32,7 +32,7 @@ FastAPI service for scholarly search and web content retrieval. Part of the `sea
 
 - Working directory inside LXC: `/opt/searcher/searcher`
 - Env file: `/opt/searcher/.env` (shared with all services)
-- Service: `searcher-mcp.service`
+- Service: `searcher.service`
 - Port: `8000`
 - Swagger docs: `http://<lxc-ip>:8000/docs`
 
@@ -53,7 +53,7 @@ Docs: `http://127.0.0.1:8000/docs`
 
 Syntax check:
 ```bash
-../.venv/bin/python -m py_compile app.py searcher_mcp/*.py searcher_mcp/services/*.py
+../.venv/bin/python -m py_compile app.py api/*.py api/services/*.py
 ```
 
 ## Environment Variables
@@ -70,7 +70,7 @@ Runtime tuning:
 - `REQUEST_TIMEOUT_SECONDS` (default `20`)
 - `PDF_MAX_MB` (default `50`)
 - `DOWNLOAD_DIR` (default `/tmp`)
-- `MCP_USER_AGENT`
+- `USER_AGENT`
 
 ## `/search_scholar` Provider Options
 

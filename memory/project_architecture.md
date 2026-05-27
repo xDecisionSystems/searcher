@@ -9,7 +9,7 @@ Two FastAPI services and a browser stack deploy to a single Proxmox LXC (`search
 
 | Service | Port | Description |
 |---------|------|-------------|
-| `searcher-mcp` | 8000 | Scholar search FastAPI |
+| `searcher` | 8000 | Scholar search FastAPI |
 | `browser-worker` | 8010 | Playwright browser download FastAPI |
 | `chromium-display` | 9222 (localhost only) | Persistent Chromium with GUI on Xvfb :99 |
 | `x11vnc` | 5900 (localhost) | VNC server |

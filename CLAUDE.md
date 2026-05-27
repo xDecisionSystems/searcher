@@ -53,7 +53,7 @@ Each service has its own `requirements.txt` and `deploy/` folder. There is a sin
 - Install browser_worker deps: `.venv/bin/python -m pip install -r browser_worker/requirements.txt`
 - Run searcher locally: `cd searcher && ../.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8000`
 - Run browser_worker locally: `cd browser_worker && ../.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8010`
-- Syntax check searcher: `.venv/bin/python -m py_compile searcher/app.py searcher/searcher_mcp/*.py searcher/searcher_mcp/services/*.py`
+- Syntax check searcher: `.venv/bin/python -m py_compile searcher/app.py searcher/api/*.py searcher/api/services/*.py`
 - Syntax check browser_worker: `.venv/bin/python -m py_compile browser_worker/app.py browser_worker/browser_worker/*.py browser_worker/browser_worker/services/*.py`
 - For standalone scripts, prefer flat top-level execution flow and do not add `main()`.
 
@@ -69,7 +69,7 @@ Each service has its own `requirements.txt` and `deploy/` folder. There is a sin
 - When code changes affect behavior, update docs in the same change.
 - Keep API responses stable unless a breaking change is explicitly requested.
 - Validate all input and return clear HTTP errors.
-- **API reference page:** whenever an endpoint is added, removed, or its parameters change, update `searcher/searcher_mcp/static/api_reference.html` in the same commit. This file is served live at `/api-reference` and is the authoritative reference for AI agents.
+- **API reference page:** whenever an endpoint is added, removed, or its parameters change, update `searcher/api/static/api_reference.html` in the same commit. This file is served live at `/api-reference` and is the authoritative reference for AI agents.
 
 ## 5. Security Basics
 
@@ -100,6 +100,6 @@ Interpretation rule:
 
 MCP endpoints:
 - Browser worker MCP: `https://searcher.xds-lab.com/aev/browser/mcp`
-- Searcher MCP: `https://searcher.xds-lab.com/aev/search/mcp`
+- Searcher MCP endpoint: `https://searcher.xds-lab.com/aev/search/mcp`
 
 If access is blocked for that publisher, create an inaccessible strategy (`accessible: false`) with an explicit `inaccessible_reason`.

@@ -2,7 +2,7 @@
 # proxmox_deploy.sh
 #
 # Creates a single Proxmox LXC and deploys all services:
-#   - searcher-mcp      FastAPI scholar search API        port 8000
+#   - searcher      FastAPI scholar search API        port 8000
 #   - browser-worker    FastAPI browser-download API      port 8010
 #   - xvfb              Virtual display (Xvfb :99)
 #   - x11vnc            VNC server on the virtual display port 5900
@@ -299,7 +299,7 @@ echo ""
 echo "  Shared env    : ${SHARED_ENV_FILE:-(repo .env.example for each service)}"
 echo ""
 echo "  Services to install:"
-echo "    searcher-mcp       port ${SEARCHER_PORT}"
+echo "    searcher       port ${SEARCHER_PORT}"
 echo "    browser-worker     port ${WORKER_PORT}"
 echo "    xvfb               virtual display :99"
 echo "    chromium-display   port ${CDP_PORT} (localhost CDP) + GUI on :99"
@@ -433,15 +433,15 @@ lxc_exec "$VMID" "
   .venv/bin/python -m pip install --quiet --upgrade pip
   .venv/bin/python -m pip install --quiet -r requirements.txt
   if [ -f /opt/searcher/.env ]; then ln -sf /opt/searcher/.env /opt/searcher/searcher/.env; else cp /opt/searcher/.env.example /opt/searcher/.env && ln -sf /opt/searcher/.env /opt/searcher/searcher/.env; fi
-  cp /opt/searcher/searcher/deploy/searcher-mcp.service /etc/systemd/system/searcher-mcp.service
+  cp /opt/searcher/searcher/deploy/searcher.service /etc/systemd/system/searcher.service
   systemctl daemon-reload
-  systemctl enable searcher-mcp
-  systemctl start searcher-mcp
+  systemctl enable searcher
+  systemctl start searcher
 "
-log "Waiting for searcher-mcp ..."
+log "Waiting for searcher ..."
 lxc_exec "$VMID" "sleep 4"
-lxc_exec "$VMID" "curl -sf http://127.0.0.1:${SEARCHER_PORT}/health || { echo 'searcher-mcp health check failed'; exit 1; }"
-log "searcher-mcp PASSED."
+lxc_exec "$VMID" "curl -sf http://127.0.0.1:${SEARCHER_PORT}/health || { echo 'searcher health check failed'; exit 1; }"
+log "searcher PASSED."
 
 # ─── Install browser_worker ───────────────────────────────────────────────────
 log "Installing browser_worker ..."
@@ -528,7 +528,7 @@ log ""
 LXC_ACTUAL_IP="$(ssh_run "$PROXMOX_HOST" \
   "pct exec ${VMID} -- hostname -I 2>/dev/null | awk '{print \$1}'" || echo "(check manually)")"
 
-echo "  searcher-mcp    http://${LXC_ACTUAL_IP}:${SEARCHER_PORT}/health"
+echo "  searcher    http://${LXC_ACTUAL_IP}:${SEARCHER_PORT}/health"
 echo "  searcher docs   http://${LXC_ACTUAL_IP}:${SEARCHER_PORT}/docs"
 echo "  browser-worker  http://${LXC_ACTUAL_IP}:${WORKER_PORT}/health"
 echo "  noVNC           http://${LXC_ACTUAL_IP}:${NOVNC_PORT}/vnc.html"

@@ -1,6 +1,6 @@
 # ARCHITECTURE.md
 
-Architecture overview for the Searcher MCP FastAPI service.
+Architecture overview for the Searcher FastAPI service.
 
 ## 1. High-Level Design
 
@@ -15,10 +15,10 @@ Core responsibilities:
 The implementation is modular:
 
 - `app.py` is a thin compatibility entrypoint.
-- `searcher_mcp/api.py` defines FastAPI routes.
-- `searcher_mcp/services/` contains business logic by domain.
-- `searcher_mcp/config.py` centralizes environment-driven settings.
-- `searcher_mcp/http_client.py` owns shared HTTP session/request helpers.
+- `api/api.py` defines FastAPI routes.
+- `api/services/` contains business logic by domain.
+- `api/config.py` centralizes environment-driven settings.
+- `api/http_client.py` owns shared HTTP session/request helpers.
 
 ## 2. Runtime Components
 
@@ -75,7 +75,7 @@ Configuration is environment-driven:
 - `REQUEST_TIMEOUT_SECONDS`
 - `PDF_MAX_MB`
 - `DOWNLOAD_DIR`
-- `MCP_USER_AGENT`
+- `USER_AGENT`
 
 Root `.env.example` documents all expected variables.
 
@@ -95,7 +95,7 @@ When changing response schemas, update `README.md` and announce impact.
 Primary production environment is Debian-based Proxmox LXC with systemd management.
 Local `.venv` + `uvicorn` deployment is also supported for testing only.
 
-- Service file: `deploy/searcher-mcp.service`
+- Service file: `deploy/searcher.service`
 - Working directory: `/opt/searcher/searcher`
 - Env file: `/opt/searcher/.env` (shared with all services)
 - Process manager: `systemd`

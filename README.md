@@ -46,7 +46,7 @@ Both services run in a single Proxmox LXC alongside the browser stack.
 
 | Service | Port | Description |
 |---------|------|-------------|
-| `searcher-mcp` | 8000 | Scholar search FastAPI |
+| `searcher` | 8000 | Scholar search FastAPI |
 | `browser-worker` | 8010 | Browser-download FastAPI |
 | `novnc` | 6080 | Browser-based remote desktop (password protected) |
 | `chromium-cdp` | 9222 (localhost) | Chromium with GUI on virtual display |

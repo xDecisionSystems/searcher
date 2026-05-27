@@ -23,7 +23,7 @@ from .services.search import (
 )
 
 app = FastAPI(
-    title="Searcher MCP API",
+    title="Searcher API",
     description=(
         "Scholarly paper search and retrieval service. "
         "Search across Google Scholar, EBSCO, IEEE Xplore, "
