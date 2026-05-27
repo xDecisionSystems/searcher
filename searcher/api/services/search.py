@@ -900,9 +900,24 @@ def search_web_of_science(
 _OPENALEX_PAGE_SIZE = 100  # API maximum per request
 _OPENALEX_SELECT = ",".join([
     "id", "doi", "display_name", "publication_year", "cited_by_count",
-    "authorships", "primary_location", "best_oa_location", "is_oa",
-    "abstract", "type",
+    "authorships", "primary_location", "best_oa_location", "open_access",
+    "abstract_inverted_index", "type",
 ])
+
+
+def _reconstruct_abstract(inverted_index: dict | None) -> str:
+    """Reconstruct abstract text from OpenAlex abstract_inverted_index format.
+
+    The inverted index maps each word to a list of positions it appears at.
+    Reconstruct by sorting words by their positions into a flat list.
+    """
+    if not inverted_index:
+        return ""
+    positions: dict[int, str] = {}
+    for word, pos_list in inverted_index.items():
+        for pos in pos_list:
+            positions[pos] = word
+    return " ".join(positions[i] for i in sorted(positions))
 
 
 def _search_openalex(
@@ -931,7 +946,7 @@ def _search_openalex(
     elif year_high:
         filters.append(f"publication_year:<{year_high + 1}")
     if is_oa is not None:
-        filters.append(f"is_oa:{'true' if is_oa else 'false'}")
+        filters.append(f"open_access.is_oa:{'true' if is_oa else 'false'}")
     if work_type:
         filters.append(f"type:{work_type}")
     if filters:
@@ -985,10 +1000,13 @@ def _search_openalex(
             if best_oa:
                 pdf_link = best_oa.get("pdf_url", "") or ""
 
+            # Abstract from inverted index
+            abstract = _reconstruct_abstract(item.get("abstract_inverted_index"))
+
             results.append(_result(
                 title=item.get("display_name", ""),
                 url=url,
-                snippet=item.get("abstract", "") or "",
+                snippet=abstract,
                 publication_year=item.get("publication_year"),
                 authors=authors,
                 doi=doi,
