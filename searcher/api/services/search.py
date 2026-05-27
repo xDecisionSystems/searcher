@@ -10,6 +10,7 @@ from ..config import (
     BROWSER_WORKER_URL,
     ELSEVIER_API_KEY,
     IEEE_XPLORE_API_KEY,
+    OPENALEX_API_KEY,
     SEMANTIC_SCHOLAR_API_KEY,
 )
 from ..http_client import request_json, session
@@ -894,3 +895,129 @@ def search_web_of_science(
 ) -> dict[str, Any]:
     data = _search_web_of_science_browser(query=query, limit=limit, year_low=year_low, year_high=year_high)
     return _envelope("web_of_science_browser", query, data["results"], data.get("total_records"))
+
+
+_OPENALEX_PAGE_SIZE = 100  # API maximum per request
+_OPENALEX_SELECT = ",".join([
+    "id", "doi", "display_name", "publication_year", "cited_by_count",
+    "authorships", "primary_location", "best_oa_location", "is_oa",
+    "abstract", "type",
+])
+
+
+def _search_openalex(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+    is_oa: bool | None = None,
+    work_type: str | None = None,
+) -> dict[str, Any]:
+    params: dict[str, Any] = {
+        "search": query,
+        "per_page": min(_OPENALEX_PAGE_SIZE, limit),
+        "select": _OPENALEX_SELECT,
+        "sort": "relevance_score:desc",
+        "mailto": "Adan.Vela@ucf.edu",
+    }
+    if OPENALEX_API_KEY:
+        params["api_key"] = OPENALEX_API_KEY
+
+    filters: list[str] = []
+    if year_low and year_high:
+        filters.append(f"publication_year:{year_low}-{year_high}")
+    elif year_low:
+        filters.append(f"publication_year:>{year_low - 1}")
+    elif year_high:
+        filters.append(f"publication_year:<{year_high + 1}")
+    if is_oa is not None:
+        filters.append(f"is_oa:{'true' if is_oa else 'false'}")
+    if work_type:
+        filters.append(f"type:{work_type}")
+    if filters:
+        params["filter"] = ",".join(filters)
+
+    results: list[dict[str, Any]] = []
+    total_records: int | None = None
+    cursor = "*"
+
+    while len(results) < limit:
+        params["per_page"] = min(_OPENALEX_PAGE_SIZE, limit - len(results))
+        params["cursor"] = cursor
+        payload = request_json(
+            "https://api.openalex.org/works",
+            params=params,
+        )
+
+        if total_records is None:
+            meta = payload.get("meta") or {}
+            total_records = meta.get("count")
+
+        works = payload.get("results") or []
+        if not works:
+            break
+
+        for item in works:
+            if len(results) >= limit:
+                break
+
+            doi = (item.get("doi") or "").replace("https://doi.org/", "")
+            url = f"https://doi.org/{doi}" if doi else item.get("id", "")
+
+            # Authors from authorships list
+            authors: list[str] = []
+            for authorship in item.get("authorships") or []:
+                author = authorship.get("author") or {}
+                name = author.get("display_name", "").strip()
+                if name:
+                    authors.append(name)
+
+            # Source/journal from primary_location
+            source = ""
+            primary_location = item.get("primary_location") or {}
+            source_obj = primary_location.get("source") or {}
+            if source_obj:
+                source = source_obj.get("display_name", "")
+
+            # PDF link from best_oa_location
+            pdf_link = ""
+            best_oa = item.get("best_oa_location") or {}
+            if best_oa:
+                pdf_link = best_oa.get("pdf_url", "") or ""
+
+            results.append(_result(
+                title=item.get("display_name", ""),
+                url=url,
+                snippet=item.get("abstract", "") or "",
+                publication_year=item.get("publication_year"),
+                authors=authors,
+                doi=doi,
+                source=source,
+                pdf_link=pdf_link,
+            ))
+
+        meta = payload.get("meta") or {}
+        cursor = meta.get("next_cursor", "")
+        if not cursor:
+            break
+
+    return {"total_records": total_records, "results": results}
+
+
+def search_openalex(
+    query: str,
+    limit: int,
+    year_low: int | None = None,
+    year_high: int | None = None,
+    is_oa: bool | None = None,
+    work_type: str | None = None,
+) -> dict[str, Any]:
+    data = _search_openalex(
+        query=query,
+        limit=limit,
+        year_low=year_low,
+        year_high=year_high,
+        is_oa=is_oa,
+        work_type=work_type,
+    )
+    return _envelope("openalex", query, data["results"], data.get("total_records"))

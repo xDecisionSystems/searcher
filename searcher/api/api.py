@@ -16,6 +16,7 @@ from .services.search import (
     search_ebsco_browser as search_ebsco_browser_service,
     search_google_scholar_browser as search_google_scholar_browser_service,
     search_ieeexplore as search_ieeexplore_service,
+    search_openalex as search_openalex_service,
     search_sciencedirect as search_sciencedirect_service,
     search_scopus as search_scopus_service,
     search_semantic_scholar as search_semantic_scholar_service,
@@ -103,6 +104,32 @@ def search_semantic_scholar(
 ) -> dict[str, Any]:
     """Search Semantic Scholar via their public API."""
     return search_semantic_scholar_service(query=query, limit=limit)
+
+
+@app.get("/search_openalex")
+def search_openalex(
+    query: str,
+    limit: int = Query(default=25, ge=1, description="Maximum number of results to return. Fetched in pages of 100."),
+    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
+    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
+    is_oa: bool | None = Query(default=None, description="If true, restrict to open access works only."),
+    work_type: str | None = Query(default=None, description="Filter by work type: article, book, dataset, preprint, review, etc."),
+) -> dict[str, Any]:
+    """Search OpenAlex via their public Works API.
+
+    OpenAlex is a free, open index of 250M+ scholarly works across all disciplines.
+    Abstracts are always included in results. Supports Boolean operators in query.
+    Paginates automatically using cursor-based pagination.
+    Set is_oa=true to restrict to open access works with PDF links.
+    """
+    return search_openalex_service(
+        query=query,
+        limit=limit,
+        year_low=year_low,
+        year_high=year_high,
+        is_oa=is_oa,
+        work_type=work_type,
+    )
 
 
 @app.get("/search_ebsco")

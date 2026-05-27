@@ -6,6 +6,7 @@ FastAPI service for scholarly search and web content retrieval. Part of the `sea
 
 - `GET /health` — liveness check
 - `GET /search_semantic_scholar` — Semantic Scholar (direct API)
+- `GET /search_openalex` — OpenAlex (direct API, abstracts always included)
 - `GET /search_ieeexplore` — IEEE Xplore (direct API)
 - `GET /search_web_of_science` — Web of Science via Chromium browser
 - `GET /search_scopus` — Elsevier Scopus (direct API)
@@ -65,6 +66,7 @@ Syntax check:
 All keys are shared via the root `.env.example`. Provider keys:
 
 - `SEMANTIC_SCHOLAR_API_KEY` (optional — unauthenticated access is rate-limited)
+- `OPENALEX_API_KEY` (optional — unauthenticated access is allowed; key raises rate limits)
 - `IEEE_XPLORE_API_KEY` (required for IEEE Xplore endpoints)
 - `WEB_OF_SCIENCE_API_KEY` (required for Web of Science endpoints)
 - `ELSEVIER_API_KEY` (required for Scopus endpoints)
@@ -79,6 +81,7 @@ Runtime tuning:
 ## Search Provider Notes
 
 - `search_semantic_scholar` — unauthenticated access is rate-limited to ~1 request/second; set `SEMANTIC_SCHOLAR_API_KEY` for higher limits.
+- `search_openalex` — free, no key required; set `OPENALEX_API_KEY` for higher rate limits. Returns abstracts for all results. Supports `is_oa` and `work_type` filters.
 - `search_ieeexplore` — requires `IEEE_XPLORE_API_KEY`; supports Boolean operators (AND, OR, NOT), author filter, content type, sort, and open-access filter.
 - `search_scopus` — requires `ELSEVIER_API_KEY`; filter by subject area with `subj` (e.g. `ENGI`, `COMP`).
 - `search_sciencedirect` — requires `ELSEVIER_API_KEY`.
