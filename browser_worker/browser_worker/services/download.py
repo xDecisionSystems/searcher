@@ -956,31 +956,13 @@ def search_web_of_science_via_browser(
                 pass
             page.wait_for_timeout(1500)
 
-            # Click the Export dropdown button in the results toolbar.
-            # Try multiple selectors — WoS renders this as a button with "Export" text
-            # and an expand_more chevron icon. The language dropdown also has expand_more
-            # so we must not use mat-icon alone.
-            export_clicked = False
-            for selector in [
-                "button[aria-label*='Export']",
-                "button[aria-label*='export']",
-                "[data-ta='export-from-summary-layer'] button",
-                "app-export-action button",
-                "button:has-text('Export')",
-            ]:
-                try:
-                    btn = page.locator(selector).first
-                    btn.wait_for(state="visible", timeout=3000)
-                    btn.click(timeout=5000)
-                    export_clicked = True
-                    log_event("wos_export_clicked", selector=selector)
-                    break
-                except PlaywrightError:
-                    continue
-            if not export_clicked:
-                raise HTTPException(status_code=502, detail="Could not find WoS Export button.")
+            # Click the Export button — recorded as a <span> with text "Export expand_more".
+            export_btn = page.get_by_text("Export expand_more", exact=True).first
+            export_btn.wait_for(state="visible", timeout=10000)
+            export_btn.click(timeout=10000)
+            log_event("wos_export_clicked")
 
-            # Wait for export overlay to appear (URL gains overlay:export/exbt suffix).
+            # Wait for export overlay (URL gains overlay:export/exbt — BibTeX pre-selected).
             try:
                 page.wait_for_url("**overlay:export**", timeout=10000)
                 log_event("wos_export_overlay_url", url=page.url)
@@ -988,25 +970,15 @@ def search_web_of_science_via_browser(
                 log_event("wos_export_overlay_timeout", url=page.url)
             page.wait_for_timeout(1500)
 
-            # Select BibTeX format — recorded as clicking span with text "BibTeX".
-            bibtex_opt = page.get_by_text("BibTeX", exact=True).first
-            bibtex_opt.wait_for(state="visible", timeout=8000)
-            bibtex_opt.click(timeout=8000)
-            log_event("wos_bibtex_selected")
-            page.wait_for_timeout(500)
-
-            # Select "Records from" radio and set the count to limit.
+            # Select "Records from" and set the count — recorded as label click then radio.
+            page.get_by_text("Records from:", exact=True).first.click(timeout=5000)
             page.locator("#radio3-input").click(timeout=5000)
             count_input = page.locator("#mat-input-1")
             count_input.click()
             count_input.triple_click()
             count_input.fill(str(limit))
             page.wait_for_timeout(500)
-
-            # Select Full Record content.
-            page.locator("#option-fullRecord").click(timeout=5000)
-            log_event("wos_full_record_selected")
-            page.wait_for_timeout(500)
+            log_event("wos_record_count_set", limit=limit)
 
             # Capture the file download triggered by the Export button.
             with page.expect_download(timeout=30000) as download_info:
