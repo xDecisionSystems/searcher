@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -11,6 +12,45 @@ from ..config import (
     SEMANTIC_SCHOLAR_API_KEY,
 )
 from ..http_client import request_json, session
+
+def _envelope(
+    provider: str,
+    query: str,
+    results: list[dict[str, Any]],
+    total_records: int | None,
+) -> dict[str, Any]:
+    return {
+        "provider": provider,
+        "query": query,
+        "search_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "total_records_available": total_records,
+        "total_records_downloaded": len(results),
+        "results": results,
+    }
+
+
+def _result(
+    *,
+    title: str = "",
+    url: str = "",
+    publication_year: int | None = None,
+    authors: list[str] | None = None,
+    doi: str = "",
+    source: str = "",
+    snippet: str = "",
+    pdf_link: str = "",
+) -> dict[str, Any]:
+    return {
+        "title": title,
+        "url": url,
+        "publication_year": publication_year,
+        "authors": authors or [],
+        "doi": doi,
+        "source": source,
+        "snippet": snippet,
+        "pdf_link": pdf_link,
+    }
+
 
 def _normalize_authors(raw: Any) -> list[str]:
     if isinstance(raw, list):
@@ -67,22 +107,21 @@ def _search_semantic_scholar(query: str, limit: int) -> dict[str, Any]:
     for item in payload.get("data", [])[:limit]:
         authors = [a.get("name", "") for a in item.get("authors", []) if a.get("name")]
         open_access_pdf = item.get("openAccessPdf") or {}
-        results.append({
-            "title": item.get("title", ""),
-            "url": item.get("url", ""),
-            "snippet": item.get("abstract", "") or "",
-            "publication_year": item.get("year"),
-            "authors": authors,
-            "citation_count": item.get("citationCount"),
-            "source": item.get("venue"),
-            "pdf_link": open_access_pdf.get("url", "") if isinstance(open_access_pdf, dict) else "",
-        })
+        results.append(_result(
+            title=item.get("title", ""),
+            url=item.get("url", ""),
+            snippet=item.get("abstract", "") or "",
+            publication_year=item.get("year"),
+            authors=authors,
+            source=item.get("venue") or "",
+            pdf_link=open_access_pdf.get("url", "") if isinstance(open_access_pdf, dict) else "",
+        ))
     return {"total_records": payload.get("total"), "results": results}
 
 
 def search_semantic_scholar(query: str, limit: int) -> dict[str, Any]:
     data = _search_semantic_scholar(query=query, limit=limit)
-    return {"provider": "semantic_scholar", "query": query, **data}
+    return _envelope("semantic_scholar", query, data["results"], data.get("total_records"))
 
 
 def _search_ieeexplore(query: str, limit: int, start_record: int) -> dict[str, Any]:
@@ -102,19 +141,19 @@ def _search_ieeexplore(query: str, limit: int, start_record: int) -> dict[str, A
     results: list[dict[str, Any]] = []
     for item in payload.get("articles", [])[:limit]:
         authors = item.get("authors", {}).get("authors", [])
-        author_names = [author.get("full_name", "") for author in authors if author.get("full_name")]
-        results.append(
-            {
-                "title": item.get("title", "") or item.get("article_title", ""),
-                "url": item.get("html_url", "") or item.get("pdf_url", ""),
-                "snippet": item.get("abstract", ""),
-                "publication_year": item.get("publication_year"),
-                "authors": author_names,
-                "doi": item.get("doi"),
-                "article_number": item.get("article_number"),
-                "source": item.get("publication_title"),
-            }
-        )
+        author_names = [a.get("full_name", "") for a in authors if a.get("full_name")]
+        doi = item.get("doi", "") or ""
+        url = item.get("html_url", "") or item.get("pdf_url", "") or (f"https://doi.org/{doi}" if doi else "")
+        results.append(_result(
+            title=item.get("title", "") or item.get("article_title", ""),
+            url=url,
+            snippet=item.get("abstract", ""),
+            publication_year=item.get("publication_year"),
+            authors=author_names,
+            doi=doi,
+            source=item.get("publication_title") or "",
+            pdf_link=item.get("pdf_url", "") or "",
+        ))
 
     return {
         "start_record": start_record,
@@ -185,16 +224,15 @@ def _parse_wos_bibtex(bibtex: str) -> list[dict[str, Any]]:
         snippet = _field("abstract")
 
         if title or url:
-            results.append({
-                "title": title,
-                "url": url,
-                "snippet": snippet,
-                "publication_year": pub_year,
-                "authors": authors,
-                "source": source,
-                "doi": doi,
-                "pdf_link": "",
-            })
+            results.append(_result(
+                title=title,
+                url=url,
+                snippet=snippet,
+                publication_year=pub_year,
+                authors=authors,
+                source=source,
+                doi=doi,
+            ))
     return results
 
 
@@ -238,10 +276,9 @@ def _search_sciencedirect(query: str, limit: int, start: int, year_low: int | No
         total_records = None
 
     results: list[dict[str, Any]] = []
-    for i, item in enumerate((search_results.get("entry") or [])[:limit], start + 1):
+    for item in (search_results.get("entry") or [])[:limit]:
         if not isinstance(item, dict):
             continue
-
         cover_date = item.get("prism:coverDate", "")
         pub_year: int | None = None
         if cover_date and len(cover_date) >= 4:
@@ -249,33 +286,26 @@ def _search_sciencedirect(query: str, limit: int, start: int, year_low: int | No
                 pub_year = int(cover_date[:4])
             except ValueError:
                 pass
-
         creator = item.get("dc:creator", "")
         authors = [a.strip() for a in creator.split(";") if a.strip()] if creator else []
-
         doi = item.get("prism:doi", "")
         url = f"https://doi.org/{doi}" if doi else item.get("prism:url", "")
-
-        results.append(
-            {
-                "index": i,
-                "title": item.get("dc:title", ""),
-                "url": url,
-                "snippet": item.get("dc:description", ""),
-                "publication_year": pub_year,
-                "authors": authors,
-                "doi": doi,
-                "pdf_link": "",
-                "source": item.get("prism:publicationName", ""),
-            }
-        )
+        results.append(_result(
+            title=item.get("dc:title", ""),
+            url=url,
+            snippet=item.get("dc:description", ""),
+            publication_year=pub_year,
+            authors=authors,
+            doi=doi,
+            source=item.get("prism:publicationName", ""),
+        ))
 
     return {"start": start, "total_records": total_records, "results": results}
 
 
 def search_sciencedirect(query: str, limit: int, start: int, year_low: int | None = None, year_high: int | None = None) -> dict[str, Any]:
     data = _search_sciencedirect(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high)
-    return {"provider": "sciencedirect", "query": query, **data}
+    return _envelope("sciencedirect", query, data["results"], data.get("total_records"))
 
 
 _SCOPUS_PAGE_SIZE = 25
@@ -283,7 +313,7 @@ _SCOPUS_PAGE_SIZE = 25
 
 def _scopus_parse_entries(entries: list, offset: int) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
-    for i, item in enumerate(entries, offset + 1):
+    for item in entries:
         if not isinstance(item, dict):
             continue
         cover_date = item.get("prism:coverDate", "")
@@ -302,18 +332,14 @@ def _scopus_parse_entries(entries: list, offset: int) -> list[dict[str, Any]]:
                 if isinstance(link, dict) and link.get("@ref") == "scopus":
                     url = link.get("@href", "")
                     break
-        results.append({
-            "index": i,
-            "title": item.get("dc:title", ""),
-            "url": url,
-            "snippet": "",
-            "publication_year": pub_year,
-            "authors": authors,
-            "doi": doi,
-            "pdf_link": "",
-            "source": item.get("prism:publicationName", ""),
-            "cited_by": item.get("citedby-count"),
-        })
+        results.append(_result(
+            title=item.get("dc:title", ""),
+            url=url,
+            publication_year=pub_year,
+            authors=authors,
+            doi=doi,
+            source=item.get("prism:publicationName", ""),
+        ))
     return results
 
 
@@ -383,7 +409,7 @@ def search_scopus(
     subj: str | None = None,
 ) -> dict[str, Any]:
     data = _search_scopus(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high, subj=subj)
-    return {"provider": "scopus", "query": query, **data}
+    return _envelope("scopus", query, data["results"], data.get("total_records"))
 
 
 def _fetch_scholar_pages_via_browser(
@@ -485,16 +511,15 @@ def _parse_scholar_results_page(html: str) -> list[dict[str, Any]]:
             pdf_link = str(pdf_tag.get("href", ""))
 
         if title or url:
-            results.append({
-                "title": title,
-                "url": url,
-                "snippet": snippet,
-                "publication_year": pub_year,
-                "authors": authors,
-                "source": source,
-                "citation_count": citation_count,
-                "pdf_link": pdf_link,
-            })
+            results.append(_result(
+                title=title,
+                url=url,
+                snippet=snippet,
+                publication_year=pub_year,
+                authors=authors,
+                source=source,
+                pdf_link=pdf_link,
+            ))
 
     return results
 
@@ -636,16 +661,15 @@ def _parse_ebsco_results_page(html: str) -> list[dict[str, Any]]:
                 break
 
         if title or url:
-            results.append({
-                "title": title,
-                "url": url,
-                "snippet": snippet,
-                "publication_year": pub_year,
-                "authors": authors,
-                "source": source,
-                "doi": doi,
-                "pdf_link": "",
-            })
+            results.append(_result(
+                title=title,
+                url=url,
+                snippet=snippet,
+                publication_year=pub_year,
+                authors=authors,
+                source=source,
+                doi=doi,
+            ))
 
     return results
 
@@ -703,7 +727,7 @@ def search_ebsco_browser(
         year_low=year_low,
         year_high=year_high,
     )
-    return {"provider": "ebsco_browser", "query": query, **data}
+    return _envelope("ebsco_browser", query, data["results"], data.get("total_records"))
 
 
 def download_ebsco_paper(url: str) -> dict[str, Any]:
@@ -750,12 +774,12 @@ def search_google_scholar_browser(
         year_high=year_high,
         exclude_domains=exclude_domains,
     )
-    return {"provider": "google_scholar_browser", "query": query, **data}
+    return _envelope("google_scholar_browser", query, data["results"], data.get("total_records"))
 
 
 def search_ieeexplore(query: str, limit: int, start_record: int) -> dict[str, Any]:
     data = _search_ieeexplore(query=query, limit=limit, start_record=start_record)
-    return {"provider": "ieeexplore", "query": query, **data}
+    return _envelope("ieeexplore", query, data["results"], data.get("total_records"))
 
 
 def search_web_of_science(
@@ -765,4 +789,4 @@ def search_web_of_science(
     year_high: int | None = None,
 ) -> dict[str, Any]:
     data = _search_web_of_science_browser(query=query, limit=limit, year_low=year_low, year_high=year_high)
-    return {"provider": "web_of_science_browser", "query": query, **data}
+    return _envelope("web_of_science_browser", query, data["results"], data.get("total_records"))
