@@ -14,6 +14,7 @@ from .services.search import (
     search_google_scholar_browser as search_google_scholar_browser_service,
     search_ieeexplore as search_ieeexplore_service,
     search_sciencedirect as search_sciencedirect_service,
+    search_scopus as search_scopus_service,
     search_semantic_scholar as search_semantic_scholar_service,
     search_web_of_science as search_web_of_science_service,
 )
@@ -50,6 +51,18 @@ def review_page(
     max_chars: int = Query(default=12000, ge=500),
 ) -> dict[str, Any]:
     return review_page_service(url=url, include_html=include_html, max_chars=max_chars)
+
+
+@app.get("/search_scopus")
+def search_scopus(
+    query: str,
+    limit: int = Query(default=20, ge=1),
+    start: int = Query(default=0, ge=0),
+    year_low: int | None = Query(default=None, description="Earliest publication year (inclusive)."),
+    year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
+) -> dict[str, Any]:
+    """Search Scopus (Elsevier) via the Scopus Search API."""
+    return search_scopus_service(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high)
 
 
 @app.get("/search_sciencedirect")

@@ -278,6 +278,70 @@ def search_sciencedirect(query: str, limit: int, start: int, year_low: int | Non
     return {"provider": "sciencedirect", "query": query, **data}
 
 
+def _search_scopus(query: str, limit: int, start: int, year_low: int | None = None, year_high: int | None = None) -> dict[str, Any]:
+    if not ELSEVIER_API_KEY:
+        raise HTTPException(status_code=400, detail="ELSEVIER_API_KEY is not configured.")
+
+    params: dict[str, Any] = {"query": query, "count": limit, "start": start}
+    if year_low or year_high:
+        lo = year_low or 1900
+        hi = year_high or 9999
+        params["date"] = f"{lo}-{hi}"
+
+    payload = request_json(
+        "https://api.elsevier.com/content/search/scopus",
+        params=params,
+        headers={"X-ELS-APIKey": ELSEVIER_API_KEY, "Accept": "application/json"},
+    )
+
+    search_results = payload.get("search-results") or {}
+    total_raw = search_results.get("opensearch:totalResults")
+    try:
+        total_records = int(total_raw) if total_raw is not None else None
+    except (TypeError, ValueError):
+        total_records = None
+
+    results: list[dict[str, Any]] = []
+    for i, item in enumerate((search_results.get("entry") or [])[:limit], start + 1):
+        if not isinstance(item, dict):
+            continue
+
+        cover_date = item.get("prism:coverDate", "")
+        pub_year: int | None = None
+        if cover_date and len(cover_date) >= 4:
+            try:
+                pub_year = int(cover_date[:4])
+            except ValueError:
+                pass
+
+        # Authors: Scopus returns a single "dc:creator" string or "author" list.
+        creator = item.get("dc:creator", "")
+        authors = [a.strip() for a in creator.split(";") if a.strip()] if creator else []
+
+        doi = item.get("prism:doi", "")
+        url = f"https://doi.org/{doi}" if doi else item.get("prism:url", "") or item.get("link", [{}])[0].get("@href", "") if item.get("link") else ""
+
+        results.append({
+            "index": i,
+            "title": item.get("dc:title", ""),
+            "url": url,
+            "snippet": item.get("dc:description", ""),
+            "publication_year": pub_year,
+            "authors": authors,
+            "doi": doi,
+            "pdf_link": "",
+            "source": item.get("prism:publicationName", ""),
+            "cited_by": item.get("citedby-count"),
+        })
+
+    return {"start": start, "total_records": total_records, "results": results}
+
+
+def search_scopus(query: str, limit: int, start: int, year_low: int | None = None, year_high: int | None = None) -> dict[str, Any]:
+    data = _search_scopus(query=query, limit=limit, start=start, year_low=year_low, year_high=year_high)
+    return {"provider": "scopus", "query": query, **data}
+
+
 def _fetch_scholar_pages_via_browser(
     query: str,
     limit: int,
