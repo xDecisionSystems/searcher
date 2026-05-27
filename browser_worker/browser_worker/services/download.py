@@ -951,18 +951,32 @@ def search_web_of_science_via_browser(
             # Apply date range filter before submitting if requested.
             if year_low or year_high:
                 try:
-                    # Click the "+ Add date range" button to expand the date inputs.
-                    page.get_by_text("Add date range").click(timeout=8000)
+                    # Step 1: Click "+ Add date range" to add the Publication Date row.
+                    page.locator("button", has_text="Add date range").first.click(timeout=8000)
+                    page.wait_for_timeout(800)
+                    log_event("wos_date_row_added")
+
+                    # Step 2: Click the "All years" dropdown to open the date type menu.
+                    page.locator("mat-select, select").filter(has_text="All years").first.click(timeout=8000)
                     page.wait_for_timeout(500)
-                    # Fill start date input (name='startDate').
+                    log_event("wos_date_dropdown_opened")
+
+                    # Step 3: Click "Custom" from the dropdown options.
+                    page.get_by_role("option", name="Custom").click(timeout=8000)
+                    page.wait_for_timeout(500)
+                    log_event("wos_custom_selected")
+
+                    # Step 4: Fill start year.
                     if year_low:
-                        start_input = page.locator("input[name='startDate']")
+                        start_input = page.locator("input[name='startDate']").first
+                        start_input.wait_for(state="visible", timeout=5000)
                         start_input.click(click_count=3)
                         start_input.fill(f"{year_low}-01-01")
                         page.wait_for_timeout(300)
-                    # Fill end date input (name='endDate').
+                    # Step 5: Fill end year.
                     if year_high:
-                        end_input = page.locator("input[name='endDate']")
+                        end_input = page.locator("input[name='endDate']").first
+                        end_input.wait_for(state="visible", timeout=5000)
                         end_input.click(click_count=3)
                         end_input.fill(f"{year_high}-12-31")
                         page.wait_for_timeout(300)
@@ -970,7 +984,9 @@ def search_web_of_science_via_browser(
                 except PlaywrightError as exc:
                     log_event("wos_date_filter_failed", error=str(exc))
 
-            page.keyboard.press("Enter")
+            # Submit the search by clicking the Search button.
+            page.locator("button", has_text="Search").last.click(timeout=8000)
+            log_event("wos_search_submitted")
 
             # Wait for results summary URL.
             try:
