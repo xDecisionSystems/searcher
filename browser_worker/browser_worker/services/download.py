@@ -910,23 +910,17 @@ def search_web_of_science_via_browser(
 ) -> dict:
     """Search Web of Science via the real Chromium browser.
 
-    Navigates to the WoS search page, submits the query, collects result pages
-    by clicking Next until limit results are collected or no Next button is found.
+    Types the query into the WoS search box, submits, waits for the Angular SPA
+    to render results, then paginates via Next until limit results are collected.
     Returns raw HTML per page for the caller to parse.
     """
-    from urllib.parse import quote_plus
-
-    params = f"queryString={quote_plus(query)}"
-    if year_low or year_high:
-        lo = year_low or 1900
-        hi = year_high or 2100
-        params += f"&publishTimeSpan={lo}%2F{hi}"
-    search_url = f"https://www.webofscience.com/wos/woscc/basic-search?{params}"
-
-    log_event("wos_search_start", query=query, limit=limit, url=search_url)
+    log_event("wos_search_start", query=query, limit=limit)
 
     pages_html: list[str] = []
     collected = 0
+
+    # Result item selector — WoS renders each record inside app-summary-title.
+    result_selector = "app-summary-title"
 
     try:
         with sync_playwright() as playwright:
@@ -934,18 +928,53 @@ def search_web_of_science_via_browser(
             pages = ctx.pages
             page = pages[0] if pages else ctx.new_page()
 
-            page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
+            # Navigate to the basic search page.
+            page.goto("https://www.webofscience.com/wos/woscc/basic-search", wait_until="domcontentloaded", timeout=30000)
             try:
                 page.wait_for_load_state("networkidle", timeout=15000)
             except PlaywrightError:
                 pass
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(1500)
+
+            # Type query into the search input and submit.
+            search_input = page.locator("input#mat-input-0, input[data-ta='search-input'], input[placeholder*='earch'], textarea[placeholder*='earch']").first
+            search_input.wait_for(state="visible", timeout=10000)
+            search_input.click()
+            search_input.fill(query)
+            page.wait_for_timeout(500)
+
+            # Apply year filters if requested.
+            if year_low or year_high:
+                try:
+                    date_btn = page.locator("button:has-text('Date Range'), button:has-text('Timespan')").first
+                    date_btn.click(timeout=3000)
+                    page.wait_for_timeout(500)
+                    if year_low:
+                        page.locator("input[placeholder*='rom'], input[aria-label*='rom']").first.fill(str(year_low))
+                    if year_high:
+                        page.locator("input[placeholder*='o'], input[aria-label*='o year']").first.fill(str(year_high))
+                except PlaywrightError:
+                    pass
+
+            # Click Search button.
+            page.locator("button[data-ta='run-search'], button:has-text('Search')").first.click(timeout=10000)
+
+            # Wait for Angular to render the results list.
+            try:
+                page.wait_for_selector(result_selector, timeout=20000)
+            except PlaywrightError:
+                log_event("wos_results_timeout")
+
+            try:
+                page.wait_for_load_state("networkidle", timeout=10000)
+            except PlaywrightError:
+                pass
+            page.wait_for_timeout(1500)
 
             while collected < limit:
                 html = page.content()
                 pages_html.append(html)
-                # Estimate count by a common WoS result item marker.
-                collected += html.count("app-summary-title")
+                collected += html.count("<app-summary-title")
                 log_event("wos_page_collected", page_num=len(pages_html), estimated=collected)
 
                 if collected >= limit:
@@ -954,8 +983,7 @@ def search_web_of_science_via_browser(
                 page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 page.wait_for_timeout(500)
 
-                # WoS Next button: aria-label="Next page" or text "Next".
-                next_btn = page.locator("button[aria-label='Next page'], button:has-text('Next')").first
+                next_btn = page.locator("button[aria-label='Next page'], [data-ta='next-page-button']").first
                 try:
                     next_btn.wait_for(state="visible", timeout=3000)
                     if not next_btn.is_enabled():
