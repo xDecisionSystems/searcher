@@ -952,7 +952,10 @@ def search_web_of_science_via_browser(
             if year_low or year_high:
                 try:
                     # Step 1: Click "+ Add date range" to add the Publication Date row.
-                    page.locator("button", has_text="Add date range").first.click(timeout=8000)
+                    # Use get_by_text with partial match to handle the "+" prefix and spacing.
+                    add_date_btn = page.get_by_text("Add date range", exact=False).first
+                    add_date_btn.wait_for(state="visible", timeout=8000)
+                    add_date_btn.click(timeout=8000)
                     page.wait_for_timeout(800)
                     log_event("wos_date_row_added")
 
@@ -1025,32 +1028,24 @@ def search_web_of_science_via_browser(
             page.wait_for_timeout(1500)
 
             # Select "Records from" radio and set the count.
-            page.locator("#radio3-input").click(timeout=8000)
+            # Scope all interactions to the export overlay panel.
+            overlay = page.locator("app-export-overlay, mat-dialog-container, [class*='export-overlay'], [class*='overlay-panel']").first
+            overlay.locator("#radio3-input").click(timeout=8000)
             page.wait_for_timeout(300)
-            # The count input is a number field inside the export overlay — find it by type or placeholder.
-            count_input = page.locator(
-                "input[type='number'], input[placeholder*='record' i], "
-                "mat-form-field input:not([type='checkbox']):not([type='radio'])"
-            ).last
+            # The count input is scoped inside the overlay to avoid hitting background inputs.
+            count_input = overlay.locator("input[type='number'], input[type='text']:not([type='checkbox']):not([type='radio'])").last
             count_input.click(click_count=3)
             count_input.fill(str(limit))
             page.wait_for_timeout(500)
             log_event("wos_record_count_set", limit=limit)
 
             # Capture the file download triggered by the purple Export button in the overlay.
-            # The overlay footer has two buttons: Export (primary/submit) and Cancel.
-            # Try multiple selectors in order of specificity.
-            export_selectors = [
-                "button[type='submit']",
-                "button.mat-flat-button",
-                "button.mat-raised-button",
-                "button.mat-primary",
-            ]
-            export_clicked = False
+            # Scope to the overlay to avoid clicking background buttons.
             with page.expect_download(timeout=30000) as download_info:
-                for sel in export_selectors:
+                export_clicked = False
+                for sel in ["button[type='submit']", "button.mat-flat-button", "button.mat-raised-button", "button.mat-primary"]:
                     try:
-                        loc = page.locator(sel).last
+                        loc = overlay.locator(sel).last
                         if loc.count() and loc.is_visible(timeout=1000):
                             loc.click(timeout=8000)
                             export_clicked = True
@@ -1059,8 +1054,7 @@ def search_web_of_science_via_browser(
                     except PlaywrightError:
                         continue
                 if not export_clicked:
-                    # Final fallback: find any button whose text is exactly "Export".
-                    page.locator("button").filter(has_text=re.compile(r"^Export$")).last.click(timeout=8000)
+                    overlay.locator("button").filter(has_text=re.compile(r"^Export$")).last.click(timeout=8000)
                     log_event("wos_export_btn_clicked", selector="button[text=Export]")
             download = download_info.value
             log_event("wos_download_started", filename=download.suggested_filename)
