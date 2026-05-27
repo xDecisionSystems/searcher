@@ -1,0 +1,221 @@
+# Searcher API
+
+Scholarly paper search and retrieval service. Searches across OpenAlex, Semantic Scholar, IEEE Xplore, Scopus, ScienceDirect, Google Scholar, Web of Science, and EBSCO. Also fetches web pages and downloads PDFs.
+
+Base URL (production): https://searcher.xds-lab.com/aev/search
+Interactive docs: <base>/docs
+Full HTML reference: <base>/api-reference
+
+## Result Record Shape
+
+Every search endpoint returns results in this common envelope:
+
+```json
+{
+  "provider": "openalex",
+  "query": "UAV trajectory optimization",
+  "search_date": "2026-05-27",
+  "total_records_available": 69114,
+  "total_records_downloaded": 200,
+  "results": [
+    {
+      "title": "Energy-Efficient UAV Communication With Trajectory Optimization",
+      "url": "https://doi.org/10.1109/twc.2017.2688328",
+      "publication_year": 2017,
+      "authors": ["Yong Zeng", "Rui Zhang"],
+      "doi": "10.1109/twc.2017.2688328",
+      "source": "IEEE Transactions on Wireless Communications",
+      "snippet": "Wireless communication with unmanned aerial vehicles...",
+      "is_abstract": true,
+      "pdf_link": "https://arxiv.org/pdf/1608.04792"
+    }
+  ]
+}
+```
+
+`is_abstract: true` means `snippet` contains a full abstract. `is_abstract: false` means only a short excerpt or nothing. Empty string when a field is unavailable. `authors` is always an array. `total_records_available` is null for browser-scraped sources.
+
+## Abstract Coverage
+
+| Endpoint | Abstract? | Notes |
+|---|---|---|
+| /search_openalex | Always | Reconstructed from OpenAlex inverted index |
+| /search_semantic_scholar | Always | From Semantic Scholar API |
+| /search_ieeexplore | Always | From IEEE Xplore API |
+| /search_web_of_science | Usually | From BibTeX export |
+| /search_scopus | Default (true) | Via Abstract Retrieval API; set include_abstract=false to skip |
+| /search_sciencedirect | Partial | Short dc:description only |
+| /search_ebsco | Partial | Scraped excerpt when visible |
+| /search_google_scholar_browser | Excerpt | 2–3 sentence snippet only |
+
+## Utility Endpoints
+
+### GET /health
+Returns service status and version. No parameters.
+Response: `{"status": "ok", "version_name": "searcher-stack-v1.1.168"}`
+
+### GET /fetch_page
+Fetch a URL and extract readable text, title, meta description, and up to 25 links.
+- `url`* (string) — page URL
+- `include_html` (bool, default: false) — include raw HTML
+- `max_chars` (int ≥ 500, default: 12000) — max body text characters
+
+### GET /review_page
+Like /fetch_page but adds word count, estimated read time, and heading list. Suited for AI review tasks. Same parameters as /fetch_page.
+
+### GET /download_pdf
+Stream a PDF from a direct URL and save it server-side. Does not use the browser.
+- `url`* (string) — direct URL to a PDF file
+- Max size: 50 MB (configurable via PDF_MAX_MB)
+- Response: `{"path": "...", "filename": "...", "size_bytes": 843210}`
+- For subscription PDFs use the browser_worker /download_paper endpoint instead.
+
+## Search Endpoints
+
+All search endpoints default to `limit=200`. `year_low` and `year_high` are inclusive year filters available on all endpoints that support them.
+
+### GET /search_openalex
+Search OpenAlex — free, open index of 250M+ scholarly works. Full abstracts always included. Cursor-based pagination (automatic).
+- `query`* (string) — full-text search, supports Boolean operators
+- `limit` (int ≥ 1, default: 200) — max results, fetched in pages of 100, max 10,000
+- `year_low` (int) — earliest publication year
+- `year_high` (int) — latest publication year
+- `is_oa` (bool) — true restricts to open access works only; OA results include pdf_link
+- `work_type` (string) — filter by type: article, book, dataset, preprint, review, etc.
+
+No API key required. Set OPENALEX_API_KEY to raise rate limits. Pagination is automatic — just increase limit.
+
+### GET /search_semantic_scholar
+Search Semantic Scholar via their public API. Good CS/STEM coverage with citation data. Full abstracts always included.
+- `query`* (string) — free-text search
+- `limit` (int ≥ 1, default: 200)
+
+Does not support Boolean operators or year filtering. Set SEMANTIC_SCHOLAR_API_KEY for higher rate limits.
+
+### GET /search_ieeexplore
+Search IEEE Xplore via the Metadata API. Supports Boolean operators and rich filtering. Full abstracts always included. Auto-paginates in batches of 200.
+- `query`* (string) — supports AND, OR, NOT
+- `limit` (int ≥ 1, default: 200)
+- `start_record` (int ≥ 1, default: 1) — **1-based** offset for manual pagination
+- `year_low` / `year_high` (int)
+- `content_type` (string) — Books, Conferences, Courses, Early Access, Journals, Magazines, Standards
+- `open_access` (bool) — true restricts to open-access articles only
+- `sort_field` (string) — article_number, article_title, or publication_title
+- `sort_order` (string) — asc or desc
+- `author` (string, min 3 chars) — filter by author first or last name
+
+Requires IEEE_XPLORE_API_KEY.
+
+### GET /search_scopus
+Search Scopus (Elsevier). Supports full Scopus field-code Boolean syntax. Abstracts fetched by default via a separate API call per result.
+- `query`* (string) — field codes: TITLE(), ABS(), AUTH(), TITLE-ABS-KEY(), etc.
+- `limit` (int ≥ 1, default: 200) — fetched in pages of 25
+- `start` (int ≥ 0, default: 0) — **0-based** offset
+- `year_low` / `year_high` (int)
+- `subj` (string, default: ENGI) — subject area: ENGI, COMP, MATE, PHYS, MATH, etc.
+- `include_abstract` (bool, default: true) — fetch full abstract via Abstract Retrieval API (1 extra API call per result); set false for faster bulk retrieval
+
+Requires ELSEVIER_API_KEY. include_abstract=true consumes Abstract Retrieval quota (~20,000 requests/week per key).
+
+### GET /search_sciencedirect
+Search ScienceDirect (Elsevier) full-text journals. Partial abstracts only (short dc:description).
+- `query`* (string)
+- `limit` (int ≥ 1, default: 200)
+- `start` (int ≥ 0, default: 0) — **0-based** offset
+- `year_low` / `year_high` (int)
+
+Requires ELSEVIER_API_KEY.
+
+### GET /search_google_scholar_browser
+Search Google Scholar by driving the persistent Chromium browser. Broad coverage including preprints and grey literature. Excerpt only (no full abstract).
+- `query`* (string)
+- `limit` (int ≥ 1, default: 200)
+- `start_index` (int ≥ 0, default: 0) — **0-based** offset
+- `year_low` / `year_high` (int)
+- `exclude_domains` (list[string]) — domains to exclude; defaults to researchgate.net, books.google.com, search.proquest.com; pass empty list to disable
+
+total_records_available is always null. If a CAPTCHA appears, solve it once via noVNC — the session persists.
+
+### GET /search_web_of_science
+Search Web of Science via the persistent Chromium browser. Exports BibTeX. Abstracts usually included.
+- `query`* (string)
+- `limit` (int ≥ 1, default: 200)
+- `year_low` / `year_high` (int)
+
+Requires active WoS browser session. Log in via noVNC if session has expired.
+
+### GET /search_ebsco
+Search EBSCO Research via the persistent Chromium browser. Requires an active institutional EBSCO session.
+- `query`* (string)
+- `limit` (int ≥ 1, default: 200)
+- `year_low` / `year_high` (int)
+
+If blocked by a login wall, open noVNC, log in through the institution portal, then retry.
+
+## EBSCO Download Endpoints
+
+### GET /download_ebsco_paper
+Download a single paper from an EBSCO detail page URL using the browser.
+- `url`* (string) — EBSCO paper detail page URL (research.ebsco.com/c/.../search/details/...)
+
+Response: `{"path": "...", "filename": "...", "size_bytes": 843210}`
+
+### POST /download_ebsco_papers
+Download multiple EBSCO papers sequentially. Request body: JSON array of EBSCO detail page URL strings. Failures on individual URLs do not stop the batch.
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| IEEE_XPLORE_API_KEY | Yes (for /search_ieeexplore) | IEEE Xplore Metadata API key |
+| ELSEVIER_API_KEY | Yes (for Scopus/ScienceDirect) | Elsevier API key |
+| OPENALEX_API_KEY | Optional | Raises OpenAlex rate limits |
+| SEMANTIC_SCHOLAR_API_KEY | Optional | Raises Semantic Scholar rate limits |
+| BROWSER_WORKER_URL | Yes (browser endpoints) | Internal URL of browser_worker (default: http://127.0.0.1:8010) |
+| REQUEST_TIMEOUT_SECONDS | Optional | Per-request timeout in seconds (default: 20) |
+| PDF_MAX_MB | Optional | Max PDF size in MB (default: 50) |
+| DOWNLOAD_DIR | Optional | Server-side PDF save directory |
+| USER_AGENT | Optional | HTTP User-Agent header |
+
+## Pagination Reference
+
+| Endpoint | Parameter | Style |
+|---|---|---|
+| /search_ieeexplore | start_record | 1-based integer |
+| /search_scopus | start | 0-based integer |
+| /search_sciencedirect | start | 0-based integer |
+| /search_google_scholar_browser | start_index | 0-based integer |
+| /search_openalex | — | Automatic cursor-based (pass limit only) |
+
+## Common Agent Patterns
+
+Check whether a result has a full abstract:
+```python
+if result["is_abstract"]:
+    abstract = result["snippet"]
+```
+
+Fetch full page content from a result:
+```
+GET /fetch_page?url={result.url}
+GET /review_page?url={result.url}   # adds word count, headings, read time
+```
+
+Download a paper:
+```
+# Open-access direct PDF:
+GET /download_pdf?url={result.pdf_link}
+
+# Subscription paper — use browser_worker:
+POST https://searcher.xds-lab.com/aev/browser/download_paper
+{"url": "{result.url}"}
+```
+
+Which endpoint to use:
+- Full abstracts, free, broadest coverage → /search_openalex
+- Peer-reviewed engineering/CS with abstracts → /search_ieeexplore, /search_semantic_scholar
+- Broad Scopus coverage with abstracts → /search_scopus (include_abstract=true by default)
+- Elsevier full-text articles → /search_sciencedirect
+- Preprints and grey literature → /search_google_scholar_browser
+- WoS citation tracking → /search_web_of_science
+- EBSCO databases → /search_ebsco

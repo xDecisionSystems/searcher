@@ -45,6 +45,12 @@ def api_reference() -> FileResponse:
     return FileResponse(_STATIC_DIR / "api_reference.html", media_type="text/html")
 
 
+@app.get("/llms.txt", response_class=FileResponse, include_in_schema=False)
+def llms_txt() -> FileResponse:
+    """Serve the LLM-friendly plain-text API reference (llms.txt spec)."""
+    return FileResponse(_STATIC_DIR / "llms.txt", media_type="text/plain; charset=utf-8")
+
+
 @app.get("/fetch_page")
 def fetch_page(
     url: str,
