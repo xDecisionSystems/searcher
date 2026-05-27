@@ -62,6 +62,7 @@ Each service has its own `requirements.txt` and `deploy/` folder. There is a sin
 - When code changes affect behavior, update docs in the same change.
 - Keep API responses stable unless a breaking change is explicitly requested.
 - Validate all input and return clear HTTP errors.
+- **API reference page:** whenever an endpoint is added, removed, or its parameters change, update `searcher/searcher_mcp/static/api_reference.html` in the same commit. This file is served live at `/api-reference` and is the authoritative reference for AI agents.
 
 ## 5. Security Basics
 

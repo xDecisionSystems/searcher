@@ -149,8 +149,8 @@ def _search_ieeexplore(
         base_params["end_year"] = year_high
     if content_type:
         base_params["content_type"] = content_type
-    if open_access is not None:
-        base_params["open_access"] = "True" if open_access else "False"
+    if open_access:
+        base_params["open_access"] = "True"
     if sort_field:
         base_params["sort_field"] = sort_field
     if sort_order:
@@ -182,8 +182,7 @@ def _search_ieeexplore(
             break
 
         for item in articles:
-            authors = item.get("authors", {}).get("authors", [])
-            author_names = [a.get("full_name", "") for a in authors if a.get("full_name")]
+            author_names = _normalize_authors(item.get("authors"))
             doi = item.get("doi", "") or ""
             url = item.get("html_url", "") or item.get("pdf_url", "") or (f"https://doi.org/{doi}" if doi else "")
             results.append(_result(

@@ -1,8 +1,12 @@
-from typing import Annotated, Any
+from pathlib import Path
+from typing import Annotated, Any, Literal
 
 from fastapi import Body, FastAPI, Query
+from starlette.responses import FileResponse
 
 from .config import VERSION_NAME
+
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
 from .services.page import fetch_page as fetch_page_service
 from .services.page import review_page as review_page_service
 from .services.pdf import download_pdf as download_pdf_service
@@ -32,6 +36,12 @@ app = FastAPI(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "version_name": VERSION_NAME}
+
+
+@app.get("/api-reference", response_class=FileResponse, include_in_schema=False)
+def api_reference() -> FileResponse:
+    """Serve the static HTML API reference page."""
+    return FileResponse(_STATIC_DIR / "api_reference.html", media_type="text/html")
 
 
 @app.get("/fetch_page")
@@ -171,9 +181,9 @@ def search_ieeexplore(
     year_high: int | None = Query(default=None, description="Latest publication year (inclusive)."),
     content_type: str | None = Query(default=None, description="Filter by content type: Books, Conferences, Courses, Early Access, Journals, Magazines, Standards."),
     open_access: bool | None = Query(default=None, description="If true, restrict to open access articles only."),
-    sort_field: str | None = Query(default=None, description="Sort field: article_number, article_title, publication_title."),
-    sort_order: str | None = Query(default=None, description="Sort direction: asc or desc."),
-    author: str | None = Query(default=None, description="Filter by author name (first or last, min 3 chars)."),
+    sort_field: Literal["article_number", "article_title", "publication_title"] | None = Query(default=None, description="Sort field: article_number, article_title, publication_title."),
+    sort_order: Literal["asc", "desc"] | None = Query(default=None, description="Sort direction: asc or desc."),
+    author: str | None = Query(default=None, min_length=3, description="Filter by author name (first or last, min 3 chars)."),
 ) -> dict[str, Any]:
     """Search IEEE Xplore via the IEEE Xplore Metadata API.
 

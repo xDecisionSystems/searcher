@@ -94,6 +94,7 @@ When using multiple agents in parallel, assign disjoint file ownership.
 - Install service deps: `.venv/bin/python -m pip install -r <service>/requirements.txt`
 - Re-run whenever a service's `requirements.txt` changes.
 - Do not use system/global `python`, `python3`, or `pip` for project tasks.
+- Use `.env.dev` at the repo root for local development; `.env` is the production file inside the LXC.
 
 ## 7. Version Update Rule
 
@@ -117,7 +118,8 @@ When using multiple agents in parallel, assign disjoint file ownership.
 3. Implement the smallest coherent change.
 4. Run syntax checks for the affected service.
 5. Update that service's docs and the root `.env.example` if config keys changed.
-6. Summarize changes, assumptions, and residual risks.
+6. **API reference page:** whenever an endpoint is added, removed, or its parameters change, update `searcher/searcher_mcp/static/api_reference.html` in the same change. This file is served live at `/api-reference` and is the authoritative reference for AI agents.
+7. Summarize changes, assumptions, and residual risks.
 
 ## 10. Domain Strategy Generation Protocol (Required)
 
