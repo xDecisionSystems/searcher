@@ -956,9 +956,9 @@ def search_web_of_science_via_browser(
                 pass
             page.wait_for_timeout(1500)
 
-            # Click Export button (recorded as mat-icon expand_more inside export button).
-            export_btn = page.locator("button mat-icon:has-text('expand_more'), button:has-text('Export')").first
-            export_btn.click(timeout=10000)
+            # Click Export button — recorded as clicking a mat-icon with text "expand_more"
+            # inside the export dropdown button on the results toolbar.
+            page.locator("mat-icon:has-text('expand_more')").first.click(timeout=10000)
             log_event("wos_export_clicked")
 
             # Wait for export overlay URL.
@@ -981,20 +981,19 @@ def search_web_of_science_via_browser(
             count_input.fill(str(limit))
             page.wait_for_timeout(500)
 
-            # Select Full Record.
+            # Select Full Record content.
             page.locator("#option-fullRecord").click(timeout=5000)
             log_event("wos_full_record_selected")
             page.wait_for_timeout(500)
 
-            # Capture the download.
-            with ctx.expect_page() as new_page_info:
-                with page.expect_download(timeout=30000) as download_info:
-                    page.locator("button:has-text('Export'), button[type='submit']").last.click(timeout=10000)
-                download = download_info.value
-                log_event("wos_download_started", filename=download.suggested_filename)
-                content = download.path()
-                if content:
-                    bibtex_content.append(Path(content).read_text(encoding="utf-8", errors="replace"))
+            # Capture the file download triggered by the Export button.
+            with page.expect_download(timeout=30000) as download_info:
+                page.locator("button:has-text('Export'), button[type='submit']").last.click(timeout=10000)
+            download = download_info.value
+            log_event("wos_download_started", filename=download.suggested_filename)
+            dl_path = download.path()
+            if dl_path:
+                bibtex_content.append(Path(dl_path).read_text(encoding="utf-8", errors="replace"))
 
             _close_context_if_needed(ctx)
 
